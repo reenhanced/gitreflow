@@ -1,0 +1,314 @@
+#
+# git-flow -- A collection of Git extensions to provide high-level
+# repository operations for Vincent Driessen's branching model.
+#
+# Original blog post presenting this model is found at:
+#    http://nvie.com/git-model
+#
+# Feel free to contribute to this project at:
+#    http://github.com/nvie/gitreflow
+#
+# Copyright 2010 Vincent Driessen. All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 
+#    1. Redistributions of source code must retain the above copyright notice,
+#       this list of conditions and the following disclaimer.
+# 
+#    2. Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+# 
+# THIS SOFTWARE IS PROVIDED BY VINCENT DRIESSEN ``AS IS'' AND ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+# EVENT SHALL VINCENT DRIESSEN OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+# OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+# EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# 
+# The views and conclusions contained in the software and documentation are
+# those of the authors and should not be interpreted as representing official
+# policies, either expressed or implied, of Vincent Driessen.
+#
+
+#
+# Common functionality
+#
+
+# shell output
+warn() { echo "$@" >&2; }
+die() { warn "$@"; exit 1; }
+
+escape() {
+  echo "$1" | sed 's/\([\.\+\$\*]\)/\\\1/g'
+}
+
+# set logic
+has() {
+  local item=$1; shift
+  echo " $@ " | grep -q " $(escape $item) "
+}
+
+# basic math
+min() { [ "$1" -le "$2" ] && echo "$1" || echo "$2"; }
+max() { [ "$1" -ge "$2" ] && echo "$1" || echo "$2"; }
+
+# basic string matching
+startswith() { [ "$1" != "${1#$2}" ]; }
+endswith() { [ "$1" != "${1%$2}" ]; }
+
+#
+# Git specific common functionality
+#
+
+git_local_branches() { git branch --no-color | sed 's/^[* ] //'; }
+git_remote_branches() { git branch -r --no-color | sed 's/^[* ] //'; }
+git_all_branches() { ( git branch --no-color; git branch -r --no-color) | sed 's/^[* ] //'; }
+git_all_tags() { git tag; }
+
+git_current_branch() {
+  git branch --no-color | grep '^\* ' | grep -v 'no branch' | sed 's/^* //g'
+}
+
+git_is_clean_working_tree() {
+  if ! git diff --no-ext-diff --ignore-submodules --quiet --exit-code; then
+    return 1
+  elif ! git diff-index --cached --quiet --ignore-submodules HEAD --; then
+    return 2
+  else
+    return 0
+  fi
+}
+
+git_repo_is_headless() {
+  ! git rev-parse --quiet --verify HEAD >/dev/null 2>&1
+}
+
+git_local_branch_exists() {
+  has $1 $(git_local_branches)
+}
+
+git_remote_branch_exists() {
+  has $1 $(git_remote_branches)
+}
+
+git_branch_exists() {
+  has $1 $(git_all_branches)
+}
+
+git_tag_exists() {
+  has $1 $(git_all_tags)
+}
+
+#
+# git_compare_branches()
+#
+# Tests whether branches and their "origin" counterparts have diverged and need
+# merging first. It returns error codes to provide more detail, like so:
+#
+# 0    Branch heads point to the same commit
+# 1    First given branch needs fast-forwarding
+# 2    Second given branch needs fast-forwarding
+# 3    Branch needs a real merge
+# 4    There is no merge base, i.e. the branches have no common ancestors
+#
+git_compare_branches() {
+  local commit1=$(git rev-parse "$1")
+  local commit2=$(git rev-parse "$2")
+  if [ "$commit1" != "$commit2" ]; then
+    local base=$(git merge-base "$commit1" "$commit2")
+    if [ $? -ne 0 ]; then
+      return 4
+    elif [ "$commit1" = "$base" ]; then
+      return 1
+    elif [ "$commit2" = "$base" ]; then
+      return 2
+    else
+      return 3
+    fi
+  else
+    return 0
+  fi
+}
+
+#
+# git_is_branch_merged_into()
+#
+# Checks whether branch $1 is succesfully merged into $2
+#
+git_is_branch_merged_into() {
+  local subject=$1
+  local base=$2
+  local all_merges="$(git branch --no-color --contains $subject | sed 's/^[* ] //')"
+  has $base $all_merges
+}
+
+#
+# gitreflow specific common functionality
+#
+
+# check if this repo has been inited for gitreflow
+gitreflow_has_master_configured() {
+  local master=$(git config --get gitreflow.branch.master)
+  [ "$master" != "" ] && git_local_branch_exists "$master"
+}
+
+gitreflow_has_develop_configured() {
+  local develop=$(git config --get gitreflow.branch.develop)
+  [ "$develop" != "" ] && git_local_branch_exists "$develop"
+}
+
+gitreflow_has_prefixes_configured() {
+  git config --get gitreflow.prefix.feature >/dev/null 2>&1     && \
+  git config --get gitreflow.prefix.release >/dev/null 2>&1     && \
+  git config --get gitreflow.prefix.hotfix >/dev/null 2>&1      && \
+  git config --get gitreflow.prefix.support >/dev/null 2>&1     && \
+  git config --get gitreflow.prefix.versiontag >/dev/null 2>&1
+}
+
+gitreflow_is_initialized() {
+  gitreflow_has_master_configured                    && \
+  gitreflow_has_develop_configured                   && \
+  [ "$(git config --get gitreflow.branch.master)" !=    \
+    "$(git config --get gitreflow.branch.develop)" ] && \
+  gitreflow_has_prefixes_configured
+}
+
+# loading settings that can be overridden using git config
+gitreflow_load_settings() {
+  export DOT_GIT_DIR=$(git rev-parse --git-dir 2>/dev/null)
+  export MASTER_BRANCH=$(git config --get gitreflow.branch.master)
+  export DEVELOP_BRANCH=$(git config --get gitreflow.branch.develop)
+  export ORIGIN=$(git config --get gitreflow.origin || echo origin)
+}
+
+#
+# gitreflow_resolve_nameprefix
+#
+# Inputs:
+# $1 = name prefix to resolve
+# $2 = branch prefix to use
+#
+# Searches branch names from git_local_branches() to look for a unique
+# branch name whose name starts with the given name prefix.
+#
+# There are multiple exit codes possible:
+# 0: The unambiguous full name of the branch is written to stdout
+#    (success)
+# 1: No match is found.
+# 2: Multiple matches found. These matches are written to stderr
+#
+gitreflow_resolve_nameprefix() {
+  local name=$1
+  local prefix=$2
+  local matches
+  local num_matches
+
+  # first, check if there is a perfect match
+  if git_local_branch_exists "$prefix$name"; then
+    echo "$name"
+    return 0
+  fi
+
+  matches=$(echo "$(git_local_branches)" | grep "^$(escape "$prefix$name")")
+  num_matches=$(echo "$matches" | wc -l)
+  if [ -z "$matches" ]; then
+    # no prefix match, so take it literally
+    warn "No branch matches prefix '$name'"
+    return 1
+  else
+    if [ $num_matches -eq 1 ]; then
+      echo "${matches#$prefix}"
+      return 0
+    else
+      # multiple matches, cannot decide
+      warn "Multiple branches match prefix '$name':"
+      for match in $matches; do
+        warn "- $match"
+      done
+      return 2
+    fi
+  fi
+}
+
+#
+# Assertions for use in git-flow subcommands
+#
+
+require_git_repo() {
+  if ! git rev-parse --git-dir >/dev/null 2>&1; then
+    die "fatal: Not a git repository"
+  fi
+}
+
+require_gitreflow_initialized() {
+  if ! gitreflow_is_initialized; then
+    die "fatal: Not a gitreflow-enabled repo yet. Please run \"git flow init\" first."
+  fi
+}
+
+require_clean_working_tree() {
+  git_is_clean_working_tree
+  local result=$?
+  if [ $result -eq 1 ]; then
+    die "fatal: Working tree contains unstaged changes. Aborting."
+  fi
+  if [ $result -eq 2 ]; then
+    die "fatal: Index contains uncommited changes. Aborting."
+  fi
+}
+
+require_local_branch() {
+  if ! git_local_branch_exists $1; then
+    die "fatal: Local branch '$1' does not exist and is required."
+  fi
+}
+
+require_remote_branch() {
+  if ! has $1 $(git_remote_branches); then
+    die "Remote branch '$1' does not exist and is required."
+  fi
+}
+
+require_branch() {
+  if ! has $1 $(git_all_branches); then
+    die "Branch '$1' does not exist and is required."
+  fi
+}
+
+require_branch_absent() {
+  if has $1 $(git_all_branches); then
+    die "Branch '$1' already exists. Pick another name."
+  fi
+}
+
+require_tag_absent() {
+  for tag in $(git_all_tags); do
+    if [ "$1" = "$tag" ]; then
+      die "Tag '$1' already exists. Pick another name."
+    fi
+  done
+}
+
+require_branches_equal() {
+  require_local_branch "$1"
+  require_remote_branch "$2"
+  git_compare_branches "$1" "$2"
+  local status=$?
+  if [ $status -gt 0 ]; then
+    warn "Branches '$1' and '$2' have diverged."
+    if [ $status -eq 1 ]; then
+      die "And branch '$1' may be fast-forwarded."
+    elif [ $status -eq 2 ]; then
+      # Warn here, since there is no harm in being ahead
+      warn "And local branch '$1' is ahead of '$2'."
+    else
+      die "Branches need merging first."
+    fi
+  fi
+}

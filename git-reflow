@@ -55,8 +55,23 @@ main() {
     exit 1
   fi
 
+  # load common functionality
+  . "$GITFLOW_DIR/gitflow-common"common
+
   git config --global alias.reflow '!./git-reflow'
   git reflow "$@"
+
+  # sanity checks
+  SUBCOMMAND="$1"; shift
+
+  if [ ! -e "$GITFLOW_DIR/git-flow-$SUBCOMMAND" ]; then
+    usage
+    exit 1
+  fi
+
+  # run command
+  . "$GITFLOW_DIR/git-flow-$SUBCOMMAND"
+  FLAGS_PARENT="git flow $SUBCOMMAND"
 }
 
 main "$@"

@@ -48,29 +48,34 @@ usage() {
 
 main() {
 
-  $GITREFLOW_DIR = ''
+  GITREFLOW_DIR="."
+
+  # load common functionality
+  . "$GITREFLOW_DIR/gitreflow-common"
+
+  # Setup reflow alias if it doesn't exist
+  if ! already_initialized; then
+    git config --global alias.reflow '!./git-reflow'
+  fi
 
   if [ $# -lt 1 ]; then
     usage
     exit 1
   fi
 
-  # load common functionality
-  . "$GITFLOW_DIR/gitflow-common"
 
-  git config --global alias.reflow '!./git-reflow'
   git reflow "$@"
 
   # sanity checks
   SUBCOMMAND="$1"; shift
 
-  if [ ! -e "$GITFLOW_DIR/git-flow-$SUBCOMMAND" ]; then
+  if [ ! -e "$GITREFLOW_DIR/git-flow-$SUBCOMMAND" ]; then
     usage
     exit 1
   fi
 
   # run command
-  . "$GITFLOW_DIR/git-flow-$SUBCOMMAND"
+  . "$GITREFLOW_DIR/git-flow-$SUBCOMMAND"
 }
 
 main "$@"

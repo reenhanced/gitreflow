@@ -66,6 +66,15 @@ endswith() { [ "$1" != "${1%$2}" ]; }
 # Git specific common functionality
 #
 
+already_initialized() {
+  if [ "`git config --get gitreflow.initialized`" != "" ]
+  then
+    return 0
+  else
+    return 1
+  fi
+}
+
 git_local_branches() { git branch --no-color | sed 's/^[* ] //'; }
 git_remote_branches() { git branch -r --no-color | sed 's/^[* ] //'; }
 git_all_branches() { ( git branch --no-color; git branch -r --no-color) | sed 's/^[* ] //'; }

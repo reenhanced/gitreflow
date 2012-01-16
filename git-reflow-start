@@ -5,6 +5,8 @@
 if [ "$1" != "" ]
 then
   # Check for local and remote existing branches
-  git_local_branch_exists( $1 )
-  echo "Woot!"
+  git push origin `git_current_branch`:refs/heads/"$1"
+  git fetch origin
+  git branch --track "$1" origin/"$1"
+  git checkout "$1"
 fi

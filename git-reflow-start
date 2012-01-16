@@ -1,0 +1,10 @@
+#!/bin/bash
+# Sets up a new remote feature branch with tracking
+. "./gitreflow-common"
+
+if [ "$1" != "" ]
+then
+  # Check for local and remote existing branches
+  git_local_branch_exists( $1 )
+  echo "Woot!"
+fi

@@ -56,7 +56,7 @@ main() {
   fi
 
   # load common functionality
-  . "$GITFLOW_DIR/gitflow-common"common
+  . "$GITFLOW_DIR/gitflow-common"
 
   git config --global alias.reflow '!./git-reflow'
   git reflow "$@"
@@ -71,7 +71,6 @@ main() {
 
   # run command
   . "$GITFLOW_DIR/git-flow-$SUBCOMMAND"
-  FLAGS_PARENT="git flow $SUBCOMMAND"
 }
 
 main "$@"

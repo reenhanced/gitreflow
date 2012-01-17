@@ -1,0 +1,17 @@
+#!/bin/bash
+# Closes out the feature branch and merges it down as requested
+. "./gitreflow-common"
+
+if [ "$1" != "" ]
+then
+  if [ "$2" == "" ]
+  then
+    echo "You must also provide a pull request to fetch from."
+    exit 0
+  else
+    git fetch origin
+    git merge --no-ff origin/"$1"
+  fi
+else
+  echo "You must provide a branch you want to merge this feature branch into."
+fi

@@ -63,19 +63,16 @@ main() {
     exit 1
   fi
 
-
-  git reflow "$@"
-
-  # sanity checks
+  # just for kicks
   SUBCOMMAND="$1"; shift
 
-  if [ ! -e "$GITREFLOW_DIR/git-flow-$SUBCOMMAND" ]; then
+  if [ ! -e "$GITREFLOW_DIR/git-reflow-$SUBCOMMAND" ]; then
     usage
     exit 1
   fi
 
   # run command
-  . "$GITREFLOW_DIR/git-flow-$SUBCOMMAND"
+  . "$GITREFLOW_DIR/git-reflow-$SUBCOMMAND"
 }
 
 main "$@"

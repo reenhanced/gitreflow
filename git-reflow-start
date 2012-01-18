@@ -9,4 +9,6 @@ then
   git fetch origin
   git branch --track "$1" origin/"$1"
   git checkout "$1"
+else
+  echo "You must provide the branch name to start the new feature on."
 fi

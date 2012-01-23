@@ -13,4 +13,11 @@ Gem::Specification.new do |spec|
   spec.summary = "A better git process"
   spec.description = "Git Reflow manages your git workflow."
   spec.require_path = "lib"
+  spec.add_development_dependency('aruba', '~> 0.4.6')
+  spec.add_development_dependency('rake')
+  spec.add_development_dependency('rspec')
+  spec.add_development_dependency('jeweler')
+  spec.add_dependency('gli')
+  spec.add_dependency('json')
+  spec.add_dependency('httpclient')
 end

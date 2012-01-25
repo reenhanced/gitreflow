@@ -3,21 +3,26 @@ $:.unshift lib unless $:.include?(lib)
 
 require 'git_reflow/version'
 
-Gem::Specification.new do |spec|
-  spec.name = "git_reflow"
-  spec.version = GitReflow::VERSION
-  spec.platform = Gem::Platform::RUBY
-  spec.authors = ["Valentino Stoll", "Robert Stern", "Nicholas Hance"]
-  spec.email = ["dev@reenhanced.com"]
-  spec.homepage = "http://github.com/reenhanced/gitreflow"
-  spec.summary = "A better git process"
-  spec.description = "Git Reflow manages your git workflow."
-  spec.require_path = "lib"
-  spec.add_development_dependency('aruba', '~> 0.4.6')
-  spec.add_development_dependency('rake')
-  spec.add_development_dependency('rspec')
-  spec.add_development_dependency('jeweler')
-  spec.add_dependency('gli')
-  spec.add_dependency('json')
-  spec.add_dependency('httpclient')
+Gem::Specification.new do |s|
+  s.name = "git_reflow"
+  s.version = GitReflow::VERSION
+  s.platform = Gem::Platform::RUBY
+  s.authors = ["Valentino Stoll", "Robert Stern", "Nicholas Hance"]
+  s.email = ["dev@reenhanced.com"]
+  s.homepage = "http://github.com/reenhanced/gitreflow"
+  s.summary = "A better git process"
+  s.description = "Git Reflow manages your git workflow."
+
+  s.add_development_dependency('aruba', '~> 0.4.6')
+  s.add_development_dependency('rake')
+  s.add_development_dependency('rspec')
+  s.add_development_dependency('jeweler')
+  s.add_dependency('gli')
+  s.add_dependency('json')
+  s.add_dependency('httpclient')
+
+  s.files = `git ls-files`.split("\n")
+  s.test_files = `git ls-files -- #{test,spec,features}/*`.split("\n")
+  s.executables = `git ls-files -- bin/*`.split("\n").map{ |f| File..basename(f) }
+  s.require_paths = ["lib"]
 end

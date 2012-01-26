@@ -1,73 +1,81 @@
-#!/bin/sh
-#
-# $ git reflow start nh-feature-branch
-#     Start a feature:
-#     Checks out new branch
+#!/usr/bin/env ruby
+# 1.9 adds realpath to resolve symlinks; 1.8 doesn't
+# have this method, so we add it so we get resolved symlinks
+# and compatibility
+unless File.respond_to? :realpath
+  class File #:nodoc:
+    def self.realpath path
+      return realpath(File.readlink(path)) if symlink?(path)
+      path
+    end
+  end
+end
+$: << File.expand_path(File.dirname(File.realpath(__FILE__)) + '/../lib')
+require 'rubygems'
+require 'gli'
+require 'git_reflow/version'
 
-# $ git reflow edit
-#     Opens $EDITOR to let you configure your workflow (stored per repo, maybe in .git/description (no one really uses that file anyway)?).
-#     Stuff to configure:
-#       - tests are enabled and the command to run them
-#       - deploys are enabled and the command to run them
-#       - github integration
-#       - remote we want to work against (default: origin)
-#       - process tweaks? Allow callbacks before each step?
-#
-#     flags: 
-#       --default    Edit the default reflow to configure global settings?
-#
-# $ git reflow edit-commit-template
-#     Opens $EDITOR to let you configure the stub for the commit message
-#
-# $ git reflow deliver master
-#     All of the following are run linearly, and we’ll dump on any failure:
-#     Is the dest branch up-to-date with origin?
-#     Are we merged up to the dest branch?
-#     Run the test suite (if enabled)
-#     Has this branch been pushed to origin?
-#     Do we have a pull request?
-#     IF not, create it and bail with URL
-#     If so, do we have lgtm?
-#     checkout destination branch
-#     Merge squashed
-#     Prep commit message (injecting [Closes #<pull_request_num>])
-#     perform the commit
-#     delete the remote branch
-#     delete the local branch
-#     deploy (if enabled)
+include GLI
 
-usage() {
-  echo "usage: git reflow <subcommand>"
-  echo
-  echo "Available subcommands are:"
-  echo "   start                Initialize a new git repo with support for the branching model."
-  echo "   edit                 Manage your feature branches."
-  echo "   edit-commit-template Manage your  release branches."
-  echo "   deliver              Manage your hotfix branches."
-}
+program_desc 'Git Reflow manages your git workflow.'
 
-main() {
+version GitReflow::VERSION
 
-  GITREFLOW_DIR="."
+desc 'Describe some switch here'
+switch [:s,:switch]
 
-  # load common functionality
-  . "$GITREFLOW_DIR/gitreflow-common"
+desc 'Describe some flag here'
+default_value 'the default'
+arg_name 'The name of the argument'
+flag [:f,:flagname]
 
-  if [ $# -lt 1 ]; then
-    usage
-    exit 1
-  fi
+desc 'Start wil create a new feature branch and setup remote tracking'
+arg_name 'Describe arguments to start here'
+command :start do |c|
+  c.desc 'Describe a switch to start'
+  c.switch :s
 
-  # just for kicks
-  SUBCOMMAND="$1"; shift
+  c.desc 'Describe a flag to start'
+  c.default_value 'default'
+  c.flag :f
+  c.action do |global_options,options,args|
 
-  if [ ! -e "$GITREFLOW_DIR/git-reflow-$SUBCOMMAND" ]; then
-    usage
-    exit 1
-  fi
+    # Your command logic here
+    if args.blank?
+      raise "you must supply a new branch name to create"
+    else
+    end 
+    # If you have any errors, just raise them
+    # raise "that command made no sense"
+  end
+end
 
-  # run command
-  . "$GITREFLOW_DIR/git-reflow-$SUBCOMMAND"
-}
+desc 'Describe deliver here'
+arg_name 'Describe arguments to deliver here'
+command :deliver do |c|
+  c.action do |global_options,options,args|
+  end
+end
 
-main "$@"
+pre do |global,command,options,args|
+  # Pre logic here
+  # Return true to proceed; false to abourt and not call the
+  # chosen command
+  # Use skips_pre before a command to skip this block
+  # on that command only
+  true
+end
+
+post do |global,command,options,args|
+  # Post logic here
+  # Use skips_post before a command to skip this
+  # block on that command only
+end
+
+on_error do |exception|
+  # Error logic here
+  # return false to skip default error handling
+  true
+end
+
+exit GLI.run(ARGV)

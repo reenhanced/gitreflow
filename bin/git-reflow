@@ -1,4 +1,4 @@
-##!/bin/sh
+#!/bin/sh
 #
 # $ git reflow start nh-feature-branch
 #     Start a feature:
@@ -52,11 +52,6 @@ main() {
 
   # load common functionality
   . "$GITREFLOW_DIR/gitreflow-common"
-
-  # Setup reflow alias if it doesn't exist
-  if ! already_initialized; then
-    git config --global alias.reflow '!./git-reflow'
-  fi
 
   if [ $# -lt 1 ]; then
     usage

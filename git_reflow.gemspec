@@ -15,7 +15,7 @@ spec = Gem::Specification.new do |s|
   s.executables = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.require_paths << 'lib'
   s.has_rdoc = true
-  s.extra_rdoc_files = ['README.rdoc','git_reflow.rdoc']
+  s.extra_rdoc_files = ['README.rdoc']
   s.rdoc_options << '--title' << 'git_reflow' << '--main' << 'README.rdoc' << '-ri'
   s.bindir = 'bin'
   s.add_development_dependency('rake')
@@ -23,7 +23,7 @@ spec = Gem::Specification.new do |s|
   s.add_development_dependency('aruba', '~> 0.4.6')
   s.add_development_dependency('rspec')
   s.add_development_dependency('jeweler')
-  s.add_development_dependency('gli')
+  s.add_dependency('gli')
   s.add_dependency('json')
   s.add_dependency('httpclient')
 end

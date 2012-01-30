@@ -5,5 +5,5 @@ Feature: User installs gem
 
   Scenario: User installs gem
     When I build and install the gem
-    And I successfully run "git reflow"
-    Then the output should contain "usage: git reflow <subcommand>"
+    And I successfully run "git-reflow"
+    Then the output should contain "usage: git-reflow [global options] command [command options]"

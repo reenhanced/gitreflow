@@ -2,7 +2,6 @@ PATH
   remote: .
   specs:
     git_reflow (0.1)
-      gli
       httpclient
       json
 
@@ -55,6 +54,8 @@ PLATFORMS
 DEPENDENCIES
   aruba (~> 0.4.6)
   git_reflow!
+  gli
   jeweler
   rake
+  rdoc
   rspec

@@ -41,10 +41,10 @@ command :start do |c|
   c.action do |global_options,options,args|
 
     # Your command logic here
-    if args.blank?
-      raise "you must supply a new branch name to create"
+    if args.empty?
+      raise "usage: git-reflow start [new-branch-name]"
     else
-    end 
+    end
     # If you have any errors, just raise them
     # raise "that command made no sense"
   end

@@ -1,7 +1,7 @@
 require 'aruba/cucumber'
 
 Before('@gem') do
-  CukeGem.setup('../../git_reflow.gemspec')
+  CukeGem.setup('./git_reflow.gemspec')
 end
 
 After('@gem') do

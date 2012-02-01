@@ -11,6 +11,7 @@ unless File.respond_to? :realpath
   end
 end
 $: << File.expand_path(File.dirname(File.realpath(__FILE__)) + '/../lib')
+
 require 'rubygems'
 require 'gli'
 require 'git_reflow/version'
@@ -29,7 +30,7 @@ default_value 'the default'
 arg_name 'The name of the argument'
 flag [:f,:flagname]
 
-desc 'Start wil create a new feature branch and setup remote tracking'
+desc 'Start will create a new feature branch and setup remote tracking'
 arg_name 'Describe arguments to start here'
 command :start do |c|
   c.desc 'Describe a switch to start'

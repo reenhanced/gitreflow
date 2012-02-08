@@ -9,8 +9,9 @@ After('@gem') do
 end
 
 Before do
+  @dirs = [Dir.tmpdir, "aruba"]
   @real_home = ENV['HOME']
-  fake_home = File.join('/tmp', 'fake_home')
+  fake_home = File.join(@dirs, 'fake_home')
   FileUtils.rm_rf fake_home, :secure => true
   ENV['HOME'] = fake_home
 end

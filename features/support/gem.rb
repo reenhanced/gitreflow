@@ -18,7 +18,7 @@ class CukeGem
       if !@setup_done || !once then
         @setup_done = true
         mkgemdir(gem_home)
-        gem_install(gemspec, gem_home)
+        gem_install(gemspec)
       end
     end
 

@@ -9,7 +9,7 @@ spec = Gem::Specification.new do |s|
   s.summary          = "A better git process"
   s.description      = "Git Reflow manages your git workflow."
   s.platform         = Gem::Platform::RUBY
-  s.files            = `git ls-files`.split("\n")
+  s.files            = `git ls-files --exclude='tmp/*'`.split("\n")
   s.test_files       = `git ls-files -- {test,spec,features}/*`.split("\n")
   s.executables      = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.has_rdoc         = true

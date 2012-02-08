@@ -29,7 +29,7 @@ default_value 'the default'
 arg_name 'The name of the argument'
 flag [:f,:flagname]
 
-desc 'Start wil create a new feature branch and setup remote tracking'
+desc 'Start will create a new feature branch and setup remote tracking'
 arg_name 'Describe arguments to start here'
 command :start do |c|
   c.desc 'Describe a switch to start'
@@ -45,6 +45,9 @@ command :start do |c|
       raise "usage: git-reflow start [new-branch-name]"
     else
       `git push origin master:refs/heads/#{args[0]}`
+      #`git fetch origin`
+      #`git branch --track #{args[0]}`
+      #`git checkout #{args[0]}`
     end
     # If you have any errors, just raise them
     # raise "that command made no sense"

@@ -45,7 +45,7 @@ command :start do |c|
       raise "usage: git-reflow start [new-branch-name]"
     else
       `git push origin master:refs/heads/#{args[0]}`
-      #`git fetch origin`
+      `git fetch origin`
       #`git branch --track #{args[0]}`
       #`git checkout #{args[0]}`
     end

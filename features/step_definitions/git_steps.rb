@@ -32,8 +32,9 @@ Given /^I have a remote git repository named "([^"]+)"$/ do |remote_name|
   }
 end
 
-Given /^the remote repository named "([^"]+)" has changes$/ do |remote_name|
+Given /^the remote repository named "([^"]+)" has changes on the "([^"]+)" branch$/ do |remote_name, branch_name|
   `cd #{remote_name}_repo.git`
+  `git checkout #{branch_name}`
   `echo 'changed' >> README`
   `git commit -am "Changed readme"`
   `cd ..`

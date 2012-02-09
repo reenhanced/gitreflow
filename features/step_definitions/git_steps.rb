@@ -31,3 +31,10 @@ Given /^I have a remote git repository named "([^"]+)"$/ do |remote_name|
     And I cd to ".."
   }
 end
+
+Given /^the remote repository named "([^"]+)" has changes$/ do |remote_name|
+  `cd #{remote_name}_repo.git`
+  `echo 'changed' >> README`
+  `git commit -am "Changed readme"`
+  `cd ..`
+end

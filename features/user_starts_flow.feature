@@ -15,4 +15,4 @@ Feature: User starts a new flow
     And I cd to "master_repo"
     When I run `git-reflow start new-branch`
     Then the output should contain "* [new branch]      master -> new-branch"
-    And the output should contain "master -> origin/master"
+    And the output should contain "* [new branch]      master     -> origin/master"

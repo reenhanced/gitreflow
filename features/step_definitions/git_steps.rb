@@ -22,23 +22,36 @@ end
 
 Given /^I have a remote git repository named "([^"]+)"$/ do |remote_name|
   steps %{
-    Given a directory named "#{remote_name}_repo.git"
-    When I cd to "#{remote_name}_repo.git"
-    And I successfully run `git init --bare`
+    Given a directory named "#{remote_name}_repo"
+    When I cd to "#{remote_name}_repo"
+    And I successfully run `git init`
+    And I write to "README" with:
+      | Initialized |
+    And I successfully run `git add .`
+    And I successfully run `git commit -am "Initial commit"`
     And I cd to ".."
     And I cd to "master_repo"
-    And I successfully run `git remote add #{remote_name} ../#{remote_name}_repo.git`
+    And I successfully run `git remote add #{remote_name} ../#{remote_name}_repo`
     And I cd to ".."
   }
 end
 
 Given /^the remote repository named "([^"]+)" has changes on the "([^"]+)" branch$/ do |remote_name, branch_name|
   steps %{
-    Given a directory named "#{remote_name}_repo.git"
-    When I cd to "#{remote_name}_repo.git"
-    And I successfully run `git checkout #{branch_name}`
-    And I successfully run `echo 'changed' >> README`
+    Given a directory named "#{remote_name}_repo"
+    When I cd to "#{remote_name}_repo"
+    And I successfully run `git checkout master`
+    And I append to "README" with:
+      | changed |
+    And I successfully run `git add .`
     And I successfully run `git commit -am "Changed readme"`
-    And I `cd ..`
+    And I cd to ".."
+  }
+end
+
+Given /^the repository has been initialized$/ do
+  steps %{
+    Given I successfully run `git branch`
+    Then the output should contain "master"
   }
 end

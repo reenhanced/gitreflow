@@ -16,3 +16,4 @@ Feature: User starts a new flow
     When I run `git-reflow start new-branch`
     Then the output should match /\* \[new branch\]\s* master\s* \-\> new\-branch/
     And the output should match /\* \[new branch\]\s* master\s* \-\> origin.master/
+    And the output should contain "Switched to a new branch 'new-branch'"

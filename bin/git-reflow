@@ -46,8 +46,7 @@ command :start do |c|
     else
       `git push origin master:refs/heads/#{args[0]}`
       `git fetch origin`
-      #`git branch --track #{args[0]}`
-      #`git checkout #{args[0]}`
+      `git checkout --track -b #{args[0]} origin/#{args[0]}`
     end
     # If you have any errors, just raise them
     # raise "that command made no sense"

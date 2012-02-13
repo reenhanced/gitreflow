@@ -24,10 +24,10 @@ version GitReflow::VERSION
 desc 'Describe some switch here'
 switch [:s,:switch]
 
-desc 'Describe some flag here'
-default_value 'the default'
-arg_name 'The name of the argument'
-flag [:f,:flagname]
+desc 'The default branch to base your new feature branch off of'
+default_value 'master'
+arg_name 'branch-name'
+flag [:b,:'default-branch']
 
 desc 'Start will create a new feature branch and setup remote tracking'
 arg_name 'Describe arguments to start here'
@@ -35,16 +35,22 @@ command :start do |c|
   c.desc 'Describe a switch to start'
   c.switch :s
 
-  c.desc 'Describe a flag to start'
-  c.default_value 'default'
-  c.flag :f
+  c.desc 'The default branch to base your new feature branch off of'
+  c.default_value 'master'
+  c.flag :base
   c.action do |global_options,options,args|
 
     # Your command logic here
     if args.empty?
       raise "usage: git-reflow start [new-branch-name]"
     else
-      `git push origin master:refs/heads/#{args[0]}`
+      if options[:base].nil?
+        puts "-- Using the default base branch 'master'"
+        base_branch = 'master'
+      else
+        base_branch = options[:base]
+      end
+      `git push origin #{base_branch}:refs/heads/#{args[0]}`
       `git fetch origin`
       `git checkout --track -b #{args[0]} origin/#{args[0]}`
     end

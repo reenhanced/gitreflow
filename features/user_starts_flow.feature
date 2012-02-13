@@ -14,5 +14,5 @@ Feature: User starts a new flow
     And the remote repository named "origin" has changes on the "master" branch
     And I cd to "master_repo"
     When I run `git-reflow start new-branch`
-    Then the output should contain "* [new branch]      master -> new-branch"
-    And the output should contain "* [new branch]      master     -> origin/master"
+    Then the output should match /\* \[new branch\]\s* master\s* \-\> new\-branch/
+    And the output should match /\* \[new branch\]\s* master\s* \-\> origin.master/

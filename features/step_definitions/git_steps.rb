@@ -1,4 +1,4 @@
-Given /^I have a git repository with a branch named "([^"]+)"$/ do |branch_name|
+Given /^I have a git repository with a branch named "([^"]+)" checked out$/ do |branch_name|
   steps %{
     Given a directory named "master_repo"
     And I cd to "master_repo"
@@ -53,5 +53,17 @@ Given /^the repository has been initialized$/ do
   steps %{
     Given I successfully run `git branch`
     Then the output should contain "master"
+  }
+end
+
+Then /^a branch named "([^"]+)" should have been created from "([^"]+)"$/ do |new_branch, base_branch|
+  steps %{
+    Then the output should match /\\* \\[new branch\\]\\s* #{Regexp.escape(base_branch)}\\s* \\-\\> #{Regexp.escape(new_branch)}/
+  }
+end
+
+Then /^the base branch named "([^"]+)" should have fetched changes from the remote branch$/ do |base_branch|
+  steps %{
+    Then the output should match /\\* \\[new branch\\]\\s* #{Regexp.escape(base_branch)}\\s* \\-\\> origin.#{Regexp.escape(base_branch)}/
   }
 end

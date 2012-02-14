@@ -61,7 +61,6 @@ class CukeGem
         Dir.chdir(gemspec_dir)
         output = `gem build #{File.basename(gemspec)}`
         Dir.chdir(pwd)
-        #puts "Building gem to: #{File.expand_path(gemspec_dir)}"
 
         if $?.exitstatus != 0 then
           raise "unable to build gem: #{output}"

@@ -11,7 +11,6 @@ unless File.respond_to? :realpath
   end
 end
 $: << File.expand_path(File.dirname(File.realpath(__FILE__)) + '/../lib')
-
 require 'rubygems'
 require 'gli'
 require 'git_reflow/version'
@@ -45,6 +44,9 @@ command :start do |c|
     if args.empty?
       raise "usage: git-reflow start [new-branch-name]"
     else
+      `git push origin master:refs/heads/#{args[0]}`
+      `git fetch origin`
+      `git checkout --track -b #{args[0]} origin/#{args[0]}`
     end
     # If you have any errors, just raise them
     # raise "that command made no sense"

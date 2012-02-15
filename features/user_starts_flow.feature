@@ -15,5 +15,5 @@ Feature: User starts a new flow
     And I cd to "master_repo"
     When I run `git-reflow start new-branch`
     Then a branch named "new-branch" should have been created from "master"
-    And the base branch named "master" should have fetched changes from the remote branch
+    And the base branch named "master" should have fetched changes from the remote git repository "origin"
     And the output should contain "Switched to a new branch 'new-branch'"

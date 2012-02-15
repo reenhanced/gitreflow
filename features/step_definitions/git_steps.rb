@@ -62,8 +62,8 @@ Then /^a branch named "([^"]+)" should have been created from "([^"]+)"$/ do |ne
   }
 end
 
-Then /^the base branch named "([^"]+)" should have fetched changes from the remote branch$/ do |base_branch|
+Then /^the base branch named "([^"]+)" should have fetched changes from the remote git repository "([^"]+)"$/ do |base_branch, remote_name|
   steps %{
-    Then the output should match /\\* \\[new branch\\]\\s* #{Regexp.escape(base_branch)}\\s* \\-\\> origin.#{Regexp.escape(base_branch)}/
+    Then the output should match /\\* \\[new branch\\]\\s* #{Regexp.escape(base_branch)}\\s* \\-\\> #{remote_name}.#{Regexp.escape(base_branch)}/
   }
 end

@@ -1,4 +1,4 @@
-git-reflow 
+git-reflow
 ==========
 A collection of Git extensions that provide a complete workflow to enable the highest possible quality of code.
 

@@ -1,4 +1,4 @@
-@gem
+@gem, @announce
 Feature: User delivers a flow
   As a User
   When I deliver a flow
@@ -8,13 +8,16 @@ Feature: User delivers a flow
     Given I have a git repository with a branch named "master" checked out
     And I have a remote git repository named "origin"
     And I have a branch named "banana" checked out
-    When I run `git-reflow deliver`
-    Then the output should contain "Created a pull #1 to merge banana into master"
+    When I run `git-reflow deliver` interactively
+    And I type "\n"
+    And the subcommand "gh" should run
+    And the output should contain "Successfully created pull request #1: Commit Title\nPull Request URL: http://github.com/reenhanced/banana/pulls/1\n"
 
   Scenario: User runs git-reflow deliver with a correct pull request number
     Given I have a git repository with a branch named "master" checked out
     And I have a remote git repository named "origin"
     And I have a branch named "banana" checked out
     And I have a pull request numbered "1" to merge "banana" into "master"
-    When I run `git-reflow deliver 1`
-    Then the output should contain "Merged \"banana\" into \"master\""
+    When I run `git-reflow deliver 1` interactively
+    Then the output should contain "Enter an existing pull request # (or leave blank to create a new one):"
+    And the output should contain "Merged \"banana\" into \"master\""

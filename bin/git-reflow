@@ -29,6 +29,20 @@ default_value 'the default'
 arg_name 'The name of the argument'
 flag [:f,:flagname]
 
+desc 'Setup your GitHub account'
+command :setup do |c|
+  c.action do |global_options,options,args|
+    print "Please enter your GitHub username: "
+    gh_user = STDIN.gets.chomp
+    `stty -echo`
+    print "Please enter your GitHub password (we do NOT store this): "
+    gh_password = STDIN.gets.chomp
+    `stty echo`
+    puts "\nYour GitHub account was successfully setup!"
+    Github.new
+  end
+end
+
 desc 'Start will create a new feature branch and setup remote tracking'
 arg_name 'Describe arguments to start here'
 command :start do |c|

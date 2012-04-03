@@ -9,14 +9,16 @@ describe :git_reflow do
 
      before do
        Github.stub :new => github
-       github.oauth.stub :create_authorization => true
+       github.oauth.stub(:create_authorization).and_return({:token => '12345'})
      end
 
      it "creates a new authorization" do
        STDIN.stub(:gets).and_return("user", "password")
        Github.should_receive :new
        github.oauth.should_receive(:create_authorization).with('scopes' => ['repo'])
+       GitReflow.should_receive(:set_oauth_token).with('12345')
        GitReflow.setup
+       GitReflow.get_oauth_token.should == '12345'
      end
   end
 

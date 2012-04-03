@@ -15,9 +15,8 @@ describe :git_reflow do
      it "creates a new authorization" do
        STDIN.stub(:gets).and_return("user", "password")
        Github.should_receive :new
-       github.oauth.should_receive :create_authorization
-       assert_matching_output 'New', all_stderr
-       run_interactive '../../bin/git-reflow setup'
+       github.oauth.should_receive(:create_authorization).with('scopes' => ['repo'])
+       GitReflow.setup
      end
   end
 

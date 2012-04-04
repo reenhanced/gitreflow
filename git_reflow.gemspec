@@ -27,5 +27,5 @@ spec = Gem::Specification.new do |s|
   s.add_dependency('json')
   s.add_dependency('httpclient')
   s.add_dependency('github_api')
-  s.post_install_message = "You need to setup your GitHub OAth token\nPlease run 'git-reflow setup'"
+  s.post_install_message = "You need to setup your GitHub OAuth token\nPlease run 'git-reflow setup'"
 end

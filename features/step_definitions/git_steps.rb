@@ -56,15 +56,11 @@ Given /^the repository has been initialized$/ do
   }
 end
 
-Given /^I have a branch named "([^"]+)" checked out$/ do |branch_name|
+Given /^I have a new branch named "([^"]+)" checked out$/ do |branch_name|
   steps %{
     When I cd to "master_repo"
     And I successfully run `git checkout -b #{branch_name}`
   }
-end
-
-When /^I debug$/ do
-  debugger
 end
 
 Then /^a branch named "([^"]+)" should have been created from "([^"]+)"$/ do |new_branch, base_branch|

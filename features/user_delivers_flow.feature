@@ -4,20 +4,20 @@ Feature: User delivers a flow
   When I deliver a flow
   I should be on the base branch with the feature branch merged in
 
-  Scenario: User runs git-reflow deliver without any parameters
+  Background:
     Given I have a git repository with a branch named "master" checked out
     And I have a remote git repository named "origin"
-    And I have a branch named "banana" checked out
+    And I have a new branch named "banana" checked out
+
+  Scenario: User runs git-reflow deliver without any parameters
     When I run `git-reflow deliver` interactively
     And I type "\n"
+    Then the output should contain "Enter an existing pull request # (or leave blank to create a new one):"
     And the subcommand "gh" should run
     And the output should contain "Successfully created pull request #1: Commit Title\nPull Request URL: http://github.com/reenhanced/banana/pulls/1\n"
 
   Scenario: User runs git-reflow deliver with a correct pull request number
-    Given I have a git repository with a branch named "master" checked out
-    And I have a remote git repository named "origin"
-    And I have a branch named "banana" checked out
-    And I have a pull request numbered "1" to merge "banana" into "master"
+    Given I have a pull request numbered "1" to merge "banana" into "master"
     When I run `git-reflow deliver 1` interactively
     Then the output should contain "Enter an existing pull request # (or leave blank to create a new one):"
     And the output should contain "Merged \"banana\" into \"master\""

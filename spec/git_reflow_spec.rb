@@ -10,6 +10,7 @@ describe :git_reflow do
      before do
        Github.stub :new => github
        github.oauth.stub(:create_authorization).and_return({:token => '12345'})
+       GitReflow.stub(:set_oauth_token)
      end
 
      it "creates a new authorization" do

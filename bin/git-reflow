@@ -13,6 +13,7 @@ end
 $: << File.expand_path(File.dirname(File.realpath(__FILE__)) + '/../lib')
 require 'rubygems'
 require 'gli'
+require 'git_reflow'
 require 'git_reflow/version'
 
 include GLI
@@ -32,14 +33,7 @@ flag [:f,:flagname]
 desc 'Setup your GitHub account'
 command :setup do |c|
   c.action do |global_options,options,args|
-    print "Please enter your GitHub username: "
-    gh_user = STDIN.gets.chomp
-    `stty -echo`
-    print "Please enter your GitHub password (we do NOT store this): "
-    gh_password = STDIN.gets.chomp
-    `stty echo`
-    puts "\nYour GitHub account was successfully setup!"
-    Github.new
+    GitReflow.setup
   end
 end
 

@@ -22,8 +22,19 @@ describe :git_reflow do
      end
   end
 
-  context :start do
+  context :github do
+   let(:github) { Github.new :basic_auth => "user:pass" }
 
+    before do
+      Github.stub :new => github
+      GitReflow.stub(:get_oauth_token).and_return('12345')
+    end
+
+    it "creates a new authorization from the stored oauth token" do
+      Github.should_receive(:new).with({:oauth_token => '12345'})
+      GitReflow.should_receive(:get_oauth_token).and_return('12345')
+      GitReflow.github
+    end
   end
 
   context :deliver do

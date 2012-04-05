@@ -22,6 +22,10 @@ module GitReflow
     set_oauth_token(oauth_token)
   end
 
+  def github
+    @github ||= Github.new :oauth_token => get_oauth_token
+  end
+
   def get_oauth_token
     `git config --get github.oauth-token`.strip
   end

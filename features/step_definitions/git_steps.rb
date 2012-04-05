@@ -56,6 +56,13 @@ Given /^the repository has been initialized$/ do
   }
 end
 
+Given /^I have a new branch named "([^"]+)" checked out$/ do |branch_name|
+  steps %{
+    When I cd to "master_repo"
+    And I successfully run `git checkout -b #{branch_name}`
+  }
+end
+
 Then /^a branch named "([^"]+)" should have been created from "([^"]+)"$/ do |new_branch, base_branch|
   steps %{
     Then the output should match /\\* \\[new branch\\]\\s* #{Regexp.escape(base_branch)}\\s* \\-\\> #{Regexp.escape(new_branch)}/
@@ -66,4 +73,8 @@ Then /^the base branch named "([^"]+)" should have fetched changes from the remo
   steps %{
     Then the output should match /\\* \\[new branch\\]\\s* #{Regexp.escape(base_branch)}\\s* \\-\\> #{remote_name}.#{Regexp.escape(base_branch)}/
   }
+end
+
+Then /^the subcommand "([^"]+)" should run$/ do |subcommand|
+  has_subcommand?(subcommand).should be_true
 end

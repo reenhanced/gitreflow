@@ -22,7 +22,10 @@ spec = Gem::Specification.new do |s|
   s.add_development_dependency('aruba', '~> 0.4.6')
   s.add_development_dependency('rspec')
   s.add_development_dependency('jeweler')
+  s.add_development_dependency('ruby-debug19')
   s.add_dependency('gli')
   s.add_dependency('json')
   s.add_dependency('httpclient')
+  s.add_dependency('github_api')
+  s.post_install_message = "You need to setup your GitHub OAuth token\nPlease run 'git-reflow setup'"
 end

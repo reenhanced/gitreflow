@@ -1,4 +1,4 @@
-@gem, @announce
+@gem
 Feature: User delivers a flow
   As a User
   When I deliver a flow

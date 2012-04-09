@@ -5,8 +5,7 @@ Feature: User installs gem
 
   Scenario: User installs gem
     When I build and install the gem
-    Then the output should contain "You need to setup your GitHub OAuth token\nPlease run 'git-reflow setup'"
-    When I successfully run `git-reflow`
+    And I successfully run `git-reflow`
     Then the output should contain "usage: git-reflow [global options] command [command options]"
 
   Scenario: User sets up GitHub

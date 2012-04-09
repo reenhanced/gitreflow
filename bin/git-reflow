@@ -65,8 +65,7 @@ desc 'Describe deliver here'
 arg_name 'Describe arguments to deliver here'
 command :deliver do |c|
   c.action do |global_options,options,args|
-    puts "Enter an existing pull request # (or leave blank to create a new one):"
-    pull_request_number = STDIN.gets.chomp
+    GitReflow.deliver args
   end
 end
 

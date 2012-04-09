@@ -22,12 +22,24 @@ module GitReflow
     set_oauth_token(oauth_token)
   end
 
+  def deliver(args = {})
+    github.pull_requests.create_request('reenhanced', 'repo',
+                                                  'title' => 'Title',
+                                                  'body' => 'Body',
+                                                  'head' => 'reenhanced:banana')
+  end
+
   def github
     @github ||= Github.new :oauth_token => get_oauth_token
   end
 
   def get_oauth_token
     `git config --get github.oauth-token`.strip
+  end
+
+  def remote_user
+    gh_user = `git config --get remote.origin.url`.strip
+    gh_user.slice!(/\:\w+/i)[1..-1]
   end
 
   private

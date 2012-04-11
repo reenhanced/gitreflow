@@ -3,11 +3,15 @@ require 'aruba/api'
 
 describe :git_reflow do
   include Aruba::Api
-  let(:github) { Github.new :basic_auth => "user:pass" }
+  let(:github) { Github.new }
+  let(:user)   { 'reenhanced' }
+  let(:repo)   { 'repo' }
 
   before do
     Github.stub :new => github
   end
+
+  after { reset_authentication_for github }
 
   context :setup do
 
@@ -28,22 +32,22 @@ describe :git_reflow do
 
   context :remote_user do
     before do
-      GitReflow.stub(:get_origin_repo_user).and_return('reenhanced')
+      GitReflow.stub(:remote_user).and_return('reenhanced')
     end
 
     it "returns the github user associated with the origin remote repo" do
-      GitReflow.should_receive(:get_origin_repo_user).and_return('reenhanced')
-      GitReflow.repo_user
+      GitReflow.should_receive(:remote_user).and_return('reenhanced')
+      GitReflow.remote_user
     end
   end
 
   context :remote_repo_name do
     before do
-      GitReflow.stub(:get_origin_repo_name).and_return('gitreflow')
+      GitReflow.stub(:remote_repo_name).and_return('gitreflow')
     end
 
     it "returns the name of the origin remote repo on GitHub" do
-      GitReflow.should_receive(:get_origin_repo_name).and_return('gitreflow')
+      GitReflow.should_receive(:remote_repo_name).and_return('gitreflow')
       GitReflow.remote_repo_name
     end
   end
@@ -60,17 +64,27 @@ describe :git_reflow do
     end
   end
 
+  # Github Response specs thanks to:
+  # https://github.com/peter-murach/github/blob/master/spec/github/pull_requests_spec.rb
   context :deliver do
+    let(:inputs) {
+      {
+       "title" => "Amazing new feature",
+       "body" => "Please pull this in!",
+       "head" => "reenhanced:new-feature",
+       "base" => "master",
+       "state" => "open"
+      }
+    }
+
     before do
-      github.pull_requests.stub(:create_request).and_return(true)
-      GitReflow.stub(:get_oauth_token).and_return('12345')
+      GitReflow.stub(:github).and_return(github)
+      stub_post("/repos/#{user}/#{repo}/pulls").
+        to_return(:body => fixture('pull_requests/pull_request.json'), :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
     end
 
     it "creates a pull request if I do not provide one" do
-      Github.should_receive(:create_request).with('reenhanced', 'repo',
-                                                  'title' => 'Title',
-                                                  'body' => 'Body',
-                                                  'head' => 'reenhanced:banana')
+      github.pull_requests.should_receive(:create_request).with(user, repo, inputs.except('state'))
       GitReflow.deliver
     end
   end

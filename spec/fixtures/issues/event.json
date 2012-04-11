@@ -1,0 +1,13 @@
+{
+  "url": "https://api.github.com/repos/octocat/Hello-World/issues/events/1",
+  "actor": {
+    "login": "octocat",
+    "id": 1,
+    "avatar_url": "https://github.com/images/error/octocat_happy.gif",
+    "gravatar_id": "somehexcode",
+    "url": "https://api.github.com/users/octocat"
+  },
+  "event": "closed",
+  "commit_id": "SHA",
+  "created_at": "2011-04-14T16:00:49Z"
+}

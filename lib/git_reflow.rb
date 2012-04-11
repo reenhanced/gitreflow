@@ -42,8 +42,13 @@ module GitReflow
     gh_user.slice!(/\:\w+/i)[1..-1]
   end
 
+  def remote_repo_name
+    gh_repo = `git config --get remote.origin.url`.strip
+    gh_repo.slice!(/\/\w+/i)[1..-1]
+  end
+
   private
   def set_oauth_token(oauth_token)
-    `git config --global --add github.oauth-token #{oath_token}`
+    `git config --global --add github.oauth-token #{oauth_token}`
   end
 end

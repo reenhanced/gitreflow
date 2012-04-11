@@ -1,0 +1,15 @@
+[
+  {
+    "id": 1,
+    "url": "https://api.github.com/gists/comments/1",
+    "body": "Just commenting for the sake of commenting",
+    "user": {
+      "login": "octocat",
+      "id": 1,
+      "avatar_url": "https://github.com/images/error/octocat_happy.gif",
+      "gravatar_id": "somehexcode",
+     "url": "https://api.github.com/users/octocat"
+    },
+   "created_at": "2011-04-18T23:23:56Z"
+  }
+]

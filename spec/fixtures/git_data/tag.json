@@ -1,0 +1,16 @@
+{
+  "tag": "v0.0.1",
+  "sha": "940bd336248efae0f9ee5bc7b2d5c985887b16ac",
+  "url": "https://api.github.com/repos/octocat/Hello-World/git/tags/940bd336248efae0f9ee5bc7b2d5c985887b16ac",
+  "message": "initial version\n",
+  "tagger": {
+    "name": "Scott Chacon",
+    "email": "schacon@gmail.com",
+    "date": "2011-06-17T14:53:35-07:00"
+  },
+  "object": {
+    "type": "commit",
+    "sha": "c3d0be41ecbe669545ee3e94d31ed9a4bc91ee3c",
+    "url": "https://api.github.com/repos/octocat/Hello-World/git/commits/c3d0be41ecbe669545ee3e94d31ed9a4bc91ee3c"
+  }
+}

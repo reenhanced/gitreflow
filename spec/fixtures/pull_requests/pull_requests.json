@@ -1,0 +1,31 @@
+[
+  {
+    "url": "https://api.github.com/octocat/Hello-World/pulls/1",
+    "html_url": "https://github.com/octocat/Hello-World/pulls/1",
+    "diff_url": "https://github.com/octocat/Hello-World/pulls/1.diff",
+    "patch_url": "https://github.com/octocat/Hello-World/pulls/1.patch",
+    "issue_url": "https://github.com/octocat/Hello-World/issue/1",
+    "number": 1,
+    "state": "open",
+    "title": "new-feature",
+    "body": "Please pull these awesome changes",
+    "created_at": "2011-01-26T19:01:12Z",
+    "updated_at": "2011-01-26T19:01:12Z",
+    "closed_at": "2011-01-26T19:01:12Z",
+    "merged_at": "2011-01-26T19:01:12Z",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/octocat/Hello-World/pulls/1"
+      },
+      "html": {
+        "href": "https://github.com/octocat/Hello-World/pull/1"
+      },
+      "comments": {
+        "href": "https://api.github.com/octocat/Hello-World/issues/1/comments"
+      },
+      "review_comments": {
+        "href": "https://api.github.com/octocat/Hello-World/pulls/1/comments"
+      }
+    }
+  }
+]

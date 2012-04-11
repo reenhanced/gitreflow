@@ -24,9 +24,9 @@ module GitReflow
 
   def deliver(args = {})
     github.pull_requests.create_request('reenhanced', 'repo',
-                                                  'title' => 'Title',
-                                                  'body' => 'Body',
-                                                  'head' => 'reenhanced:banana')
+                                        'title' => 'Title',
+                                        'body' => 'Body',
+                                        'head' => 'reenhanced:banana')
   end
 
   def github
@@ -44,6 +44,6 @@ module GitReflow
 
   private
   def set_oauth_token(oauth_token)
-    `git config --global --add github.oauth-token #{oath_token}`
+    `git config --global --add github.oauth-token #{oauth_token}`
   end
 end

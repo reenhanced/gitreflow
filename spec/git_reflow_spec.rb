@@ -30,6 +30,17 @@ describe :git_reflow do
 
   end
 
+  context :current_branch do
+    before do
+      GitReflow.stub(:current_branch).and_return('banana')
+    end
+
+    it "returns the current working branch name" do
+      GitReflow.should_receive(:current_branch).and_return('banana')
+      GitReflow.current_branch
+    end
+  end
+
   context :remote_user do
     before do
       GitReflow.stub(:remote_user).and_return('reenhanced')
@@ -79,13 +90,17 @@ describe :git_reflow do
 
     before do
       GitReflow.stub(:github).and_return(github)
+      GitReflow.stub(:current_branch).and_return('new-feature')
+      GitReflow.stub(:remote_repo_name).and_return(repo)
+      github.pull_requests.stub(:create_request).with(user, repo, inputs.except('state')).and_return(Hashie::Mash.new(:number => '1', :title => inputs['title'], :url => "http://github.com/#{user}/#{repo}/pulls/1"))
       stub_post("/repos/#{user}/#{repo}/pulls").
         to_return(:body => fixture('pull_requests/pull_request.json'), :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
     end
 
-    it "creates a pull request if I do not provide one" do
+    it "successfully creates a pull request if I do not provide one" do
       github.pull_requests.should_receive(:create_request).with(user, repo, inputs.except('state'))
-      GitReflow.deliver
+      STDOUT.should_receive(:puts).with("Successfully created pull request #1: #{inputs['title']}\nPull Request URL: http://github.com/#{user}/#{repo}/pulls/1\n")
+      GitReflow.deliver inputs
     end
   end
 end

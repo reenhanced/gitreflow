@@ -1,5 +1,6 @@
 require 'aruba/cucumber'
 require 'ruby-debug'
+require 'webmock/cucumber'
 
 Before('@gem') do
   CukeGem.setup('./git_reflow.gemspec')
@@ -13,6 +14,8 @@ Before do
   @dirs = [Dir.tmpdir, "aruba"]
   FileUtils.rm_rf @dirs
 end
+
+WebMock.disable_net_connect!
 
 def has_subcommand?(command)
   # In order to see if a subcommand is run

@@ -22,11 +22,14 @@ module GitReflow
     set_oauth_token(oauth_token)
   end
 
-  def deliver(args = {})
-    github.pull_requests.create_request('reenhanced', 'repo',
-                                                  'title' => 'Title',
-                                                  'body' => 'Body',
-                                                  'head' => 'reenhanced:banana')
+  def deliver(options = {})
+    base_branch = options['base'] || 'master'
+    pull_request = github.pull_requests.create_request(remote_user, remote_repo_name,
+                                        'title' => options['title'],
+                                        'body' => options['body'],
+                                        'head' => "#{remote_user}:#{current_branch}",
+                                        'base' => base_branch)
+    puts "Successfully created pull request ##{pull_request.number}: #{pull_request.title}\nPull Request URL: #{pull_request.url}\n"
   end
 
   def github
@@ -35,6 +38,10 @@ module GitReflow
 
   def get_oauth_token
     `git config --get github.oauth-token`.strip
+  end
+
+  def current_branch
+    `git branch --no-color | grep '^\* ' | grep -v 'no branch' | sed 's/^* //g'`.strip
   end
 
   def remote_user

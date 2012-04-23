@@ -30,39 +30,6 @@ describe :git_reflow do
 
   end
 
-  context :current_branch do
-    before do
-      GitReflow.stub(:current_branch).and_return('banana')
-    end
-
-    it "returns the current working branch name" do
-      GitReflow.should_receive(:current_branch).and_return('banana')
-      GitReflow.current_branch
-    end
-  end
-
-  context :remote_user do
-    before do
-      GitReflow.stub(:remote_user).and_return('reenhanced')
-    end
-
-    it "returns the github user associated with the origin remote repo" do
-      GitReflow.should_receive(:remote_user).and_return('reenhanced')
-      GitReflow.remote_user
-    end
-  end
-
-  context :remote_repo_name do
-    before do
-      GitReflow.stub(:remote_repo_name).and_return('gitreflow')
-    end
-
-    it "returns the name of the origin remote repo on GitHub" do
-      GitReflow.should_receive(:remote_repo_name).and_return('gitreflow')
-      GitReflow.remote_repo_name
-    end
-  end
-
   context :github do
     before do
       GitReflow.stub(:get_oauth_token).and_return('12345')
@@ -70,7 +37,7 @@ describe :git_reflow do
 
     it "creates a new authorization from the stored oauth token" do
       Github.should_receive(:new).with({:oauth_token => '12345'})
-      GitReflow.should_receive(:get_oauth_token).and_return('12345')
+      GitReflow.should_receive(:get_oauth_token)
       GitReflow.github
     end
   end

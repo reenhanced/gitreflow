@@ -23,6 +23,7 @@ spec = Gem::Specification.new do |s|
   s.add_development_dependency('rspec')
   s.add_development_dependency('jeweler')
   s.add_development_dependency('ruby-debug19')
+  s.add_development_dependency('webmock')
   s.add_dependency('gli')
   s.add_dependency('json')
   s.add_dependency('httpclient')

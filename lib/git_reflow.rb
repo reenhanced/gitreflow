@@ -54,8 +54,12 @@ module GitReflow
     gh_repo.slice!(/\/\w+/i)[1..-1]
   end
 
+  def get_first_commit_message
+    `git log --pretty=format:"%s" --no-merges -n 1`.strip
+  end
+
   private
   def set_oauth_token(oauth_token)
-    `git config --global --add github.oauth-token #{oauth_token}`
+    `git config --global --replace-all github.oauth-token #{oauth_token}`
   end
 end

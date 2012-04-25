@@ -23,12 +23,13 @@ module GitReflow
   end
 
   def deliver(options = {})
-    base_branch = options['base'] || 'master'
+    options['base'] ||= 'master'
     pull_request = github.pull_requests.create_request(remote_user, remote_repo_name,
                                         'title' => options['title'],
                                         'body' => options['body'],
                                         'head' => "#{remote_user}:#{current_branch}",
-                                        'base' => base_branch)
+                                        'base' => options['base'])
+
     puts "Successfully created pull request ##{pull_request.number}: #{pull_request.title}\nPull Request URL: #{pull_request.url}\n"
   end
 
@@ -54,8 +55,12 @@ module GitReflow
     gh_repo.slice!(/\/\w+/i)[1..-1]
   end
 
+  def get_first_commit_message
+    `git log --pretty=format:"%s" --no-merges -n 1`.strip
+  end
+
   private
   def set_oauth_token(oauth_token)
-    `git config --global --add github.oauth-token #{oauth_token}`
+    `git config --global --replace-all github.oauth-token #{oauth_token}`
   end
 end

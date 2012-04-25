@@ -6,3 +6,4 @@ A collection of Git extensions that provide a complete workflow to enable the hi
 Getting started
 ---------------
 Comming next.
+Changed

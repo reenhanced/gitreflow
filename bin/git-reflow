@@ -78,6 +78,8 @@ command :deliver do |c|
     when 1
       deliver_options['base'] = args[0]
       deliver_options['title'] = deliver_options['body'] = GitReflow.get_first_commit_message
+    else
+      deliver_options['title'] = deliver_options['body'] = GitReflow.get_first_commit_message
     end
     GitReflow.deliver deliver_options
   end

@@ -23,12 +23,13 @@ module GitReflow
   end
 
   def deliver(options = {})
-    base_branch = options['base'] || 'master'
+    options['base'] ||= 'master'
     pull_request = github.pull_requests.create_request(remote_user, remote_repo_name,
                                         'title' => options['title'],
                                         'body' => options['body'],
                                         'head' => "#{remote_user}:#{current_branch}",
-                                        'base' => base_branch)
+                                        'base' => options['base'])
+
     puts "Successfully created pull request ##{pull_request.number}: #{pull_request.title}\nPull Request URL: #{pull_request.url}\n"
   end
 

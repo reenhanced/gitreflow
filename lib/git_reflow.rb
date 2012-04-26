@@ -24,13 +24,19 @@ module GitReflow
 
   def deliver(options = {})
     options['base'] ||= 'master'
-    pull_request = github.pull_requests.create_request(remote_user, remote_repo_name,
-                                        'title' => options['title'],
-                                        'body' => options['body'],
-                                        'head' => "#{remote_user}:#{current_branch}",
-                                        'base' => options['base'])
+    begin
+      pull_request = github.pull_requests.create_request(remote_user, remote_repo_name,
+                                          'title' => options['title'],
+                                          'body' => options['body'],
+                                          'head' => "#{remote_user}:#{current_branch}",
+                                          'base' => options['base'])
 
-    puts "Successfully created pull request ##{pull_request.number}: #{pull_request.title}\nPull Request URL: #{pull_request.url}\n"
+      puts "Successfully created pull request ##{pull_request.number}: #{pull_request.title}\nPull Request URL: #{pull_request.url}\n"
+    rescue Github::Error::UnprocessableEntity => e
+      errors = JSON.parse(e.response_message[:body])
+      error_messages = errors["errors"].collect {|error| "GitHub Error: #{error["message"]}" if error["message"].present?}.compact.join("\n")
+      puts error_messages
+    end
   end
 
   def github

@@ -68,5 +68,15 @@ describe :git_reflow do
       STDOUT.should_receive(:puts).with("Successfully created pull request #1: #{inputs['title']}\nPull Request URL: http://github.com/#{user}/#{repo}/pulls/1\n")
       GitReflow.deliver inputs
     end
+
+    it "reports any errors returned from github" do
+      github_error = Github::Error::UnprocessableEntity.new( eval(fixture('pull_requests/pull_request_exists_error.json').read) )
+      github.pull_requests.stub(:create_request).with(user, repo, inputs.except('state')).and_raise(github_error)
+      stub_post("/repos/#{user}/#{repo}/pulls").
+        to_return(:body => fixture('pull_requests/pull_request_exists_error.json'), :status => 422, :headers => {:content_type => "application/json; charset=utf-8"})
+
+      STDOUT.should_receive(:puts).with("GitHub Error: A pull request already exists for reenhanced:banana.")
+      GitReflow.deliver inputs
+    end
   end
 end

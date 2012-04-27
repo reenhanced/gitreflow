@@ -4,7 +4,6 @@ require 'json'
 require 'open-uri'
 require 'httpclient'
 require 'github_api'
-require 'ruby-debug'
 
 module GitReflow
   extend self

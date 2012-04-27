@@ -1,43 +1,32 @@
 {
-   "error":{
-      "method":"post",
-      "body":{
-         "message":"Validation Failed",
-         "errors":[
-            {
-               "field":"base",
-               "message":"base A pull request already exists for reenhanced:banana.",
-               "resource":"PullRequest",
-               "code":"custom"
-            }
-         ]
-      },
-      "url":"https://api.github.com/repos/reenhanced/gitreflow/pulls?access_token=123456",
-      "request_headers":{
-         "Content-Type":"application/json",
-         "Authorization":"Token token=\"123456\""
-      },
-      "parallel_manager":"nil",
-      "request":{
-         "proxy":"nil"
-      },
-      "ssl":{
-
-      },
-      "status":422,
-      "response_headers":{
-         "server":"nginx/1.0.13",
-         "date":"Wed, 25 Apr 2012 13:52:52 GMT",
-         "content-type":"application/json; charset=utf-8",
-         "connection":"close",
-         "status":"422 Unprocessable Entity",
-         "x-ratelimit-limit":"5000",
-         "etag":"\"f7bf4fe22087063e6994e95426943921\"",
-         "x-oauth-scopes":"repo",
-         "x-ratelimit-remaining":"4974",
-         "x-accepted-oauth-scopes":"repo",
-         "content-length":"170"
-      },
-      "response":""
-   }
+  :method => :post,
+  :body   => "{
+    \"errors\"     : [{
+      \"code\"     : \"custom\",
+      \"field\"    : \"base\",
+      \"message\"  : \"base A pull request already exists for reenhanced:banana.\",
+      \"resource\" : \"PullRequest\" }],
+    \"message\" : \"Validation Failed\"}",
+  :url => "https://api.github.com/repos/reenhanced/gitreflow/pulls?access_token=12345",
+  :request_headers => {
+    "Content-Type"  => "application/json",
+    "Authorization" => "Token token=\"12345\""
+  },
+  :parallel_manager => nil,
+  :request          => {:proxy => nil},
+  :ssl              => {},
+  :status           => 422,
+  :response_headers => {
+    "server"                  => "nginx/1.0.13",
+    "date"                    => "Fri, 27 Apr 2012 13:02:49 GMT",
+    "content-type"            => "application/json; charset=utf-8",
+    "connection"              => "close",
+    "status"                  => "422 Unprocessable Entity",
+    "x-ratelimit-limit"       => "5000",
+    "etag"                    => "\"ebdeb717fe19444c308e608728569d5a\"",
+    "x-oauth-scopes"          => "repo",
+    "x-ratelimit-remaining"   => "4996",
+    "x-accepted-oauth-scopes" => "repo",
+    "content-length"          => "192"},
+  :response => ""
 }

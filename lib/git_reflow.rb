@@ -4,6 +4,7 @@ require 'json'
 require 'open-uri'
 require 'httpclient'
 require 'github_api'
+require 'ruby-debug'
 
 module GitReflow
   extend self
@@ -34,7 +35,7 @@ module GitReflow
       puts "Successfully created pull request ##{pull_request.number}: #{pull_request.title}\nPull Request URL: #{pull_request.url}\n"
     rescue Github::Error::UnprocessableEntity => e
       errors = JSON.parse(e.response_message[:body])
-      error_messages = errors["errors"].collect {|error| "GitHub Error: #{error["message"]}" if error["message"].present?}.compact.join("\n")
+      error_messages = errors["errors"].collect {|error| "GitHub Error: #{error["message"].gsub(/^base\s/, '')}" unless error["message"].nil?}.compact.join("\n")
       puts error_messages
     end
   end

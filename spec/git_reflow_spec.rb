@@ -70,7 +70,7 @@ describe :git_reflow do
     end
 
     it "reports any errors returned from github" do
-      github_error = Github::Error::UnprocessableEntity.new( JSON.parse(fixture('pull_requests/pull_request_exists_error.json').to_s))
+      github_error = Github::Error::UnprocessableEntity.new( eval(fixture('pull_requests/pull_request_exists_error.json').read) )
       github.pull_requests.stub(:create_request).with(user, repo, inputs.except('state')).and_raise(github_error)
       stub_post("/repos/#{user}/#{repo}/pulls").
         to_return(:body => fixture('pull_requests/pull_request_exists_error.json'), :status => 422, :headers => {:content_type => "application/json; charset=utf-8"})

@@ -55,6 +55,7 @@ describe :git_reflow do
     }
 
     before do
+      GitReflow.stub(:push_current_branch).and_return(true)
       GitReflow.stub(:github).and_return(github)
       GitReflow.stub(:current_branch).and_return('new-feature')
       GitReflow.stub(:remote_repo_name).and_return(repo)
@@ -77,6 +78,13 @@ describe :git_reflow do
 
       STDOUT.should_receive(:puts).with("GitHub Error: A pull request already exists for reenhanced:banana.")
       GitReflow.deliver inputs
+    end
+
+    it "pushes the latest current branch to the origin repo" do
+      github.pull_requests.should_receive(:create_request)
+      GitReflow.should_receive(:push_current_branch)
+      GitReflow.should_receive(:current_branch)
+      GitReflow.deliver
     end
   end
 end

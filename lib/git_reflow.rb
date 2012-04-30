@@ -25,6 +25,7 @@ module GitReflow
   def deliver(options = {})
     options['base'] ||= 'master'
     begin
+      push_current_branch
       pull_request = github.pull_requests.create_request(remote_user, remote_repo_name,
                                           'title' => options['title'],
                                           'body' => options['body'],
@@ -66,7 +67,12 @@ module GitReflow
   end
 
   private
+
   def set_oauth_token(oauth_token)
     `git config --global --replace-all github.oauth-token #{oauth_token}`
+  end
+
+  def push_current_branch
+    `git push origin #{current_branch}`
   end
 end

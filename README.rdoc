@@ -1,8 +1,36 @@
 git-reflow
 ==========
-A collection of Git extensions that provide a complete workflow to enable the highest possible quality of code.
+Tools to help build software that just works.
+
+How it works
+-------------
+
+`$ git reflow deliver [branch]`
+  Assumes remote 'origin'
+  Performs the following against [branch] or master if branch is not specified:
+    `git fetch origin`
+    - Are we up-to-date with changes from the destination?
+      - Fail with "origin/[branch] has newer changes" if no
+    - Run the test suite
+      - If fails, do not continue
+      - If not configured, fail with "Run test suite then use flag --green"
+    `git push origin current-branch` # Updates remote branch
+    - Do we have pull request?
+      - if no, create it and print "Pull request created at http://pull-url/"
+    - Do we have lgtm after last commit?
+      - If no, print "Still waiting for review" (Maybe provide a way to skip this with `--lgtm`?)
+    - Prompt "Accepted by:" and get name/email/github username of person who does acceptance
+    - Checkout destination branch
+    - Update destination from origin (`git pull origin [branch]`)
+    - Merge squashed (`git merge --squash branch-name`)
+    - Prepare commit message (Adds Closes #pull-request-number)
+    - Perform the commit
+    - Push to branch
+    - Delete the remote branch
+    - Delete the local branch
+    - Deploy (Maybe with flag `--deploy`)
 
 
-Getting started
----------------
-Comming next.
+`$ git reflow start branch-name`
+  Creates new branch
+  Prompts for PT ticket numbers? (Keep the PT stuff as a plugin?)

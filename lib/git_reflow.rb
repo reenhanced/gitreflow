@@ -24,6 +24,8 @@ module GitReflow
 
   def deliver(options = {})
     options['base'] ||= 'master'
+    fetch_destination options['base']
+
     begin
       push_current_branch
       pull_request = github.pull_requests.create_request(remote_user, remote_repo_name,
@@ -74,5 +76,9 @@ module GitReflow
 
   def push_current_branch
     `git push origin #{current_branch}`
+  end
+
+  def fetch_destination(destination_branch)
+    `git fetch origin #{destination_branch}`
   end
 end

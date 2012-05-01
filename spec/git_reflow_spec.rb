@@ -59,6 +59,7 @@ describe :git_reflow do
       GitReflow.stub(:github).and_return(github)
       GitReflow.stub(:current_branch).and_return('new-feature')
       GitReflow.stub(:remote_repo_name).and_return(repo)
+      GitReflow.stub(:fetch_destination).and_return(true)
       github.pull_requests.stub(:create_request).with(user, repo, inputs.except('state')).and_return(Hashie::Mash.new(:number => '1', :title => inputs['title'], :url => "http://github.com/#{user}/#{repo}/pulls/1"))
       stub_post("/repos/#{user}/#{repo}/pulls").
         to_return(:body => fixture('pull_requests/pull_request.json'), :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
@@ -84,6 +85,12 @@ describe :git_reflow do
       github.pull_requests.should_receive(:create_request)
       GitReflow.should_receive(:push_current_branch)
       GitReflow.should_receive(:current_branch)
+      GitReflow.deliver
+    end
+
+    it "fetches the latest changes to the destination branch" do
+      GitReflow.should_receive(:fetch_destination)
+      github.pull_requests.should_receive(:create_request)
       GitReflow.deliver
     end
   end

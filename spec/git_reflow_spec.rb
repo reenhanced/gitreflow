@@ -60,20 +60,20 @@ describe :git_reflow do
       GitReflow.stub(:current_branch).and_return('new-feature')
       GitReflow.stub(:remote_repo_name).and_return(repo)
       GitReflow.stub(:fetch_destination).and_return(true)
-      github.pull_requests.stub(:create_request).with(user, repo, inputs.except('state')).and_return(Hashie::Mash.new(:number => '1', :title => inputs['title'], :url => "http://github.com/#{user}/#{repo}/pulls/1"))
+      github.pull_requests.stub(:create).with(user, repo, inputs.except('state')).and_return(Hashie::Mash.new(:number => '1', :title => inputs['title'], :url => "http://github.com/#{user}/#{repo}/pulls/1"))
       stub_post("/repos/#{user}/#{repo}/pulls").
         to_return(:body => fixture('pull_requests/pull_request.json'), :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
     end
 
     it "successfully creates a pull request if I do not provide one" do
-      github.pull_requests.should_receive(:create_request).with(user, repo, inputs.except('state'))
+      github.pull_requests.should_receive(:create).with(user, repo, inputs.except('state'))
       STDOUT.should_receive(:puts).with("Successfully created pull request #1: #{inputs['title']}\nPull Request URL: http://github.com/#{user}/#{repo}/pulls/1\n")
       GitReflow.deliver inputs
     end
 
     it "reports any errors returned from github" do
       github_error = Github::Error::UnprocessableEntity.new( eval(fixture('pull_requests/pull_request_exists_error.json').read) )
-      github.pull_requests.stub(:create_request).with(user, repo, inputs.except('state')).and_raise(github_error)
+      github.pull_requests.stub(:create).with(user, repo, inputs.except('state')).and_raise(github_error)
       stub_post("/repos/#{user}/#{repo}/pulls").
         to_return(:body => fixture('pull_requests/pull_request_exists_error.json'), :status => 422, :headers => {:content_type => "application/json; charset=utf-8"})
 
@@ -82,7 +82,7 @@ describe :git_reflow do
     end
 
     it "pushes the latest current branch to the origin repo" do
-      github.pull_requests.should_receive(:create_request)
+      github.pull_requests.should_receive(:create)
       GitReflow.should_receive(:push_current_branch)
       GitReflow.should_receive(:current_branch)
       GitReflow.deliver
@@ -90,7 +90,7 @@ describe :git_reflow do
 
     it "fetches the latest changes to the destination branch" do
       GitReflow.should_receive(:fetch_destination)
-      github.pull_requests.should_receive(:create_request)
+      github.pull_requests.should_receive(:create)
       GitReflow.deliver
     end
   end

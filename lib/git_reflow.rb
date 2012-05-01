@@ -28,7 +28,7 @@ module GitReflow
 
     begin
       push_current_branch
-      pull_request = github.pull_requests.create_request(remote_user, remote_repo_name,
+      pull_request = github.pull_requests.create(remote_user, remote_repo_name,
                                           'title' => options['title'],
                                           'body' => options['body'],
                                           'head' => "#{remote_user}:#{current_branch}",

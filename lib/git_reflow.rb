@@ -34,7 +34,7 @@ module GitReflow
                                           'head' => "#{remote_user}:#{current_branch}",
                                           'base' => options['base'])
 
-      puts "Successfully created pull request ##{pull_request.number}: #{pull_request.title}\nPull Request URL: #{pull_request.url}\n"
+      puts "Successfully created pull request ##{pull_request.number}: #{pull_request.title}\nPull Request URL: #{pull_request.html_url}\n"
     rescue Github::Error::UnprocessableEntity => e
       errors = JSON.parse(e.response_message[:body])
       error_messages = errors["errors"].collect {|error| "GitHub Error: #{error["message"].gsub(/^base\s/, '')}" unless error["message"].nil?}.compact.join("\n")

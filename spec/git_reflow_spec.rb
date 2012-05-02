@@ -43,7 +43,7 @@ describe :git_reflow do
 
   # Github Response specs thanks to:
   # https://github.com/peter-murach/github/blob/master/spec/github/pull_requests_spec.rb
-  context :deliver do
+  context :review do
     let(:inputs) {
       {
        "title" => "Amazing new feature",
@@ -68,7 +68,7 @@ describe :git_reflow do
     it "successfully creates a pull request if I do not provide one" do
       github.pull_requests.should_receive(:create).with(user, repo, inputs.except('state'))
       STDOUT.should_receive(:puts).with("Successfully created pull request #1: #{inputs['title']}\nPull Request URL: http://github.com/#{user}/#{repo}/pulls/1\n")
-      GitReflow.deliver inputs
+      GitReflow.review inputs
     end
 
     it "reports any errors returned from github" do
@@ -78,20 +78,20 @@ describe :git_reflow do
         to_return(:body => fixture('pull_requests/pull_request_exists_error.json'), :status => 422, :headers => {:content_type => "application/json; charset=utf-8"})
 
       STDOUT.should_receive(:puts).with("GitHub Error: A pull request already exists for reenhanced:banana.")
-      GitReflow.deliver inputs
+      GitReflow.review inputs
     end
 
     it "pushes the latest current branch to the origin repo" do
       github.pull_requests.should_receive(:create)
       GitReflow.should_receive(:push_current_branch)
       GitReflow.should_receive(:current_branch)
-      GitReflow.deliver
+      GitReflow.review
     end
 
     it "fetches the latest changes to the destination branch" do
       GitReflow.should_receive(:fetch_destination)
       github.pull_requests.should_receive(:create)
-      GitReflow.deliver
+      GitReflow.review
     end
   end
 end

@@ -22,7 +22,7 @@ module GitReflow
     set_oauth_token(oauth_token)
   end
 
-  def deliver(options = {})
+  def review(options = {})
     options['base'] ||= 'master'
     fetch_destination options['base']
 

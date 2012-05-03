@@ -16,14 +16,14 @@ describe :git_reflow do
   context :setup do
 
      before do
-       github.oauth.stub(:create_authorization).and_return({:token => '12345'})
+       github.oauth.stub(:create).and_return({:token => '12345'})
        GitReflow.stub(:set_oauth_token)
      end
 
      it "creates a new authorization" do
        STDIN.stub(:gets).and_return("user", "password")
        Github.should_receive :new
-       github.oauth.should_receive(:create_authorization).with('scopes' => ['repo'])
+       github.oauth.should_receive(:create).with('scopes' => ['repo'])
        GitReflow.should_receive(:set_oauth_token).with('12345')
        GitReflow.setup
      end
@@ -60,7 +60,7 @@ describe :git_reflow do
       GitReflow.stub(:current_branch).and_return('new-feature')
       GitReflow.stub(:remote_repo_name).and_return(repo)
       GitReflow.stub(:fetch_destination).and_return(true)
-      github.pull_requests.stub(:create).with(user, repo, inputs.except('state')).and_return(Hashie::Mash.new(:number => '1', :title => inputs['title'], :url => "http://github.com/#{user}/#{repo}/pulls/1"))
+      github.pull_requests.stub(:create).with(user, repo, inputs.except('state')).and_return(Hashie::Mash.new(:number => '1', :title => inputs['title'], :html_url => "http://github.com/#{user}/#{repo}/pulls/1"))
       stub_post("/repos/#{user}/#{repo}/pulls").
         to_return(:body => fixture('pull_requests/pull_request.json'), :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
     end

@@ -17,7 +17,7 @@ module GitReflow
     `stty echo`
     puts "\nYour GitHub account was successfully setup!"
     github = Github.new :basic_auth => "#{gh_user}:#{gh_password}"
-    authorization = github.oauth.create_authorization 'scopes' => ['repo']
+    authorization = github.oauth.create 'scopes' => ['repo']
     oauth_token = authorization[:token]
     set_oauth_token(oauth_token)
   end

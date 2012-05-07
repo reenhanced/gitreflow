@@ -87,7 +87,7 @@ end
 
 desc 'deliver will merge your feature branch down to your base branch'
 arg_name 'base_branch - the branch you want to merge into'
-command :review do |c|
+command :deliver do |c|
   c.action do |global_options,options,args|
     deliver_options = {'base' => nil, 'head' => nil}
     case args.length

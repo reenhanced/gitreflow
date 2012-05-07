@@ -100,21 +100,19 @@ describe :git_reflow do
       GitReflow.stub(:github).and_return(github)
       GitReflow.stub(:current_branch).and_return('new-feature')
       GitReflow.stub(:remote_repo_name).and_return(repo)
-      github.pull_requests.stub(:all).with(user, repo, :state => 'open').and_return(Hashie::Mash.new(fixture('pull_requests/pull_requests.json')))
-      stub_post("/repos/#{user}/#{repo}/pulls").
+      #github.pull_requests.stub(:all).with(user, repo, :state => 'open').and_return(Hashie::Mash.new(:number => 1, :title => 'new-feature'))
+      stub_get("/repos/#{user}/#{repo}/pulls").with(:query => {'state' => 'open'}).
         to_return(:body => fixture('pull_requests/pull_requests.json'), :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
     end
 
     it "successfully finds a pull request for the current feature branch" do
-      github.pull_requests.should_receive(:all).with(user, repo, :state => 'open')
-      puts github.pull_requests.all(user, repo, :state => 'open').inspect
-      STDOUT.should_receive(:puts).with("Merging pull request #1: 'new-feature', from 'new-feature' into 'master'")
+      STDOUT.should_receive(:puts).with("Merging pull request #1: 'new-feature', from 'reenhanced:new-feature' into 'reenhanced:master'")
       GitReflow.deliver
     end
 
     it "reports an errors if no open pull requests exist for the current feature branch" do
       github.pull_requests.stub(:all).with(user, repo, :state => 'open')
-      stub_post("/repos/#{user}/#{repo}/pulls").
+      stub_get("/repos/#{user}/#{repo}/pulls").
         to_return(:body => "[]", :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
 
       STDOUT.should_receive(:puts).with("Error: No pull request exists for reenhanced:new-feature\nPlease submit your branch for review first with \`git reflow review\`")

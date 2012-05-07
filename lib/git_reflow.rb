@@ -49,18 +49,17 @@ module GitReflow
     begin
       existing_pull_request = nil
       github.pull_requests.all(remote_user, remote_repo_name, :state => 'open') do |pull_request|
-        puts "#{pull_request.inspect}"
         if pull_request[:base][:label] == "#{remote_user}:#{options['base']}" and
-           pull_request[:head][:label] == "#{remote_user}:#{current_branch}}"
+           pull_request[:head][:label] == "#{remote_user}:#{current_branch}"
            existing_pull_request = pull_request
            break
         end
       end
 
       if existing_pull_request.nil?
-        #puts "Error: No pull request exists for #{remote_user}:#{current_branch}\nPlease submit your branch for review first with \`git reflow review\`"
+        puts "Error: No pull request exists for #{remote_user}:#{current_branch}\nPlease submit your branch for review first with \`git reflow review\`"
       else
-        puts "Merging pull request ##{existing_pull_request[:number]}: '#{existing_pull_request[:title]}', from '#{existing_pull_request[:head][:label]}' into '#{existing_pull_request[:base][:label]}"
+        puts "Merging pull request ##{existing_pull_request[:number]}: '#{existing_pull_request[:title]}', from '#{existing_pull_request[:head][:label]}' into '#{existing_pull_request[:base][:label]}'"
       end
 
     rescue Github::Error::UnprocessableEntity => e

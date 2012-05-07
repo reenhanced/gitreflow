@@ -100,7 +100,6 @@ describe :git_reflow do
       GitReflow.stub(:github).and_return(github)
       GitReflow.stub(:current_branch).and_return('new-feature')
       GitReflow.stub(:remote_repo_name).and_return(repo)
-      #github.pull_requests.stub(:all).with(user, repo, :state => 'open').and_return(Hashie::Mash.new(:number => 1, :title => 'new-feature'))
       stub_get("/repos/#{user}/#{repo}/pulls").with(:query => {'state' => 'open'}).
         to_return(:body => fixture('pull_requests/pull_requests.json'), :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
     end

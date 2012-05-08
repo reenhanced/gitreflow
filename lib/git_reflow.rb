@@ -42,6 +42,26 @@ module GitReflow
     end
   end
 
+  def deliver(options = {})
+    options['base'] ||= 'master'
+    fetch_destination options['base']
+
+    begin
+      existing_pull_request = find_pull_request( :from => current_branch, :to => options['base'] )
+
+      if existing_pull_request.nil?
+        puts "Error: No pull request exists for #{remote_user}:#{current_branch}\nPlease submit your branch for review first with \`git reflow review\`"
+      else
+        puts "Merging pull request ##{existing_pull_request[:number]}: '#{existing_pull_request[:title]}', from '#{existing_pull_request[:head][:label]}' into '#{existing_pull_request[:base][:label]}'"
+      end
+
+    rescue Github::Error::UnprocessableEntity => e
+      errors = JSON.parse(e.response_message[:body])
+      error_messages = errors["errors"].collect {|error| "GitHub Error: #{error["message"].gsub(/^base\s/, '')}" unless error["message"].nil?}.compact.join("\n")
+      puts error_messages
+    end
+  end
+
   def github
     @github ||= Github.new :oauth_token => get_oauth_token
   end
@@ -61,7 +81,7 @@ module GitReflow
 
   def remote_repo_name
     gh_repo = `git config --get remote.origin.url`.strip
-    gh_repo.slice!(/\/\w+/i)[1..-1]
+    gh_repo.slice(/\/(\w|-)+/i)[1..-1]
   end
 
   def get_first_commit_message
@@ -80,5 +100,17 @@ module GitReflow
 
   def fetch_destination(destination_branch)
     `git fetch origin #{destination_branch}`
+  end
+
+  def find_pull_request(options)
+    existing_pull_request = nil
+    github.pull_requests.all(remote_user, remote_repo_name, :state => 'open') do |pull_request|
+      if pull_request[:base][:label] == "#{remote_user}:#{options[:to]}" and
+         pull_request[:head][:label] == "#{remote_user}:#{options[:from]}"
+         existing_pull_request = pull_request
+         break
+      end
+    end
+    existing_pull_request
   end
 end

@@ -88,18 +88,6 @@ module GitReflow
     `git log --pretty=format:"%s" --no-merges -n 1`.strip
   end
 
-  def find_pull_request(options)
-    existing_pull_request = nil
-    github.pull_requests.all(remote_user, remote_repo_name, :state => 'open') do |pull_request|
-      if pull_request[:base][:label] == "#{remote_user}:#{options[:to]}" and
-         pull_request[:head][:label] == "#{remote_user}:#{options[:from]}"
-         existing_pull_request = pull_request
-         break
-      end
-    end
-    existing_pull_request
-  end
-
   private
 
   def set_oauth_token(oauth_token)
@@ -112,5 +100,17 @@ module GitReflow
 
   def fetch_destination(destination_branch)
     `git fetch origin #{destination_branch}`
+  end
+
+  def find_pull_request(options)
+    existing_pull_request = nil
+    github.pull_requests.all(remote_user, remote_repo_name, :state => 'open') do |pull_request|
+      if pull_request[:base][:label] == "#{remote_user}:#{options[:to]}" and
+         pull_request[:head][:label] == "#{remote_user}:#{options[:from]}"
+         existing_pull_request = pull_request
+         break
+      end
+    end
+    existing_pull_request
   end
 end

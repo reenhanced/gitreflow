@@ -2,6 +2,7 @@ require 'rubygems'
 require 'rspec'
 require 'json'
 require 'webmock/rspec'
+require 'ruby-debug'
 
 $LOAD_PATH << 'lib'
 require 'git_reflow'

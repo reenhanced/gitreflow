@@ -85,6 +85,22 @@ command :review do |c|
   end
 end
 
+desc 'deliver will merge your feature branch down to your base branch'
+arg_name 'base_branch - the branch you want to merge into'
+command :deliver do |c|
+  c.action do |global_options,options,args|
+    deliver_options = {'base' => nil, 'head' => nil}
+    case args.length
+    when 2
+      deliver_options['base'] = args[0]
+      deliver_options['head'] = args[1]
+    when 1
+      deliver_options['base'] = args[0]
+    end
+    GitReflow.deliver deliver_options
+  end
+end
+
 pre do |global,command,options,args|
   # Pre logic here
   # Return true to proceed; false to abourt and not call the

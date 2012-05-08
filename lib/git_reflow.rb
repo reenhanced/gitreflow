@@ -47,7 +47,7 @@ module GitReflow
     fetch_destination options['base']
 
     begin
-      existing_pull_request = pull_request_for current_branch, options['base']
+      existing_pull_request = find_pull_request( :from => current_branch, :to => options['base'] )
 
       if existing_pull_request.nil?
         puts "Error: No pull request exists for #{remote_user}:#{current_branch}\nPlease submit your branch for review first with \`git reflow review\`"
@@ -88,11 +88,11 @@ module GitReflow
     `git log --pretty=format:"%s" --no-merges -n 1`.strip
   end
 
-  def pull_request_for(branch_from, branch_to)
+  def find_pull_request(options)
     existing_pull_request = nil
     github.pull_requests.all(remote_user, remote_repo_name, :state => 'open') do |pull_request|
-      if pull_request[:base][:label] == "#{remote_user}:#{branch_to}" and
-         pull_request[:head][:label] == "#{remote_user}:#{branch_from}"
+      if pull_request[:base][:label] == "#{remote_user}:#{options[:to]}" and
+         pull_request[:head][:label] == "#{remote_user}:#{options[:from]}"
          existing_pull_request = pull_request
          break
       end

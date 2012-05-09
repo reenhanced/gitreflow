@@ -64,23 +64,20 @@ Given /^I have a new branch named "([^"]+)" checked out$/ do |branch_name|
 end
 
 Given /^I have a reviewed feature branch named "([^"]+)" checked out$/ do |branch_name|
-  user = 'reenhanced'
-  repo = 'repo'
-  inputs = {
-    {
-      "title" => "Amazing new feature",
-      "body"  => "Please pull this in!",
-      "head"  => "reenhanced:new-feature",
-      "base"  => "master",
-      "state" => "open"
-    }
+  pull = {
+    "title" => "Amazing new feature",
+    "body"  => "Please pull this in!",
+    "head"  => "reenhanced:new-feature",
+    "base"  => "master",
+    "state" => "open"
   }
-  github.pull_requests.stub(:create).with(user, repo, inputs.except('state')).and_return(Hashie::Mash.new(:number => '1', :title => inputs['title'], :html_url => "http://github.com/#{user}/#{repo}/pulls/1"))
-  stub_post("/repos/#{user}/#{repo}/pulls").
-    to_return(:body => fixture('pull_requests/pull_request.json'), :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
-  steps %{
-    
-  }
+  stub_github_with(
+    :user => 'reenhanced',
+    :repo => 'repo',
+    :pull => pull
+  )
+
+  GitReflow.review pull
 end
 
 Then /^a branch named "([^"]+)" should have been created from "([^"]+)"$/ do |new_branch, base_branch|

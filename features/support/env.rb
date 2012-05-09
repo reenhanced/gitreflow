@@ -1,6 +1,7 @@
 require 'aruba/cucumber'
 require 'ruby-debug'
 require 'webmock/cucumber'
+require 'cucumber/rspec/doubles'
 
 Before('@gem') do
   CukeGem.setup('./git_reflow.gemspec')

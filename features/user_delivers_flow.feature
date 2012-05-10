@@ -20,13 +20,13 @@ Feature: User delivers a flow
     When I run `git-reflow deliver`
     Then the output should contain "Merging pull request #1: 'Changed readme', from 'reenhanced:new-branch' into 'reenhanced:master'"
 
-  @wip
-  Scenario: User runs git-reflow deliver with the branch name to merge into
-    Given I have a git repository with a branch named "master" checked out
-    And I have a remote git repository named "origin"
-    And the remote repository named "origin" has changes on the "master" branch
-    And I cd to "master_repo"
-    When I run `git-reflow start new-branch`
-    Then a branch named "new-branch" should have been created from "master"
-    And the base branch named "master" should have fetched changes from the remote git repository "origin"
-    And the output should contain "Switched to a new branch 'new-branch'"
+    #@wip
+  #Scenario: User runs git-reflow deliver with the branch name to merge into
+  #  Given I have a git repository with a branch named "master" checked out
+  #  And I have a remote git repository named "origin"
+  #  And the remote repository named "origin" has changes on the "master" branch
+  #  And I cd to "master_repo"
+  #  When I run `git-reflow start new-branch`
+  #  Then a branch named "new-branch" should have been created from "master"
+  #  And the base branch named "master" should have fetched changes from the remote git repository "origin"
+  #  And the output should contain "Switched to a new branch 'new-branch'"

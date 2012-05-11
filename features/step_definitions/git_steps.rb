@@ -67,17 +67,20 @@ Given /^I have a reviewed feature branch named "([^"]+)" checked out$/ do |branc
   pull = {
     "title" => "Amazing new feature",
     "body"  => "Please pull this in!",
-    "head"  => "reenhanced:new-feature",
+    "head"  => "reenhanced:#{branch_name}",
     "base"  => "master",
     "state" => "open"
   }
   stub_github_with(
     :user => 'reenhanced',
     :repo => 'repo',
+    :branch => branch_name,
     :pull => pull
   )
 
-  GitReflow.review pull
+  steps %{
+    When I run `git-reflow review "#{pull['base']}" "#{pull['title']}" "#{pull['body']}"`
+  }
 end
 
 Then /^a branch named "([^"]+)" should have been created from "([^"]+)"$/ do |new_branch, base_branch|

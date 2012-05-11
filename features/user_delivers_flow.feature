@@ -1,4 +1,4 @@
-@gem @fixture
+@gem @fixture @announce
 Feature: User delivers a flow
   As a User
   I can deliver a flow
@@ -14,11 +14,11 @@ Feature: User delivers a flow
       | changed |
     And I successfully run `git add .`
     And I successfully run `git commit -am "Changed readme"`
-    And I have a reviewed feature branch named "new-branch" checked out
+    Given I have a reviewed feature branch named "new-branch" checked out
 
   Scenario: User runs git-reflow deliver without any parameters
-    When I run `git-reflow deliver`
-    Then the output should contain "Merging pull request #1: 'Changed readme', from 'reenhanced:new-branch' into 'reenhanced:master'"
+    When I successfully run `git-reflow deliver`
+    #Then the output should contain "Merging pull request #1: 'Changed readme', from 'reenhanced:new-branch' into 'reenhanced:master'"
 
     #@wip
   #Scenario: User runs git-reflow deliver with the branch name to merge into

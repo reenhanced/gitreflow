@@ -107,6 +107,6 @@ Then /^the subcommand "([^"]+)" should run$/ do |subcommand|
   has_subcommand?(subcommand).should be_true
 end
 
-Then /^the current branch should be "([^"]+)"$/ do |branch_name|
+Then /^the branch "([^"]+)" is checked out$/ do |branch_name|
   GitReflow.current_branch.should == branch_name
 end

@@ -88,6 +88,7 @@ end
 
 When /^I deliver my "([^"]+)" branch$/ do |branch_name|
   GitReflow.deliver
+  GitReflow.stub(:current_branch).and_return("master")
 end
 
 Then /^a branch named "([^"]+)" should have been created from "([^"]+)"$/ do |new_branch, base_branch|

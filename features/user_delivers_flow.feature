@@ -1,4 +1,4 @@
-@gem @fixture @announce
+@gem @fixture
 Feature: User delivers a flow
   As a User
   I can deliver a flow

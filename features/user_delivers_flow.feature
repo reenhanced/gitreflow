@@ -18,7 +18,7 @@ Feature: User delivers a flow
 
   Scenario: User runs git-reflow deliver without any parameters
     When I deliver my "new-branch" branch
-    Then the current branch should be "new-branch"
+    Then the current branch should be "master"
 
     #@wip
   #Scenario: User runs git-reflow deliver with the branch name to merge into

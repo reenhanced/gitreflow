@@ -17,8 +17,8 @@ Feature: User delivers a flow
     Given I have a reviewed feature branch named "new-branch" checked out
 
   Scenario: User runs git-reflow deliver without any parameters
-    When I successfully run `git-reflow deliver`
-    #Then the output should contain "Merging pull request #1: 'Changed readme', from 'reenhanced:new-branch' into 'reenhanced:master'"
+    When I deliver my "new-branch" branch
+    Then the current branch should be "new-branch"
 
     #@wip
   #Scenario: User runs git-reflow deliver with the branch name to merge into

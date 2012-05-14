@@ -78,9 +78,16 @@ Given /^I have a reviewed feature branch named "([^"]+)" checked out$/ do |branc
     :pull => pull
   )
 
-  steps %{
-    When I run `git-reflow review "#{pull['base']}" "#{pull['title']}" "#{pull['body']}"`
+  review_options = {
+    'base'  => pull['base'],
+    'title' => pull['title'],
+    'body'  => pull['body']
   }
+  GitReflow.review review_options
+end
+
+When /^I deliver my "([^"]+)" branch$/ do |branch_name|
+  GitReflow.deliver
 end
 
 Then /^a branch named "([^"]+)" should have been created from "([^"]+)"$/ do |new_branch, base_branch|
@@ -97,4 +104,8 @@ end
 
 Then /^the subcommand "([^"]+)" should run$/ do |subcommand|
   has_subcommand?(subcommand).should be_true
+end
+
+Then /^the current branch should be "([^"]+)"$/ do |branch_name|
+  GitReflow.current_branch.should == branch_name
 end

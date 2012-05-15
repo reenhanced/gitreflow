@@ -53,6 +53,7 @@ module GitReflow
         puts "Error: No pull request exists for #{remote_user}:#{current_branch}\nPlease submit your branch for review first with \`git reflow review\`"
       else
         puts "Merging pull request ##{existing_pull_request[:number]}: '#{existing_pull_request[:title]}', from '#{existing_pull_request[:head][:label]}' into '#{existing_pull_request[:base][:label]}'"
+        `git checkout #{options['base']}`
       end
 
     rescue Github::Error::UnprocessableEntity => e

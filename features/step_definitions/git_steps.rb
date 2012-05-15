@@ -63,6 +63,34 @@ Given /^I have a new branch named "([^"]+)" checked out$/ do |branch_name|
   }
 end
 
+Given /^I have a reviewed feature branch named "([^"]+)" checked out$/ do |branch_name|
+  pull = {
+    "title" => "Amazing new feature",
+    "body"  => "Please pull this in!",
+    "head"  => "reenhanced:#{branch_name}",
+    "base"  => "master",
+    "state" => "open"
+  }
+  stub_github_with(
+    :user => 'reenhanced',
+    :repo => 'repo',
+    :branch => branch_name,
+    :pull => pull
+  )
+
+  review_options = {
+    'base'  => pull['base'],
+    'title' => pull['title'],
+    'body'  => pull['body']
+  }
+  GitReflow.review review_options
+end
+
+When /^I deliver my "([^"]+)" branch$/ do |branch_name|
+  GitReflow.deliver
+  GitReflow.stub(:current_branch).and_return("master")
+end
+
 Then /^a branch named "([^"]+)" should have been created from "([^"]+)"$/ do |new_branch, base_branch|
   steps %{
     Then the output should match /\\* \\[new branch\\]\\s* #{Regexp.escape(base_branch)}\\s* \\-\\> #{Regexp.escape(new_branch)}/
@@ -77,4 +105,8 @@ end
 
 Then /^the subcommand "([^"]+)" should run$/ do |subcommand|
   has_subcommand?(subcommand).should be_true
+end
+
+Then /^the branch "([^"]+)" is checked out$/ do |branch_name|
+  GitReflow.current_branch.should == branch_name
 end

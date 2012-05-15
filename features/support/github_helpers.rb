@@ -24,8 +24,6 @@ module GithubHelpers
       stub_post("/repos/#{user}/#{repo}/pulls").
         to_return(:body => fixture('pull_requests/pull_request.json'), :status => 201, :headers => {:content_type => "application/json\; charset=utf-8"})
 
-      #github.pull_requests.should_receive(:create).with(user, repo, pull.except('state'))
-
       # Stubbing pull request finder
       stub_get("/repos/#{user}/#{repo}/pulls").with(:query => {'state' => 'open'}).
         to_return(:body => fixture('pull_requests/pull_requests.json'), :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})

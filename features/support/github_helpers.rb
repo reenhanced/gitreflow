@@ -1,4 +1,7 @@
-require 'spec_helper'
+#require 'spec_helper'
+$LOAD_PATH << 'lib'
+require 'git_reflow'
+require 'github_api'
 module GithubHelpers
   def stub_github_with(options = {})
     github = Github.new
@@ -28,6 +31,33 @@ module GithubHelpers
         to_return(:body => fixture('pull_requests/pull_requests.json'), :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
     end
   end
+
+  def fixture_path
+    File.expand_path("../../../spec/fixtures", __FILE__)
+  end
+
+  def fixture(file)
+    File.new(File.join(fixture_path, '/', file))
+  end
+
+  def stub_get(path, endpoint = Github.endpoint.to_s)
+    stub_request(:get, endpoint + path)
+  end
+
+  def stub_post(path, endpoint = Github.endpoint.to_s)
+    stub_request(:post, endpoint + path)
+  end
+
 end
 
 World(GithubHelpers)
+
+# the github_api gem does some overrides to Hash so we have to make sure
+# this still works here...
+class Hash
+  def except(*keys)
+    cpy = self.dup
+    keys.each { |key| cpy.delete(key) }
+    cpy
+  end
+end

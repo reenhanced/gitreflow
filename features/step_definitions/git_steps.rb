@@ -107,6 +107,13 @@ Then /^the subcommand "([^"]+)" should run$/ do |subcommand|
   has_subcommand?(subcommand).should be_true
 end
 
-Then /^the branch "([^"]+)" is checked out$/ do |branch_name|
+Then /^the branch "([^"]+)" should be checked out$/ do |branch_name|
   GitReflow.current_branch.should == branch_name
+end
+
+Then /^the branch "([^"]+)" should be up to date with the remote repository$/ do |branch_name|
+  steps %{
+    When I successfully run `git pull origin #{branch_name}`
+    Then the output should contain "Already up-to-date"
+  }
 end

@@ -54,6 +54,7 @@ module GitReflow
       else
         puts "Merging pull request ##{existing_pull_request[:number]}: '#{existing_pull_request[:title]}', from '#{existing_pull_request[:head][:label]}' into '#{existing_pull_request[:base][:label]}'"
         `git checkout #{options['base']}`
+        pull_destination(options['base'])
       end
 
     rescue Github::Error::UnprocessableEntity => e
@@ -87,6 +88,10 @@ module GitReflow
 
   def get_first_commit_message
     `git log --pretty=format:"%s" --no-merges -n 1`.strip
+  end
+
+  def pull_destination(destination_branch)
+    `git pull origin #{destination_branch}`
   end
 
   private

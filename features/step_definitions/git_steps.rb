@@ -3,7 +3,7 @@ Given /^I have a git repository with a branch named "([^"]+)" checked out$/ do |
     Given a directory named "master_repo"
     And I cd to "master_repo"
     And I write to "README" with:
-      | empty file |
+      | Initialized |
     And I successfully run `git init`
     And I successfully run `git add README`
     And I successfully run `git commit -m "Initial commit"`
@@ -40,7 +40,7 @@ Given /^the remote repository named "([^"]+)" has changes on the "([^"]+)" branc
   steps %{
     Given a directory named "#{remote_name}_repo"
     When I cd to "#{remote_name}_repo"
-    And I successfully run `git checkout master`
+    And I successfully run `git checkout #{branch_name}`
     And I append to "README" with:
       | changed |
     And I successfully run `git add .`
@@ -83,7 +83,13 @@ Given /^I have a reviewed feature branch named "([^"]+)" checked out$/ do |branc
     'title' => pull['title'],
     'body'  => pull['body']
   }
+
   GitReflow.review review_options
+
+  # ensure we do not stay inside the remote repo
+  steps %{
+    Given I cd to ".."
+  }
 end
 
 When /^I deliver my "([^"]+)" branch$/ do |branch_name|
@@ -113,7 +119,8 @@ end
 
 Then /^the branch "([^"]+)" should be up to date with the remote repository$/ do |branch_name|
   steps %{
-    When I successfully run `git pull origin #{branch_name}`
+    When I successfully run `git fetch origin`
+    And I run `git pull origin #{branch_name}`
     Then the output should contain "Already up-to-date"
   }
 end

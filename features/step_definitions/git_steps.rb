@@ -93,6 +93,19 @@ Given /^I have a reviewed feature branch named "([^"]+)" checked out$/ do |branc
 end
 
 When /^I deliver my "([^"]+)" branch$/ do |branch_name|
+  pull = {
+    "title" => "Amazing new feature",
+    "body"  => "Please pull this in!",
+    "head"  => "reenhanced:#{branch_name}",
+    "base"  => "master",
+    "state" => "open"
+  }
+  stub_github_with(
+    :user => 'reenhanced',
+    :repo => 'repo',
+    :branch => branch_name,
+    :pull => pull
+  )
   GitReflow.deliver
   GitReflow.stub(:current_branch).and_return("master")
 end

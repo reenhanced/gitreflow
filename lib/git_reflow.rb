@@ -56,6 +56,7 @@ module GitReflow
         `git checkout #{options['base']}`
         pull_destination(options['base'])
       end
+      debugger
 
     rescue Github::Error::UnprocessableEntity => e
       errors = JSON.parse(e.response_message[:body])

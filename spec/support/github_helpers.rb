@@ -19,6 +19,7 @@ module GithubHelpers
     GitReflow.stub(:remote_repo_name).and_return(repo)
     GitReflow.stub(:remote_user).and_return(user)
     GitReflow.stub(:fetch_destination).and_return(true)
+    GitReflow.stub(:update_destination).and_return(true)
 
     if pull
       # Stubbing review

@@ -100,6 +100,8 @@ describe :git_reflow do
       GitReflow.stub(:github).and_return(github)
       GitReflow.stub(:current_branch).and_return('new-feature')
       GitReflow.stub(:remote_repo_name).and_return(repo)
+      GitReflow.stub(:fetch_destination).and_return(true)
+      GitReflow.stub(:update_destination).and_return(true)
       stub_get("/repos/#{user}/#{repo}/pulls").with(:query => {'state' => 'open'}).
         to_return(:body => fixture('pull_requests/pull_requests.json'), :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
     end
@@ -121,6 +123,11 @@ describe :git_reflow do
     it "fetches the latest changes to the destination branch" do
       GitReflow.should_receive(:fetch_destination)
       github.pull_requests.should_receive(:all)
+      GitReflow.deliver
+    end
+
+    it "checks out the destination branch and updates any remote changes" do
+      GitReflow.should_receive(:update_destination)
       GitReflow.deliver
     end
   end

@@ -12,8 +12,7 @@ After('@gem') do
 end
 
 Before do
-  @dirs = [Dir.tmpdir, "aruba"]
-  FileUtils.rm_rf @dirs
+  FileUtils.rm_rf Dir.glob("#{Dir.tmpdir}/aruba")
 end
 
 WebMock.disable_net_connect!

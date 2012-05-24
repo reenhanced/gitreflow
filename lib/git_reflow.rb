@@ -89,10 +89,6 @@ module GitReflow
     `git log --pretty=format:"%s" --no-merges -n 1`.strip
   end
 
-  def pull_destination(destination_branch)
-    `git pull origin #{destination_branch}`
-  end
-
   private
 
   def set_oauth_token(oauth_token)
@@ -108,8 +104,8 @@ module GitReflow
   end
 
   def update_destination(destination_branch)
-    `git checkout #{options['base']}`
-    pull_destination(options['base'])
+    `git checkout #{destination_branch}`
+    `git pull origin #{destination_branch}`
   end
 
   def find_pull_request(options)

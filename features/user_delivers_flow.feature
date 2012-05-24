@@ -17,8 +17,6 @@ Feature: User delivers a flow
     Given I have a reviewed feature branch named "new-feature" checked out
 
   Scenario: User runs git-reflow deliver without any parameters
-    Given the remote repository named "origin" has changes on the "master" branch
-    And I cd to "master_repo"
     When I deliver my "new-feature" branch
     Then the branch "master" should be checked out
     And the branch "master" should be up to date with the remote repository

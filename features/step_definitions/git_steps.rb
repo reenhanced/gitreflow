@@ -132,8 +132,7 @@ end
 
 Then /^the branch "([^"]+)" should be up to date with the remote repository$/ do |branch_name|
   steps %{
-    When I successfully run `git fetch origin`
-    And I run `git pull origin #{branch_name}`
+    When I successfully run `git pull origin #{branch_name}`
     Then the output should contain "Already up-to-date"
   }
 end

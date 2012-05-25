@@ -14,8 +14,9 @@ Feature: User delivers a flow
       | changed |
     And I successfully run `git add .`
     And I successfully run `git commit -am "Changed readme"`
-    Given I have a reviewed feature branch named "new-branch" checked out
+    Given I have a reviewed feature branch named "new-feature" checked out
 
   Scenario: User runs git-reflow deliver without any parameters
-    When I deliver my "new-branch" branch
-    Then the branch "master" is checked out
+    When I deliver my "new-feature" branch
+    Then the branch "master" should be checked out
+    And the branch "master" should be up to date with the remote repository

@@ -130,5 +130,10 @@ describe :git_reflow do
       GitReflow.should_receive(:update_destination)
       GitReflow.deliver
     end
+
+    it "merges and squashes the feature branch into the master branch" do
+      GitReflow.should_receive(:merge_feature_branch)
+      GitReflow.deliver
+    end
   end
 end

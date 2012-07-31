@@ -43,6 +43,7 @@ module GitReflow
   end
 
   def deliver(options = {})
+    feature_branch    = current_branch
     options['base'] ||= 'master'
     fetch_destination options['base']
 
@@ -54,6 +55,7 @@ module GitReflow
       else
         puts "Merging pull request ##{existing_pull_request[:number]}: '#{existing_pull_request[:title]}', from '#{existing_pull_request[:head][:label]}' into '#{existing_pull_request[:base][:label]}'"
         update_destination(options['base'])
+        merge_feature_branch(:feature_branch => feature_branch, :destination_branch => options['base'])
       end
 
     rescue Github::Error::UnprocessableEntity => e
@@ -106,6 +108,12 @@ module GitReflow
   def update_destination(destination_branch)
     `git checkout #{destination_branch}`
     `git pull origin #{destination_branch}`
+  end
+
+  def merge_feature_branch(options = {})
+    options[:destination_branch] ||= 'master'
+    `git checkout #{options[:destination_branch]}`
+    `git merge --squash #{options[:feature_branch]}`
   end
 
   def find_pull_request(options)

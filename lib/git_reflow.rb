@@ -27,7 +27,7 @@ module GitReflow
     fetch_destination options['base']
 
     begin
-      push_current_branch
+      puts push_current_branch
       pull_request = github.pull_requests.create(remote_user, remote_repo_name,
                                           'title' => options['title'],
                                           'body' => options['body'],
@@ -98,7 +98,7 @@ module GitReflow
   end
 
   def push_current_branch
-    exec("git push origin #{current_branch}")
+    `git push origin #{current_branch}`
   end
 
   def fetch_destination(destination_branch)

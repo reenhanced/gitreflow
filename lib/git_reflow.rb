@@ -106,14 +106,16 @@ module GitReflow
   end
 
   def update_destination(destination_branch)
+    origin_branch = current_branch
     `git checkout #{destination_branch}`
-    `git pull origin #{destination_branch}`
+    exec("git pull origin #{destination_branch}")
+    `git checkout #{origin_branch}`
   end
 
   def merge_feature_branch(options = {})
     options[:destination_branch] ||= 'master'
     `git checkout #{options[:destination_branch]}`
-    `git merge --squash #{options[:feature_branch]}`
+    exec("git merge --squash #{options[:feature_branch]}")
   end
 
   def find_pull_request(options)

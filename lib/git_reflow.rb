@@ -84,7 +84,7 @@ module GitReflow
 
   def remote_repo_name
     gh_repo = `git config --get remote.origin.url`.strip
-    gh_repo.slice(/\/(\w|-)+/i)[1..-1]
+    gh_repo.slice(/(\w|-|.)+[^.git]/i)[1..-1]
   end
 
   def get_first_commit_message

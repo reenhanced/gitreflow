@@ -55,7 +55,7 @@ module GitReflow
       else
         puts "Merging pull request ##{existing_pull_request[:number]}: '#{existing_pull_request[:title]}', from '#{existing_pull_request[:head][:label]}' into '#{existing_pull_request[:base][:label]}'"
         update_destination(options['base'])
-        merge_feature_branch(:feature_branch => feature_branch, :destination_branch => options['base'])
+        merge_feature_branch(:feature_branch => feature_branch, :destination_branch => options['base'], :pull_request_number => existing_pull_request[:number])
       end
 
     rescue Github::Error::UnprocessableEntity => e
@@ -84,7 +84,7 @@ module GitReflow
 
   def remote_repo_name
     gh_repo = `git config --get remote.origin.url`.strip
-    gh_repo.slice(/(\w|-|.)+[^.git]/i)[1..-1]
+    gh_repo.slice(/\/(\w|-|\.)+[^.git]/i)[1..-1]
   end
 
   def get_first_commit_message
@@ -116,6 +116,13 @@ module GitReflow
     options[:destination_branch] ||= 'master'
     `git checkout #{options[:destination_branch]}`
     puts `git merge --squash #{options[:feature_branch]}`
+    # append pull request number to commit message
+    append_to_squashed_commit_message("\nCloses ##{options[:pull_request_number]}\n")
+  end
+
+  def append_to_squashed_commit_message(message = '')
+    `echo "#{message}" | cat - .git/SQUASH_MSG > ./tmp_squash_msg`
+    `mv ./tmp_squash_msg .git/SQUASH_MSG`
   end
 
   def find_pull_request(options)

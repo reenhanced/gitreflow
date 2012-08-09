@@ -53,9 +53,19 @@ module GitReflow
       if existing_pull_request.nil?
         puts "Error: No pull request exists for #{remote_user}:#{current_branch}\nPlease submit your branch for review first with \`git reflow review\`"
       else
+        commit_message = get_first_commit_message
         puts "Merging pull request ##{existing_pull_request[:number]}: '#{existing_pull_request[:title]}', from '#{existing_pull_request[:head][:label]}' into '#{existing_pull_request[:base][:label]}'"
+
         update_destination(options['base'])
         merge_feature_branch(:feature_branch => feature_branch, :destination_branch => options['base'], :pull_request_number => existing_pull_request[:number])
+        append_to_squashed_commit_message(commit_message)
+        committed = system('git commit')
+
+        if committed
+          puts "Merge complete!"
+        else
+          puts "There were problems commiting your feature... please check the errors above and try again."
+        end
       end
 
     rescue Github::Error::UnprocessableEntity => e

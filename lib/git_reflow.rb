@@ -35,10 +35,16 @@ module GitReflow
                                           'base' => options['base'])
 
       puts "Successfully created pull request ##{pull_request.number}: #{pull_request.title}\nPull Request URL: #{pull_request.html_url}\n"
+      ask_to_open_in_browser(pull_request.html_url)
     rescue Github::Error::UnprocessableEntity => e
       errors = JSON.parse(e.response_message[:body])
       error_messages = errors["errors"].collect {|error| "GitHub Error: #{error["message"].gsub(/^base\s/, '')}" unless error["message"].nil?}.compact.join("\n")
       puts error_messages
+      if error_messages =~ /request already exists/i
+        existing_pull_request = find_pull_request( :from => current_branch, :to => options['base'] )
+        puts "Existing pull request at: #{existing_pull_request[:html_url]}"
+        ask_to_open_in_browser(existing_pull_request.html_url)
+      end
     end
   end
 
@@ -53,18 +59,25 @@ module GitReflow
       if existing_pull_request.nil?
         puts "Error: No pull request exists for #{remote_user}:#{current_branch}\nPlease submit your branch for review first with \`git reflow review\`"
       else
-        commit_message = get_first_commit_message
-        puts "Merging pull request ##{existing_pull_request[:number]}: '#{existing_pull_request[:title]}', from '#{existing_pull_request[:head][:label]}' into '#{existing_pull_request[:base][:label]}'"
+        # first we'll check for a lgtm
+        last_comment = last_comment_for_pull_request(existing_pull_request[:number])
+        if last_comment =~ /lgtm|looks good to me/i
+          commit_message = get_first_commit_message
+          puts "Merging pull request ##{existing_pull_request[:number]}: '#{existing_pull_request[:title]}', from '#{existing_pull_request[:head][:label]}' into '#{existing_pull_request[:base][:label]}'"
 
-        update_destination(options['base'])
-        merge_feature_branch(:feature_branch => feature_branch, :destination_branch => options['base'], :pull_request_number => existing_pull_request[:number])
-        append_to_squashed_commit_message(commit_message)
-        committed = system('git commit')
+          update_destination(options['base'])
+          merge_feature_branch(:feature_branch => feature_branch, :destination_branch => options['base'], :pull_request_number => existing_pull_request[:number])
+          append_to_squashed_commit_message(commit_message)
+          committed = system('git commit')
 
-        if committed
-          puts "Merge complete!"
+          if committed
+            puts "Merge complete!"
+          else
+            puts "There were problems commiting your feature... please check the errors above and try again."
+          end
         else
-          puts "There were problems commiting your feature... please check the errors above and try again."
+          last_comment ||= "no comments found for issue ##{existing_pull_request[:number]}"
+          puts "You need a LGTM before you can ship it...\nThe last comment was: #{last_comment}"
         end
       end
 
@@ -145,5 +158,19 @@ module GitReflow
       end
     end
     existing_pull_request
+  end
+
+  def last_comment_for_pull_request(pull_request_number)
+    comments = github.issues.comments.all remote_user, remote_repo_name, pull_request_number
+    comments.last.try(:body)
+  end
+
+  def ask_to_open_in_browser(url)
+    print "Would you like to open it in your browser? "
+    open_in_browser = STDIN.gets.chomp
+    `stty -echo`
+    if open_in_browser =~ /^y/i
+      `open #{url}`
+    end
   end
 end

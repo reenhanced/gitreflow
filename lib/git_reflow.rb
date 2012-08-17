@@ -59,9 +59,36 @@ module GitReflow
       if existing_pull_request.nil?
         puts "Error: No pull request exists for #{remote_user}:#{current_branch}\nPlease submit your branch for review first with \`git reflow review\`"
       else
-        # first we'll check for a lgtm
-        last_comment = last_comment_for_pull_request(existing_pull_request[:number])
-        if last_comment =~ /lgtm|looks good to me/i
+        # first we'll gather all the authors that have commented on the pull request
+        comment_authors = []
+        comments = github.issues.comments.all remote_user, remote_repo_name, existing_pull_request[:number]
+        review_comments = github.pull_requests.comments.all remote_user, remote_repo_name, existing_pull_request[:number]
+
+        review_comments.each do |comment|
+          comment_authors << comment.user.login unless comment_authors.include? comment.user.login
+        end
+
+        comments.each do |comment|
+          comment_authors << comment.user.login unless comment_authors.include? comment.user.login
+        end
+
+        # remove the current user from the list to check
+        comment_authors -= [github_user]
+
+        # now we need to check that all the commented authors have given a lgtm after the last commit
+        comments.each do |comment|
+          next unless comment_authors.include?(comment.user.login)
+          pull_last_committed_at = Time.parse existing_pull_request.head.repo.updated_at
+          comment_updated_at     = Time.parse(comment.updated_at)
+          if comment_updated_at > pull_last_committed_at
+            if comment.body =~ /lgtm|looks good to me/i
+              comment_authors -= [comment.user.login]
+            end
+          end
+        end
+
+        # if there any comment_authors left, then they haven't given a lgtm after the last commit
+        if comment_authors.blank?
           commit_message = get_first_commit_message
           puts "Merging pull request ##{existing_pull_request[:number]}: '#{existing_pull_request[:title]}', from '#{existing_pull_request[:head][:label]}' into '#{existing_pull_request[:base][:label]}'"
 
@@ -76,8 +103,7 @@ module GitReflow
             puts "There were problems commiting your feature... please check the errors above and try again."
           end
         else
-          last_comment ||= "no comments found for issue ##{existing_pull_request[:number]}"
-          puts "You need a LGTM before you can ship it...\nThe last comment was: #{last_comment}"
+          puts "[deliver halted] You still need a LGTM from: #{comment_authors.join(', ')}"
         end
       end
 
@@ -100,14 +126,18 @@ module GitReflow
     `git branch --no-color | grep '^\* ' | grep -v 'no branch' | sed 's/^* //g'`.strip
   end
 
+  def github_user
+    `git config --get github.user`.strip
+  end
+
   def remote_user
-    gh_user = `git config --get remote.origin.url`.strip
-    gh_user.slice!(/\:\w+/i)[1..-1]
+    gh_remote_user = `git config --get remote.origin.url`.strip
+    gh_remote_user.slice!(/\:\w+/i)[1..-1]
   end
 
   def remote_repo_name
     gh_repo = `git config --get remote.origin.url`.strip
-    gh_repo.slice(/\/(\w|-|\.)+[^.git]/i)[1..-1]
+    gh_repo.slice(/\/(\w|-|\.)+$/i)[1..-5]
   end
 
   def get_first_commit_message
@@ -158,11 +188,6 @@ module GitReflow
       end
     end
     existing_pull_request
-  end
-
-  def last_comment_for_pull_request(pull_request_number)
-    comments = github.issues.comments.all remote_user, remote_repo_name, pull_request_number
-    comments.last.try(:body)
   end
 
   def ask_to_open_in_browser(url)

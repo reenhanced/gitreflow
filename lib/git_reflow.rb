@@ -81,7 +81,7 @@ module GitReflow
           pull_last_committed_at = Time.parse existing_pull_request.head.repo.updated_at
           comment_updated_at     = Time.parse(comment.updated_at)
           if comment_updated_at > pull_last_committed_at
-            if comment.body =~ /lgtm|looks good to me/i
+            if comment.body =~ /lgtm|looks good to me|:\+1:|:thumbsup:/i
               comment_authors -= [comment.user.login]
             end
           end

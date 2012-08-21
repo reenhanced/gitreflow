@@ -24,9 +24,9 @@ spec = Gem::Specification.new do |s|
   s.add_development_dependency('jeweler')
   s.add_development_dependency('ruby-debug19')
   s.add_development_dependency('webmock')
-  s.add_dependency('gli')
-  s.add_dependency('json')
+  s.add_dependency('gli', '2.0.0')
+  s.add_dependency('json', '1.7.5')
   s.add_dependency('httpclient')
-  s.add_dependency('github_api', '0.5.0')
+  s.add_dependency('github_api', '0.6.5')
   s.post_install_message = "You need to setup your GitHub OAuth token\nPlease run 'git-reflow setup'"
 end

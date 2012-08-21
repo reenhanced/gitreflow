@@ -8,6 +8,8 @@ require 'github_api'
 module GitReflow
   extend self
 
+  LGTM = /lgtm|looks good to me|:\+1:|:thumbsup:/i
+
   def setup
     print "Please enter your GitHub username: "
     gh_user = STDIN.gets.chomp
@@ -59,41 +61,20 @@ module GitReflow
       if existing_pull_request.nil?
         puts "Error: No pull request exists for #{remote_user}:#{current_branch}\nPlease submit your branch for review first with \`git reflow review\`"
       else
-        # first we'll gather all the authors that have commented on the pull request
-        comment_authors = []
-        comments = github.issues.comments.all remote_user, remote_repo_name, existing_pull_request[:number]
-        review_comments = github.pull_requests.comments.all remote_user, remote_repo_name, existing_pull_request[:number]
 
-        review_comments.each do |comment|
-          comment_authors << comment.user.login unless comment_authors.include? comment.user.login
-        end
-
-        comments.each do |comment|
-          comment_authors << comment.user.login unless comment_authors.include? comment.user.login
-        end
-
-        # remove the current user from the list to check
-        comment_authors -= [github_user]
-
-        # now we need to check that all the commented authors have given a lgtm after the last commit
-        comments.each do |comment|
-          next unless comment_authors.include?(comment.user.login)
-          pull_last_committed_at = Time.parse existing_pull_request.head.repo.updated_at
-          comment_updated_at     = Time.parse(comment.updated_at)
-          if comment_updated_at > pull_last_committed_at
-            if comment.body =~ /lgtm|looks good to me|:\+1:|:thumbsup:/i
-              comment_authors -= [comment.user.login]
-            end
-          end
-        end
+        open_comment_authors = find_authors_of_open_pull_request_comments(existing_pull_request)
 
         # if there any comment_authors left, then they haven't given a lgtm after the last commit
-        if comment_authors.blank?
+        if open_comment_authors.empty?
+          lgtm_authors   = comment_authors_for_pull_request(existing_pull_request, :with => LGTM)
           commit_message = get_first_commit_message
           puts "Merging pull request ##{existing_pull_request[:number]}: '#{existing_pull_request[:title]}', from '#{existing_pull_request[:head][:label]}' into '#{existing_pull_request[:base][:label]}'"
 
           update_destination(options['base'])
-          merge_feature_branch(:feature_branch => feature_branch, :destination_branch => options['base'], :pull_request_number => existing_pull_request[:number])
+          merge_feature_branch(:feature_branch => feature_branch,
+                               :destination_branch => options['base'],
+                               :pull_request_number => existing_pull_request[:number],
+                               :message => "\nCloses ##{existing_pull_request[:number]}\n\n#LGTM given by: #{lgtm_authors.join(', ')}\n")
           append_to_squashed_commit_message(commit_message)
           committed = system('git commit')
 
@@ -103,7 +84,7 @@ module GitReflow
             puts "There were problems commiting your feature... please check the errors above and try again."
           end
         else
-          puts "[deliver halted] You still need a LGTM from: #{comment_authors.join(', ')}"
+          puts "[deliver halted] You still need a LGTM from: #{lgtm_authors.join(', ')}"
         end
       end
 
@@ -167,10 +148,12 @@ module GitReflow
 
   def merge_feature_branch(options = {})
     options[:destination_branch] ||= 'master'
+    message                        = options[:message] || "\nCloses ##{options[:pull_request_number]}\n"
+
     `git checkout #{options[:destination_branch]}`
     puts `git merge --squash #{options[:feature_branch]}`
     # append pull request number to commit message
-    append_to_squashed_commit_message("\nCloses ##{options[:pull_request_number]}\n")
+    append_to_squashed_commit_message(message)
   end
 
   def append_to_squashed_commit_message(message = '')
@@ -190,12 +173,59 @@ module GitReflow
     existing_pull_request
   end
 
+  def find_authors_of_open_pull_request_comments(pull_request)
+    # first we'll gather all the authors that have commented on the pull request
+    comments        = github.issues.comments.all remote_user, remote_repo_name, pull_request[:number]
+    comment_authors = comment_authors_for_pull_request(pull_request)
+
+    # now we need to check that all the commented authors have given a lgtm after the last commit
+    comments.each do |comment|
+      next unless comment_authors.include?(comment.user.login)
+      pull_last_committed_at = Time.parse pull_request.head.repo.updated_at
+      comment_updated_at     = Time.parse(comment.updated_at)
+      if comment_updated_at > pull_last_committed_at
+        if comment.body =~ LGTM
+          comment_authors -= [comment.user.login]
+        end
+      end
+    end
+
+    comment_authors
+  end
+
+  def comment_authors_for_pull_request(pull_request, options = {})
+    comments = github.issues.comments.all remote_user, remote_repo_name, pull_request[:number]
+    review_comments = github.pull_requests.comments.all remote_user, remote_repo_name, pull_request[:number]
+    comment_authors = []
+
+    review_comments.each do |comment|
+      comment_authors << comment.user.login if !comment_authors.include?(comment.user.login) and (!options[:with].nil? and comment.body =~ options[:with])
+    end
+
+    comments.each do |comment|
+      comment_authors << comment.user.login if !comment_authors.include?(comment.user.login) and (!options[:with].nil? and comment.body =~ options[:with])
+    end
+
+    # remove the current user from the list to check
+    comment_authors -= [github_user]
+  end
+
+  # WARNING: this currently only supports OS X and UBUNTU
   def ask_to_open_in_browser(url)
-    print "Would you like to open it in your browser? "
-    open_in_browser = STDIN.gets.chomp
-    `stty -echo`
-    if open_in_browser =~ /^y/i
-      `open #{url}`
+    if `uname`.strip =~ /darwin|linux/i
+      print "Would you like to open it in your browser? "
+      open_in_browser = STDIN.gets.chomp
+      `stty -echo`
+      if open_in_browser =~ /^y/i
+        os_type = `uname`.strip
+        if os_type =~ /darwin/i
+          # OS X
+          `open #{url}`
+        else
+          # Ubuntu
+          `xdg-open #{url}`
+        end
+      end
     end
   end
 end

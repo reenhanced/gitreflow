@@ -84,7 +84,7 @@ module GitReflow
             puts "There were problems commiting your feature... please check the errors above and try again."
           end
         else
-          puts "[deliver halted] You still need a LGTM from: #{lgtm_authors.join(', ')}"
+          puts "[deliver halted] You still need a LGTM from: #{open_comment_authors.join(', ')}"
         end
       end
 
@@ -113,7 +113,7 @@ module GitReflow
 
   def remote_user
     gh_remote_user = `git config --get remote.origin.url`.strip
-    gh_remote_user.slice!(/\:\w+/i)[1..-1]
+    gh_remote_user.slice!(/github\.com[\/:](\w|-|\.)+/i)[11..-1]
   end
 
   def remote_repo_name
@@ -176,21 +176,25 @@ module GitReflow
   def find_authors_of_open_pull_request_comments(pull_request)
     # first we'll gather all the authors that have commented on the pull request
     comments        = github.issues.comments.all remote_user, remote_repo_name, pull_request[:number]
+    review_comments = github.pull_requests.comments.all remote_user, remote_repo_name, pull_request[:number]
+    all_comments    = comments + review_comments
     comment_authors = comment_authors_for_pull_request(pull_request)
 
     # now we need to check that all the commented authors have given a lgtm after the last commit
-    comments.each do |comment|
+    all_comments.each do |comment|
       next unless comment_authors.include?(comment.user.login)
       pull_last_committed_at = Time.parse pull_request.head.repo.updated_at
       comment_updated_at     = Time.parse(comment.updated_at)
       if comment_updated_at > pull_last_committed_at
         if comment.body =~ LGTM
           comment_authors -= [comment.user.login]
+        else
+          comment_authors << comment.user.login unless comment_authors.include?(comment.user.login)
         end
       end
     end
 
-    comment_authors
+    comment_authors || []
   end
 
   def comment_authors_for_pull_request(pull_request, options = {})
@@ -199,11 +203,11 @@ module GitReflow
     comment_authors = []
 
     review_comments.each do |comment|
-      comment_authors << comment.user.login if !comment_authors.include?(comment.user.login) and (!options[:with].nil? and comment.body =~ options[:with])
+      comment_authors << comment.user.login if !comment_authors.include?(comment.user.login) and (options[:with].nil? or comment.body =~ options[:with])
     end
 
     comments.each do |comment|
-      comment_authors << comment.user.login if !comment_authors.include?(comment.user.login) and (!options[:with].nil? and comment.body =~ options[:with])
+      comment_authors << comment.user.login if !comment_authors.include?(comment.user.login) and (options[:with].nil? or comment.body =~ options[:with])
     end
 
     # remove the current user from the list to check
@@ -212,13 +216,12 @@ module GitReflow
 
   # WARNING: this currently only supports OS X and UBUNTU
   def ask_to_open_in_browser(url)
-    if `uname`.strip =~ /darwin|linux/i
+    if RUBY_PLATFORM =~ /darwin|linux/i
       print "Would you like to open it in your browser? "
       open_in_browser = STDIN.gets.chomp
       `stty -echo`
       if open_in_browser =~ /^y/i
-        os_type = `uname`.strip
-        if os_type =~ /darwin/i
+        if RUBY_PLATFORM =~ /darwin/i
           # OS X
           `open #{url}`
         else

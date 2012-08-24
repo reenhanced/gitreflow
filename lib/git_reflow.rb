@@ -1,6 +1,6 @@
 require 'rubygems'
 require 'rake'
-require 'json'
+require 'json/pure'
 require 'open-uri'
 require 'httpclient'
 require 'github_api'

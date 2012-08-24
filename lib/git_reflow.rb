@@ -39,13 +39,13 @@ module GitReflow
       puts "Successfully created pull request ##{pull_request.number}: #{pull_request.title}\nPull Request URL: #{pull_request.html_url}\n"
       ask_to_open_in_browser(pull_request.html_url)
     rescue Github::Error::UnprocessableEntity => e
-      errors = JSON.parse(e.response_message[:body])
-      error_messages = errors["errors"].collect {|error| "GitHub Error: #{error["message"].gsub(/^base\s/, '')}" unless error["message"].nil?}.compact.join("\n")
-      puts error_messages
-      if error_messages =~ /request already exists/i
+      error_message = e.to_s
+      if error_message =~ /request already exists/i
         existing_pull_request = find_pull_request( :from => current_branch, :to => options['base'] )
         puts "Existing pull request at: #{existing_pull_request[:html_url]}"
         ask_to_open_in_browser(existing_pull_request.html_url)
+      else
+        puts error_message
       end
     end
   end

@@ -184,8 +184,8 @@ module GitReflow
     all_comments.each do |comment|
       next unless comment_authors.include?(comment.user.login)
       pull_last_committed_at = Time.parse pull_request.head.repo.updated_at
-      comment_updated_at     = Time.parse(comment.updated_at)
-      if comment_updated_at > pull_last_committed_at
+      comment_created_at     = Time.parse(comment.created_at)
+      if comment_created_at > pull_last_committed_at
         if comment.body =~ LGTM
           comment_authors -= [comment.user.login]
         else
@@ -198,15 +198,12 @@ module GitReflow
   end
 
   def comment_authors_for_pull_request(pull_request, options = {})
-    comments = github.issues.comments.all remote_user, remote_repo_name, pull_request[:number]
+    comments        = github.issues.comments.all remote_user, remote_repo_name, pull_request[:number]
     review_comments = github.pull_requests.comments.all remote_user, remote_repo_name, pull_request[:number]
+    all_comments    = comments + review_comments
     comment_authors = []
 
-    review_comments.each do |comment|
-      comment_authors << comment.user.login if !comment_authors.include?(comment.user.login) and (options[:with].nil? or comment.body =~ options[:with])
-    end
-
-    comments.each do |comment|
+    all_comments.each do |comment|
       comment_authors << comment.user.login if !comment_authors.include?(comment.user.login) and (options[:with].nil? or comment.body =~ options[:with])
     end
 

@@ -71,7 +71,7 @@ module GitReflow
           merge_feature_branch(:feature_branch => feature_branch,
                                :destination_branch => options['base'],
                                :pull_request_number => existing_pull_request[:number],
-                               :message => "\nCloses ##{existing_pull_request[:number]}\n\n#LGTM given by: #{lgtm_authors.join(', ')}\n")
+                               :message => "\nCloses ##{existing_pull_request[:number]}\n\nLGTM given by: @#{lgtm_authors.join(', @')}\n")
           append_to_squashed_commit_message(commit_message)
           committed = system('git commit')
 

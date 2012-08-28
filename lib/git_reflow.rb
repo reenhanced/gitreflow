@@ -2,6 +2,7 @@ require 'rubygems'
 require 'rake'
 require 'json/pure'
 require 'open-uri'
+require "highline/import"
 require 'httpclient'
 require 'github_api'
 
@@ -11,12 +12,8 @@ module GitReflow
   LGTM = /lgtm|looks good to me|:\+1:|:thumbsup:/i
 
   def setup
-    print "Please enter your GitHub username: "
-    gh_user = STDIN.gets.chomp
-    `stty -echo`
-    print "Please enter your GitHub password (we do NOT store this): "
-    gh_password = STDIN.gets.chomp
-    `stty echo`
+    gh_user = ask "Please enter your GitHub username: "
+    gh_password = ask "Please enter your GitHub password (we do NOT store this): "
     puts "\nYour GitHub account was successfully setup!"
     github = Github.new :basic_auth => "#{gh_user}:#{gh_password}"
     authorization = github.oauth.create 'scopes' => ['repo']
@@ -80,6 +77,13 @@ module GitReflow
 
           if committed
             puts "Merge complete!"
+            deploy_and_cleanup = ask "Would you like to push this branch to your remote repo and cleanup your feature branch? "
+            if deploy_and_cleanup
+              puts `git push origin #{options['base']}`
+              puts `git push origin :#{feature_branch}`
+              puts `git br -D #{feature_branch}`
+              puts "Nice job buddy."
+            end
           else
             puts "There were problems commiting your feature... please check the errors above and try again."
           end
@@ -214,9 +218,7 @@ module GitReflow
   # WARNING: this currently only supports OS X and UBUNTU
   def ask_to_open_in_browser(url)
     if RUBY_PLATFORM =~ /darwin|linux/i
-      print "Would you like to open it in your browser? "
-      open_in_browser = STDIN.gets.chomp
-      `stty -echo`
+      open_in_browser = ask "Would you like to open it in your browser? "
       if open_in_browser =~ /^y/i
         if RUBY_PLATFORM =~ /darwin/i
           # OS X

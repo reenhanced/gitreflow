@@ -78,7 +78,7 @@ module GitReflow
           if committed
             puts "Merge complete!"
             deploy_and_cleanup = ask "Would you like to push this branch to your remote repo and cleanup your feature branch? "
-            if deploy_and_cleanup
+            if deploy_and_cleanup =~ /^y/i
               puts `git push origin #{options['base']}`
               puts `git push origin :#{feature_branch}`
               puts `git br -D #{feature_branch}`

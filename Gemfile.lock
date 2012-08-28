@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    git_reflow (0.1)
+    git_reflow (0.2)
       github_api (= 0.6.5)
       gli (= 2.0.0)
       highline

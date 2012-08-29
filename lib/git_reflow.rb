@@ -10,7 +10,6 @@ module GitReflow
   extend self
 
   LGTM = /lgtm|looks good to me|:\+1:|:thumbsup:/i
-  NEEDED_LGTMS = 1
 
   def setup
     gh_user = ask "Please enter your GitHub username: "

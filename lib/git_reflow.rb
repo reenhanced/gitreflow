@@ -10,6 +10,7 @@ module GitReflow
   extend self
 
   LGTM = /lgtm|looks good to me|:\+1:|:thumbsup:/i
+  NEEDED_LGTMS = 1
 
   def setup
     gh_user = ask "Please enter your GitHub username: "
@@ -40,6 +41,16 @@ module GitReflow
       if error_message =~ /request already exists/i
         existing_pull_request = find_pull_request( :from => current_branch, :to => options['base'] )
         puts "Existing pull request at: #{existing_pull_request[:html_url]}"
+
+        # check for needed lgtm's
+        pull_comments = pull_request_comments(existing_pull_request)
+        if pull_comments.any?
+          open_comment_authors = find_authors_of_open_pull_request_comments(existing_pull_request)
+          puts "[notice] You still need a LGTM from: #{open_comment_authors.join(', ')}" if open_comment_authors.any?
+        else
+          puts "[notice] No one has reviewed your pull request..."
+        end
+
         ask_to_open_in_browser(existing_pull_request.html_url)
       else
         puts error_message
@@ -177,11 +188,15 @@ module GitReflow
     existing_pull_request
   end
 
-  def find_authors_of_open_pull_request_comments(pull_request)
-    # first we'll gather all the authors that have commented on the pull request
+  def pull_request_comments(pull_request)
     comments        = github.issues.comments.all remote_user, remote_repo_name, pull_request[:number]
     review_comments = github.pull_requests.comments.all remote_user, remote_repo_name, pull_request[:number]
-    all_comments    = comments + review_comments
+    comments + review_comments
+  end
+
+  def find_authors_of_open_pull_request_comments(pull_request)
+    # first we'll gather all the authors that have commented on the pull request
+    all_comments    = pull_request_comments(pull_request)
     comment_authors = comment_authors_for_pull_request(pull_request)
 
     # now we need to check that all the commented authors have given a lgtm after the last commit
@@ -202,9 +217,7 @@ module GitReflow
   end
 
   def comment_authors_for_pull_request(pull_request, options = {})
-    comments        = github.issues.comments.all remote_user, remote_repo_name, pull_request[:number]
-    review_comments = github.pull_requests.comments.all remote_user, remote_repo_name, pull_request[:number]
-    all_comments    = comments + review_comments
+    all_comments    = pull_request_comments(pull_request)
     comment_authors = []
 
     all_comments.each do |comment|

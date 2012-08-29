@@ -91,7 +91,7 @@ module GitReflow
             if deploy_and_cleanup =~ /^y/i
               puts `git push origin #{options['base']}`
               puts `git push origin :#{feature_branch}`
-              puts `git br -D #{feature_branch}`
+              puts `git branch -D #{feature_branch}`
               puts "Nice job buddy."
             end
           else

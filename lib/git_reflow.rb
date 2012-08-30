@@ -45,6 +45,8 @@ module GitReflow
         pull_comments = pull_request_comments(existing_pull_request)
         if pull_comments.any?
           open_comment_authors = find_authors_of_open_pull_request_comments(existing_pull_request)
+          lgtm_authors         = comment_authors_for_pull_request(existing_pull_request, :with => LGTM)
+          puts "[review] LGTM given by: #{lgtm_authors.join(', ')}"
           puts "[notice] You still need a LGTM from: #{open_comment_authors.join(', ')}" if open_comment_authors.any?
         else
           puts "[notice] No one has reviewed your pull request..."

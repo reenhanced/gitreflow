@@ -1,10 +1,11 @@
 require 'rubygems'
 require 'rake'
-require 'json/pure'
 require 'open-uri'
 require "highline/import"
 require 'httpclient'
 require 'github_api'
+require 'json/pure'
+require 'colorize'
 
 module GitReflow
   extend self
@@ -130,7 +131,6 @@ module GitReflow
     `git log --pretty=format:"%s" --no-merges -n 1`.strip
   end
 
-  private
 
   def set_oauth_token(oauth_token)
     `git config --global --replace-all github.oauth-token #{oauth_token}`
@@ -188,20 +188,25 @@ module GitReflow
     # first we'll gather all the authors that have commented on the pull request
     all_comments    = pull_request_comments(pull_request)
     comment_authors = comment_authors_for_pull_request(pull_request)
+    lgtm_authors    = []
 
     # now we need to check that all the commented authors have given a lgtm after the last commit
     all_comments.each do |comment|
       next unless comment_authors.include?(comment.user.login)
-      pull_last_committed_at = Time.parse pull_request.head.repo.updated_at
+      pull_last_committed_at = get_commited_time(pull_request.head.sha)
       comment_created_at     = Time.parse(comment.created_at)
       if comment_created_at > pull_last_committed_at
-        if comment.body =~ LGTM
-          comment_authors -= [comment.user.login]
+        if comment[:body] =~ LGTM
+          lgtm_authors << comment.user.login
         else
           comment_authors << comment.user.login unless comment_authors.include?(comment.user.login)
         end
+      else
+        comment_authors -= [comment.user.login] if comment_authors.include?(comment.user.login)
       end
     end
+
+    comment_authors -= lgtm_authors
 
     comment_authors || []
   end
@@ -212,7 +217,7 @@ module GitReflow
 
     all_comments.each do |comment|
       next if options[:after] and Time.parse(comment.created_at) < options[:after]
-      comment_authors << comment.user.login if !comment_authors.include?(comment.user.login) and (options[:with].nil? or comment.body =~ options[:with])
+      comment_authors << comment.user.login if !comment_authors.include?(comment.user.login) and (options[:with].nil? or comment[:body] =~ options[:with])
     end
 
     # remove the current user from the list to check
@@ -223,34 +228,44 @@ module GitReflow
     summary_data = {
       "branches"    => "#{pull_request.head.label} -> #{pull_request.base.label}",
       "number"      => pull_request.number,
-      "url"         => pull_request.html_url,
-      "reviewed by" => (comment_authors_for_pull_request(pull_request).join(", ") || "nobody")
+      "url"         => pull_request.html_url
     }
 
     notices = ""
+    reviewed_by = comment_authors_for_pull_request(pull_request).map {|author| author.colorize(:red) }
 
     # check for needed lgtm's
     pull_comments = pull_request_comments(pull_request)
-    if pull_comments.any?
+    if pull_comments.reject {|comment| comment.user.login == github_user}.any?
       open_comment_authors = find_authors_of_open_pull_request_comments(pull_request)
-      last_committed_at    = Time.parse pull_request.head.repo.updated_at
+      last_committed_at    = get_commited_time(pull_request.head.sha)
       lgtm_authors         = comment_authors_for_pull_request(pull_request, :with => LGTM, :after => last_committed_at)
 
       summary_data.merge!("Last comment"  => pull_comments.last.body)
-      summary_data.merge!("LGTM given by" => "#{lgtm_authors.join(', ')}") if lgtm_authors.any?
+
+      if lgtm_authors.any?
+        reviewed_by.map! { |author| lgtm_authors.include?(author.uncolorize) ? author.colorize(:green) : author }
+      end
 
       notices << "[notice] You still need a LGTM from: #{open_comment_authors.join(', ')}\n" if open_comment_authors.any?
     else
       notices << "[notice] No one has reviewed your pull request...\n"
     end
 
-    padding_size = summary_data.keys.max{|a,b| a.size <=> b.size }.size + 2
+    summary_data['reviewed by'] = reviewed_by.join(', ')
+
+    padding_size = summary_data.keys.max_by(&:size).size + 2
     summary_data.keys.sort.each do |name|
       string_format = "    %-#{padding_size}s %s\n"
       printf string_format, "#{name}:", summary_data[name]
     end
 
-    puts "\n#{notices}"
+    puts "\n#{notices}" if notices != ''
+  end
+
+  def get_commited_time(commit_sha)
+    last_commit = github.repos.commits.find remote_user, remote_repo_name, commit_sha
+    Time.parse last_commit.commit.author[:date]
   end
 
   # WARNING: this currently only supports OS X and UBUNTU

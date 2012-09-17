@@ -1,6 +1,6 @@
 require 'rubygems'
 require 'rspec'
-require 'json'
+require 'multi_json'
 require 'webmock/rspec'
 require 'ruby-debug'
 

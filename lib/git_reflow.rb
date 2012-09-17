@@ -1,10 +1,11 @@
 require 'rubygems'
 require 'rake'
-require 'json/pure'
 require 'open-uri'
 require "highline/import"
 require 'httpclient'
 require 'github_api'
+require 'json/pure'
+require 'colorize'
 
 module GitReflow
   extend self
@@ -39,20 +40,8 @@ module GitReflow
       error_message = e.to_s
       if error_message =~ /request already exists/i
         existing_pull_request = find_pull_request( :from => current_branch, :to => options['base'] )
-        puts "Existing pull request at: #{existing_pull_request[:html_url]}"
-
-        # check for needed lgtm's
-        pull_comments = pull_request_comments(existing_pull_request)
-        if pull_comments.any?
-          open_comment_authors = find_authors_of_open_pull_request_comments(existing_pull_request)
-          last_committed_at    = Time.parse existing_pull_request.head.repo.updated_at
-          lgtm_authors         = comment_authors_for_pull_request(existing_pull_request, :with => LGTM, :after => last_committed_at)
-          puts "[review] LGTM given by: #{lgtm_authors.join(', ')}" if lgtm_authors.any?
-          puts "[notice] You still need a LGTM from: #{open_comment_authors.join(', ')}" if open_comment_authors.any?
-        else
-          puts "[notice] No one has reviewed your pull request..."
-        end
-
+        puts "A pull request already exists for these branches:"
+        display_pull_request_summary(existing_pull_request)
         ask_to_open_in_browser(existing_pull_request.html_url)
       else
         puts error_message
@@ -78,13 +67,13 @@ module GitReflow
         if open_comment_authors.empty?
           lgtm_authors   = comment_authors_for_pull_request(existing_pull_request, :with => LGTM)
           commit_message = get_first_commit_message
-          puts "Merging pull request ##{existing_pull_request[:number]}: '#{existing_pull_request[:title]}', from '#{existing_pull_request[:head][:label]}' into '#{existing_pull_request[:base][:label]}'"
+          puts "Merging pull request ##{existing_pull_request.number}: '#{existing_pull_request.title}', from '#{existing_pull_request.head.label}' into '#{existing_pull_request.base.label}'"
 
           update_destination(options['base'])
           merge_feature_branch(:feature_branch => feature_branch,
                                :destination_branch => options['base'],
-                               :pull_request_number => existing_pull_request[:number],
-                               :message => "\nCloses ##{existing_pull_request[:number]}\n\nLGTM given by: @#{lgtm_authors.join(', @')}\n")
+                               :pull_request_number => existing_pull_request.number,
+                               :message => "\nCloses ##{existing_pull_request.number}\n\nLGTM given by: @#{lgtm_authors.join(', @')}\n")
           append_to_squashed_commit_message(commit_message)
           committed = system('git commit')
 
@@ -142,7 +131,6 @@ module GitReflow
     `git log --pretty=format:"%s" --no-merges -n 1`.strip
   end
 
-  private
 
   def set_oauth_token(oauth_token)
     `git config --global --replace-all github.oauth-token #{oauth_token}`
@@ -181,8 +169,8 @@ module GitReflow
   def find_pull_request(options)
     existing_pull_request = nil
     github.pull_requests.all(remote_user, remote_repo_name, :state => 'open') do |pull_request|
-      if pull_request[:base][:label] == "#{remote_user}:#{options[:to]}" and
-         pull_request[:head][:label] == "#{remote_user}:#{options[:from]}"
+      if pull_request.base.label == "#{remote_user}:#{options[:to]}" and
+         pull_request.head.label == "#{remote_user}:#{options[:from]}"
          existing_pull_request = pull_request
          break
       end
@@ -191,8 +179,8 @@ module GitReflow
   end
 
   def pull_request_comments(pull_request)
-    comments        = github.issues.comments.all remote_user, remote_repo_name, pull_request[:number]
-    review_comments = github.pull_requests.comments.all remote_user, remote_repo_name, pull_request[:number]
+    comments        = github.issues.comments.all remote_user, remote_repo_name, pull_request.number
+    review_comments = github.pull_requests.comments.all remote_user, remote_repo_name, pull_request.number
     comments + review_comments
   end
 
@@ -200,20 +188,25 @@ module GitReflow
     # first we'll gather all the authors that have commented on the pull request
     all_comments    = pull_request_comments(pull_request)
     comment_authors = comment_authors_for_pull_request(pull_request)
+    lgtm_authors    = []
 
     # now we need to check that all the commented authors have given a lgtm after the last commit
     all_comments.each do |comment|
       next unless comment_authors.include?(comment.user.login)
-      pull_last_committed_at = Time.parse pull_request.head.repo.updated_at
+      pull_last_committed_at = get_commited_time(pull_request.head.sha)
       comment_created_at     = Time.parse(comment.created_at)
       if comment_created_at > pull_last_committed_at
-        if comment.body =~ LGTM
-          comment_authors -= [comment.user.login]
+        if comment[:body] =~ LGTM
+          lgtm_authors << comment.user.login
         else
           comment_authors << comment.user.login unless comment_authors.include?(comment.user.login)
         end
+      else
+        comment_authors -= [comment.user.login] if comment_authors.include?(comment.user.login)
       end
     end
+
+    comment_authors -= lgtm_authors
 
     comment_authors || []
   end
@@ -224,11 +217,55 @@ module GitReflow
 
     all_comments.each do |comment|
       next if options[:after] and Time.parse(comment.created_at) < options[:after]
-      comment_authors << comment.user.login if !comment_authors.include?(comment.user.login) and (options[:with].nil? or comment.body =~ options[:with])
+      comment_authors << comment.user.login if !comment_authors.include?(comment.user.login) and (options[:with].nil? or comment[:body] =~ options[:with])
     end
 
     # remove the current user from the list to check
     comment_authors -= [github_user]
+  end
+
+  def display_pull_request_summary(pull_request)
+    summary_data = {
+      "branches"    => "#{pull_request.head.label} -> #{pull_request.base.label}",
+      "number"      => pull_request.number,
+      "url"         => pull_request.html_url
+    }
+
+    notices = ""
+    reviewed_by = comment_authors_for_pull_request(pull_request).map {|author| author.colorize(:red) }
+
+    # check for needed lgtm's
+    pull_comments = pull_request_comments(pull_request)
+    if pull_comments.reject {|comment| comment.user.login == github_user}.any?
+      open_comment_authors = find_authors_of_open_pull_request_comments(pull_request)
+      last_committed_at    = get_commited_time(pull_request.head.sha)
+      lgtm_authors         = comment_authors_for_pull_request(pull_request, :with => LGTM, :after => last_committed_at)
+
+      summary_data.merge!("Last comment"  => pull_comments.last.body)
+
+      if lgtm_authors.any?
+        reviewed_by.map! { |author| lgtm_authors.include?(author.uncolorize) ? author.colorize(:green) : author }
+      end
+
+      notices << "[notice] You still need a LGTM from: #{open_comment_authors.join(', ')}\n" if open_comment_authors.any?
+    else
+      notices << "[notice] No one has reviewed your pull request...\n"
+    end
+
+    summary_data['reviewed by'] = reviewed_by.join(', ')
+
+    padding_size = summary_data.keys.max_by(&:size).size + 2
+    summary_data.keys.sort.each do |name|
+      string_format = "    %-#{padding_size}s %s\n"
+      printf string_format, "#{name}:", summary_data[name]
+    end
+
+    puts "\n#{notices}" if notices != ''
+  end
+
+  def get_commited_time(commit_sha)
+    last_commit = github.repos.commits.find remote_user, remote_repo_name, commit_sha
+    Time.parse last_commit.commit.author[:date]
   end
 
   # WARNING: this currently only supports OS X and UBUNTU

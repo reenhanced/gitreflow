@@ -22,6 +22,19 @@ module GitReflow
     set_oauth_token(oauth_token)
   end
 
+  def status(destination_branch)
+    pull_request = find_pull_request( :from => current_branch, :to => destination_branch )
+
+    if pull_request.nil?
+      puts "\n[notice] No pull request exists for #{current_branch} -> #{destination_branch}"
+      puts "[notice] Run 'git reflow review #{destination_branch}' to start the review process"
+    else
+      puts "Here's the status of your review:"
+      display_pull_request_summary(pull_request)
+      ask_to_open_in_browser(pull_request)
+    end
+  end
+
   def review(options = {})
     options['base'] ||= 'master'
     fetch_destination options['base']

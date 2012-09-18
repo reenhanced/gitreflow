@@ -22,14 +22,6 @@ program_desc 'Git Reflow manages your git workflow.'
 
 version GitReflow::VERSION
 
-desc 'Describe some switch here'
-switch [:s,:switch]
-
-desc 'Describe some flag here'
-default_value 'the default'
-arg_name 'The name of the argument'
-flag [:f,:flagname]
-
 desc 'Setup your GitHub account'
 command :setup do |c|
   c.action do |global_options,options,args|
@@ -58,6 +50,15 @@ command :start do |c|
     end
     # If you have any errors, just raise them
     # raise "that command made no sense"
+  end
+end
+
+desc 'Display information about the status of your feature in the review process'
+arg_name "destination_branch - the branch you're merging your feature into ('master' is default)"
+command :status do |c|
+  c.action do |global_options, options, args|
+    destination_branch = args[0] || 'master'
+    GitReflow.status destination_branch
   end
 end
 

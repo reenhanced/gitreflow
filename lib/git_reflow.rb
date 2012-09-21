@@ -1,5 +1,5 @@
 require 'rubygems'
-require 'rake'
+require 'git_reflow/version.rb'
 require 'open-uri'
 require "highline/import"
 require 'httpclient'

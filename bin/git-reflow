@@ -14,7 +14,6 @@ $: << File.expand_path(File.dirname(File.realpath(__FILE__)) + '/../lib')
 require 'rubygems'
 require 'gli'
 require 'git_reflow'
-require 'git_reflow/version'
 
 include GLI::App
 
@@ -22,85 +21,7 @@ program_desc 'Git Reflow manages your git workflow.'
 
 version GitReflow::VERSION
 
-desc 'Setup your GitHub account'
-command :setup do |c|
-  c.action do |global_options,options,args|
-    GitReflow.setup
-  end
-end
-
-desc 'Start will create a new feature branch and setup remote tracking'
-arg_name 'Describe arguments to start here'
-command :start do |c|
-  c.desc 'Describe a switch to start'
-  c.switch :s
-
-  c.desc 'Describe a flag to start'
-  c.default_value 'default'
-  c.flag :f
-  c.action do |global_options,options,args|
-
-    # Your command logic here
-    if args.empty?
-      raise "usage: git-reflow start [new-branch-name]"
-    else
-      `git push origin master:refs/heads/#{args[0]}`
-      `git fetch origin`
-      `git checkout --track -b #{args[0]} origin/#{args[0]}`
-    end
-    # If you have any errors, just raise them
-    # raise "that command made no sense"
-  end
-end
-
-desc 'Display information about the status of your feature in the review process'
-arg_name "destination_branch - the branch you're merging your feature into ('master' is default)"
-command :status do |c|
-  c.action do |global_options, options, args|
-    destination_branch = args[0] || 'master'
-    GitReflow.status destination_branch
-  end
-end
-
-desc 'Describe review here'
-arg_name 'Describe arguments to review here'
-command :review do |c|
-  c.action do |global_options,options,args|
-    review_options = {'base' => nil, 'title' => nil, 'body' => nil}
-    case args.length
-    when 3
-      review_options['base'] = args[0]
-      review_options['title'] = args[1]
-      review_options['body'] = args[2]
-    when 2
-      review_options['base'] = args[0]
-      review_options['title'] = args[1]
-      review_options['body'] = review_options['title']
-    when 1
-      review_options['base'] = args[0]
-      review_options['title'] = review_options['body'] = GitReflow.get_first_commit_message
-    else
-      review_options['title'] = review_options['body'] = GitReflow.get_first_commit_message
-    end
-    GitReflow.review review_options
-  end
-end
-
-desc 'deliver will merge your feature branch down to your base branch'
-arg_name 'base_branch - the branch you want to merge into'
-command :deliver do |c|
-  c.action do |global_options,options,args|
-    deliver_options = {'base' => nil, 'head' => nil}
-    case args.length
-    when 2
-      deliver_options['base'] = args[0]
-      deliver_options['head'] = args[1]
-    when 1
-      deliver_options['base'] = args[0]
-    end
-    GitReflow.deliver deliver_options
-  end
-end
+commands_from 'git_reflow/commands'
 
 pre do |global,command,options,args|
   # Pre logic here

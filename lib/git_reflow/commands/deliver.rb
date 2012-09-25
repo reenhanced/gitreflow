@@ -4,6 +4,7 @@ long_desc 'merge your feature branch down to your base branch, and cleanup your 
 command :deliver do |c|
   c.desc 'merge your feature branch down to your base branch, and cleanup your feature branch'
   c.arg_name 'base_branch - the branch you want to merge into'
+  c.switch [:f, :'skip-lgtm']
   c.action do |global_options,options,args|
     deliver_options = {'base' => nil, 'head' => nil}
     case args.length
@@ -13,6 +14,7 @@ command :deliver do |c|
     when 1
       deliver_options['base'] = args[0]
     end
+    deliver_options.merge({'skip_lgtm' => options[:'skip-lgtm']})
     GitReflow.deliver deliver_options
   end
 end

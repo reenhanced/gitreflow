@@ -1,11 +1,15 @@
 require 'rubygems'
-require 'git_reflow/version.rb'
 require 'open-uri'
 require "highline/import"
 require 'httpclient'
 require 'github_api'
 require 'json/pure'
 require 'colorize'
+require 'git_reflow/version.rb'
+require 'git_reflow/hooks.rb'
+
+# load all supported service hooks
+Dir["git_reflow/services/*.rb"].each {|file| require file }
 
 module GitReflow
   extend self

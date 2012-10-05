@@ -5,11 +5,17 @@ require 'httpclient'
 require 'github_api'
 require 'json/pure'
 require 'colorize'
+
+require 'ext/object/blank.rb'
 require 'git_reflow/version.rb'
-require 'git_reflow/hooks.rb'
+require 'git_reflow/services.rb'
 
 # load all supported service hooks
-Dir["git_reflow/services/*.rb"].each {|file| require file }
+Dir[File.dirname(__FILE__) + "/git_reflow/services/*.rb"].each do |path|
+  require path
+  file_name = File.basename(path, '.rb')
+  GitReflow::Services::add_service(GitReflow::Services::const_get(file_name.capitalize))
+end
 
 module GitReflow
   extend self

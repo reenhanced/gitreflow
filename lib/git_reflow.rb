@@ -6,9 +6,9 @@ require 'github_api'
 require 'json/pure'
 require 'colorize'
 
-require 'ext/object/blank.rb'
+require "#{File.dirname(__FILE__)}/ext/object/blank.rb"
 require 'git_reflow/version.rb'
-require 'git_reflow/services.rb'
+require "#{File.dirname(__FILE__)}/git_reflow/services.rb"
 
 # load all supported service hooks
 Dir[File.dirname(__FILE__) + "/git_reflow/services/*.rb"].each do |path|
@@ -21,6 +21,17 @@ module GitReflow
   extend self
 
   LGTM = /lgtm|looks good to me|:\+1:|:thumbsup:/i
+
+  def commands
+    return @commands if @commands
+    @commands = []
+    Dir[File.dirname(__FILE__) + "/git_reflow/commands/*.rb"].each do |path|
+      filename = File.basename(path, '.rb')
+      @commands << filename
+    end
+
+    @commands
+  end
 
   def setup
     gh_user = ask "Please enter your GitHub username: "

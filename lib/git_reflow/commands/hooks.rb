@@ -36,20 +36,41 @@ command :hooks do |c|
       GitReflow::Services::supported_services.each_with_index do |service, index|
         puts "\t#{index+1}) #{service.name}"
       end
-      selection = ask "Enter the number for the corresponding service: "
+      selection = ask "\nEnter the number for the corresponding service: "
 
       # 2) Check for existing setup
-      case selection
-      when /1/
-        unless GitReflow::Services::Campfire.setup?
-          puts "\nYou must setup your Campfire account..."
-          GitReflow::Services::Campfire.setup
-        else
-          puts "Campfire setup..."
-        end
+      selection = selection.to_i - 1
+      selected_service = GitReflow::Services::supported_services[selection]
+      exit_now! 'Please enter a valid number for the service you want to use' unless selected_service
+
+      unless selected_service.setup?
+        puts "\nYou must setup your Campfire account..."
+        selected_service.setup
       else
-        exit_now! 'Please enter a valid number for the service you want to use'
+        puts "Campfire already setup...\n"
       end
+
+      # 3) ask for command to add hook to
+      puts "\nSelect a command you want this to hook onto:"
+      GitReflow::commands.each_with_index do |command, index|
+        puts "\t#{index+1}) #{command}"
+      end
+
+      selection = ask "\nEnter the number for the corresponding command: "
+      selection = selection.to_i - 1
+      selected_command = GitReflow.commands[selection]
+      exit_now! 'Please enter a valid number for the service you want to use' unless selected_command
+
+      # 4) ask for before or after command
+      selection = ask "\nPerform this hook before or after this command? "
+
+      case selection
+      when /^b/
+        selected_service.add_hook(:command => selected_command, :timing => 'before')
+      else
+        selected_service.add_hook(:command => selected_command, :timing => 'after')
+      end
+
     end
   end
 

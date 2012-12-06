@@ -10,7 +10,7 @@ module GitReflow
       raise METHOD_MUST_BE_IMPLEMENTED_MESSAGE
     end
 
-    def send_update(message="")
+    def add_hook(options = {})
       raise METHOD_MUST_BE_IMPLEMENTED_MESSAGE
     end
 

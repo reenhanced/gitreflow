@@ -1,5 +1,5 @@
 require 'tinder'
-require 'git_reflow/service'
+require "#{File.dirname(__FILE__)}/../service"
 
 module GitReflow
   module Services
@@ -13,6 +13,21 @@ module GitReflow
 
       def self.name
         "Campfire"
+      end
+
+      def self.add_hook(options = {})
+        puts "\nSelect an action you want this hook to perform:"
+        self.actions.each_with_index do |action, index|
+          puts "\t#{index+1}) #{action}"
+        end
+
+        selection = ask "\nEnter the number for the corresponding action: "
+        selection = selection.to_i -1
+        selected_action = self.actions[selection]
+
+        exit_now! 'Please enter a valid number for the action you want to perform' unless selected_action
+        `git config --global --replace-all reflow.hooks.campfire.#{options[:timing]}.#{options[:command]}`
+        puts "\nAdded #{self.name} hook to preform #{options[:timing]} the #{options[:command]}"
       end
 
       def send_update(message = "", room = "")
@@ -42,7 +57,7 @@ module GitReflow
       def self.setup?
         found_all_required = false
         required_credentials.each do |key, value|
-          found_all_required = `git config --global --get reflow.hooks.campfire.#{key}`.present?
+          found_all_required = `git config --global --get reflow.services.campfire.#{key}`.present?
           break unless found_all_required
         end
 
@@ -50,19 +65,19 @@ module GitReflow
       end
 
       def self.subdomain
-        `git config --global --get reflow.hooks.campfire.subdomain`.strip
+        `git config --global --get reflow.services.campfire.subdomain`.strip
       end
 
       def self.subdomain=(campfire_subdomain)
-        `git config --global --replace-all reflow.hooks.campfire.subdomain #{campfire_subdomain}`
+        `git config --global --replace-all reflow.services.campfire.subdomain #{campfire_subdomain}`
       end
 
       def self.token
-        `git config --global --get reflow.hooks.campfire.token`.strip
+        `git config --global --get reflow.services.campfire.token`.strip
       end
 
       def self.token=(campfire_token)
-        `git config --global --replace-all reflow.hooks.campfire.token #{campfire_token}`
+        `git config --global --replace-all reflow.services.campfire.token #{campfire_token}`
       end
 
       def self.campfire

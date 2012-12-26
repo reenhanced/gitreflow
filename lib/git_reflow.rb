@@ -210,9 +210,9 @@ module GitReflow
       comment_created_at     = Time.parse(comment.created_at)
       if comment_created_at > pull_last_committed_at
         if comment[:body] =~ LGTM
-          lgtm_authors |= comment.user.login
+          lgtm_authors |= [comment.user.login]
         else
-          comment_authors |= comment.user.login unless comment_authors.include?(comment.user.login)
+          comment_authors |= [comment.user.login] unless comment_authors.include?(comment.user.login)
         end
       else
         comment_authors -= [comment.user.login] if comment_authors.include?(comment.user.login)
@@ -230,7 +230,7 @@ module GitReflow
 
     all_comments.each do |comment|
       next if options[:after] and Time.parse(comment.created_at) < options[:after]
-      comment_authors |= comment.user.login if !comment_authors.include?(comment.user.login) and (options[:with].nil? or comment[:body] =~ options[:with])
+      comment_authors |= [comment.user.login] if !comment_authors.include?(comment.user.login) and (options[:with].nil? or comment[:body] =~ options[:with])
     end
 
     # remove the current user from the list to check

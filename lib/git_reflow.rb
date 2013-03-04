@@ -79,7 +79,7 @@ module GitReflow
         # if there any comment_authors left, then they haven't given a lgtm after the last commit
         if open_comment_authors.empty? or options['skip-lgtm']
           lgtm_authors   = comment_authors_for_pull_request(existing_pull_request, :with => LGTM)
-          commit_message = get_first_commit_message
+          commit_message = existing_pull_request[:body] || get_first_commit_message
           puts "Merging pull request ##{existing_pull_request.number}: '#{existing_pull_request.title}', from '#{existing_pull_request.head.label}' into '#{existing_pull_request.base.label}'"
 
           update_destination(options['base'])

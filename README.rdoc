@@ -20,35 +20,6 @@ Create a pull request for your branch against master
   $ git reflow deliver
 If your code is 'LGTM'd, merge to master and delete the feature branch
 
-== Guiding principles:
-* You should already know what you're doing.
-  We assume you know how to use git.
-
-* The +master+ branch is your codebase.
-  You don't need multiple branches for code actually want to use.
-
-* +master+ should remain stable at all times.
-  The entire team depends on it.
-
-* No direct commits to +master+.
-  All work happens in feature branches. From a single commit to hundreds.
-
-* All feature branches are reviewed via pull requests.
-
-* Looks Good To Me. All feature branches require approval.
-  We look for the string 'LGTM' in a comment on the pull request to know it's ready to merge.
-
-* If you make a new commit in your branch, you require another review.
-
-* All participants in a pull request must approve the pull request.
-  If 2 guys comment, you need 2 'LGTM's before the code is ready to merge.
-
-* Once approved, your feature branch is squash merged to master.
-  This makes the history of the master branch extremely clean and easy to follow.
-
-* Git blame becomes your friend. You'll know who to blame and can see the full context of changes.
-  Squash commits to master mean every commit represents the whole feature, not a "typo fix".
-
 == Using Reflow
 
 === Installation
@@ -145,38 +116,66 @@ We built this to get in your way and make you follow the process. If you don't l
 
 This is what it looks like:
   $ git reflow deliver
-
   From github.com:reenhanced/gitreflow
- * branch            master     -> FETCH_HEAD
-Merging pull request #36: 'Enforce at least one LGTM before delivery', from 'reenhanced:nh-fail-without-lgtm' into 'reenhanced:master'
-Switched to branch 'master'
-From github.com:reenhanced/gitreflow
- * branch            master     -> FETCH_HEAD
-Already up-to-date.
-Switched to branch 'nh-fail-without-lgtm'
-Switched to branch 'master'
-Updating c2ec1b1..f90e111
-Fast-forward
-Squash commit -- not updating HEAD
- lib/git_reflow.rb | 71 +++++++++++++++++++++++++++----------------------------
- 1 file changed, 35 insertions(+), 36 deletions(-)
-[master d1b4dd5] Enforces LGTM before deliver, even with no comments.
- 1 file changed, 35 insertions(+), 36 deletions(-)
-Merge complete!
-Would you like to push this branch to your remote repo and cleanup your feature branch? y
-Counting objects: 7, done.
-Delta compression using up to 16 threads.
-Compressing objects: 100% (4/4), done.
-Writing objects: 100% (4/4), 1.38 KiB, done.
-Total 4 (delta 2), reused 0 (delta 0)
-To git@github.com:reenhanced/gitreflow.git
-   c2ec1b1..d1b4dd5  master -> master
+  * branch            master     -> FETCH_HEAD
+  Merging pull request #36: 'Enforce at least one LGTM before delivery', from 'reenhanced:nh-fail-without-lgtm' into 'reenhanced:master'
+  Switched to branch 'master'
+  From github.com:reenhanced/gitreflow
+   * branch            master     -> FETCH_HEAD
+  Already up-to-date.
+  Switched to branch 'nh-fail-without-lgtm'
+  Switched to branch 'master'
+  Updating c2ec1b1..f90e111
+  Fast-forward
+  Squash commit -- not updating HEAD
+   lib/git_reflow.rb | 71 +++++++++++++++++++++++++++----------------------------
+   1 file changed, 35 insertions(+), 36 deletions(-)
+  [master d1b4dd5] Enforces LGTM before deliver, even with no comments.
+   1 file changed, 35 insertions(+), 36 deletions(-)
+  Merge complete!
+  Would you like to push this branch to your remote repo and cleanup your feature branch? y
+  Counting objects: 7, done.
+  Delta compression using up to 16 threads.
+  Compressing objects: 100% (4/4), done.
+  Writing objects: 100% (4/4), 1.38 KiB, done.
+  Total 4 (delta 2), reused 0 (delta 0)
+  To git@github.com:reenhanced/gitreflow.git
+     c2ec1b1..d1b4dd5  master -> master
 
-To git@github.com:reenhanced/gitreflow.git
- - [deleted]         nh-fail-without-lgtm
+  To git@github.com:reenhanced/gitreflow.git
+   - [deleted]         nh-fail-without-lgtm
 
-Deleted branch nh-fail-without-lgtm (was f90e111).
-Nice job buddy.
+  Deleted branch nh-fail-without-lgtm (was f90e111).
+  Nice job buddy.
+
+== Guiding principles:
+* You should already know what you're doing.
+  We assume you know how to use git.
+
+* The +master+ branch is your codebase.
+  You don't need multiple branches for code actually want to use.
+
+* +master+ should remain stable at all times.
+  The entire team depends on it.
+
+* No direct commits to +master+.
+  All work happens in feature branches. From a single commit to hundreds.
+
+* All feature branches are reviewed via pull requests.
+
+* Looks Good To Me. All feature branches require approval.
+  We look for the string 'LGTM' in a comment on the pull request to know it's ready to merge.
+
+* If you make a new commit in your branch, you require another review.
+
+* All participants in a pull request must approve the pull request.
+  If 2 guys comment, you need 2 'LGTM's before the code is ready to merge.
+
+* Once approved, your feature branch is squash merged to master.
+  This makes the history of the master branch extremely clean and easy to follow.
+
+* Git blame becomes your friend. You'll know who to blame and can see the full context of changes.
+  Squash commits to master mean every commit represents the whole feature, not a "typo fix".
 
 
 `$ git reflow deliver [branch]`

@@ -228,7 +228,7 @@ module GitReflow
     all_comments.each do |comment|
       next if options[:after] and Time.parse(comment.created_at) < options[:after]
       if (options[:with].nil? or comment[:body] =~ options[:with])
-        comment_authors << comment.user.login unless comment_authors.include?(comment.user.login)
+        comment_authors |= [comment.user.login]
       end
     end
 

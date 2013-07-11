@@ -1,31 +1,41 @@
-git-reflow
-==========
+= git-reflow
+
 Reflow is a no bullshit git workflow designed to help you maintain quality and get things done.
 
 == Benefits:
-* Reduce risks of improper merges.
-* Enforce quality standards on all of your code.
 * Save minutes every day that add up to hours of more productive time.
-* Stop worrying about how to deliver your code and just do it.
-* The last git workflow you'll ever need.
+* Enforce better quality standards on all of your code.
+* Stop worrying about how to deliver your code and just get work done.
+* Reduce the risk of improper merges.
+* Stop searching for other git workflows.
   Covers 90% of your needs without junk you'll never use.
+
+== Quickstart
+  $ git reflow start nh-branchy-branch
+Create and switch to new branch +nh-branchy-branch+
+
+  $ git reflow review
+Create a pull request for your branch against master
+
+  $ git reflow deliver
+If your code is 'LGTM'd, merge to master and delete the feature branch
 
 == Guiding principles:
 * You should already know what you're doing.
   We assume you know how to use git.
 
-* The master branch is the codebase.
-  You don't need multiple branches of code actually want to use.
+* The +master+ branch is your codebase.
+  You don't need multiple branches for code actually want to use.
 
-* Master should remain stable at all times.
+* +master+ should remain stable at all times.
   The entire team depends on it.
 
-* No direct commits to master.
+* No direct commits to +master+.
   All work happens in feature branches. From a single commit to hundreds.
 
 * All feature branches are reviewed via pull requests.
 
-* Looks Good To Me. All feature branches require approval (even from yourself)
+* Looks Good To Me. All feature branches require approval.
   We look for the string 'LGTM' in a comment on the pull request to know it's ready to merge.
 
 * If you make a new commit in your branch, you require another review.
@@ -38,8 +48,6 @@ Reflow is a no bullshit git workflow designed to help you maintain quality and g
 
 * Git blame becomes your friend. You'll know who to blame and can see the full context of changes.
   Squash commits to master mean every commit represents the whole feature, not a "typo fix".
-
----
 
 == Using Reflow
 
@@ -137,6 +145,39 @@ We built this to get in your way and make you follow the process. If you don't l
 
 This is what it looks like:
   $ git reflow deliver
+
+  From github.com:reenhanced/gitreflow
+ * branch            master     -> FETCH_HEAD
+Merging pull request #36: 'Enforce at least one LGTM before delivery', from 'reenhanced:nh-fail-without-lgtm' into 'reenhanced:master'
+Switched to branch 'master'
+From github.com:reenhanced/gitreflow
+ * branch            master     -> FETCH_HEAD
+Already up-to-date.
+Switched to branch 'nh-fail-without-lgtm'
+Switched to branch 'master'
+Updating c2ec1b1..f90e111
+Fast-forward
+Squash commit -- not updating HEAD
+ lib/git_reflow.rb | 71 +++++++++++++++++++++++++++----------------------------
+ 1 file changed, 35 insertions(+), 36 deletions(-)
+[master d1b4dd5] Enforces LGTM before deliver, even with no comments.
+ 1 file changed, 35 insertions(+), 36 deletions(-)
+Merge complete!
+Would you like to push this branch to your remote repo and cleanup your feature branch? y
+Counting objects: 7, done.
+Delta compression using up to 16 threads.
+Compressing objects: 100% (4/4), done.
+Writing objects: 100% (4/4), 1.38 KiB, done.
+Total 4 (delta 2), reused 0 (delta 0)
+To git@github.com:reenhanced/gitreflow.git
+   c2ec1b1..d1b4dd5  master -> master
+
+To git@github.com:reenhanced/gitreflow.git
+ - [deleted]         nh-fail-without-lgtm
+
+Deleted branch nh-fail-without-lgtm (was f90e111).
+Nice job buddy.
+
 
 `$ git reflow deliver [branch]`
     - Do we have lgtm after last commit?

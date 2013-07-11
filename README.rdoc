@@ -1,24 +1,28 @@
 = git-reflow
 
+http://www.reenhanced.com/images/reflow.jpg
+
 Reflow is a no bullshit git workflow designed to help you maintain quality and get things done.
 
 == Benefits:
 * Save minutes every day that add up to hours of more productive time.
-* Enforce better quality standards on all of your code.
+* Enforce code reviews across your team without the chance accidentally skip the review.
 * Stop worrying about how to deliver your code and just get work done.
+* Know that your entire team delivers code the same way.
 * Reduce the risk of improper merges.
+* Work with diverse teams with less worry about different processes.
 * Stop searching for other git workflows.
-  Covers 90% of your needs without junk you'll never use.
+  Reflow covers 90% of your needs without junk you'll never use.
 
 == Quickstart
+Create and switch to new branch +nh-branchy-branch+:
   $ git reflow start nh-branchy-branch
-Create and switch to new branch +nh-branchy-branch+
 
+Create a pull request for your branch against +master+:
   $ git reflow review
-Create a pull request for your branch against master
 
+If your code is 'LGTM'd, squash merge to +master+ and delete the feature branch:
   $ git reflow deliver
-If your code is 'LGTM'd, merge to master and delete the feature branch
 
 == Using Reflow
 
@@ -35,7 +39,7 @@ After installation, run:
   git reflow setup
 
 It looks like this:
-  $ git reflow setup                                                                                                                                                                                               [11:43:06]
+  $ git reflow setup
   Please enter your GitHub username: nhance
   Please enter your GitHub password (we do NOT store this):
 
@@ -71,7 +75,7 @@ After making commits to your branch, run +review+. Didn't push it up? We don't c
   To git@github.com:reenhanced/gitreflow.git
      c2ec1b1..1103006  nh-readme-update -> nh-readme-update
 
-  Successfully created pull request #35: Bootstrapping the readme. This commit is so I can show how review works
+  Successfully created pull request #35: Bootstrapping the readme. This is so I can show how review works
   Pull Request URL: https://github.com/reenhanced/gitreflow/pull/35
   Would you like to open it in your browser? y
 
@@ -109,10 +113,14 @@ This gives you details on who's reviewed your pull request. If someone has parti
 +status+ prevents you from having to open a browser to find out where your pull request is at. But in case you want to take a look, we give you the option to open it for you.
 
 === Delivering approved code
-You kick butt. You've got your code reviewed and now you're ready to merge it down to master and deploy. +deliver+ will take care of all of the steps for you to make this happen.
+You kick butt. You've got your code reviewed and now you're ready to merge it down to +master+ and deploy. Reflow +deliver+ will take care of all of the steps for you to make this happen.
 
-+deliver+ requires you to have a pull request, so you'll be protected on those mornings when the coffee isn't working yet.
+Reflow's +deliver+ requires you to have a pull request, so you'll be protected on those mornings when the coffee isn't working yet.
 We built this to get in your way and make you follow the process. If you don't like it, do it by hand. You already know what you're doing.
+
+You'll be presented with a prefilled commit message based on the body of your pull request which includes the text <code>Closes #XX</code> that will automatically close the associated pull request on github when deliver completes.
+
+Make a mistake and deliver too early? It happens. You'll be prompted after you edit your commit message if you want to push your updated +master+ to github. If you answer 'n', then you'll want to do <code>git reset --hard origin/master</code> and checkout your branch again.
 
 This is what it looks like:
   $ git reflow deliver
@@ -147,6 +155,62 @@ This is what it looks like:
 
   Deleted branch nh-fail-without-lgtm (was f90e111).
   Nice job buddy.
+  
+This is what the default commit message looks like:
+  Enforces LGTM before deliver, even with no comments.
+  Removes the need to review the pull request yourself if you make a
+  comment.
+  
+  Better error message if setup fails.
+  
+  Bug fixes.
+  
+  Closes #36
+  
+  LGTM given by: @codenamev
+  
+  Squashed commit of the following:
+  
+  commit f90e111
+  Author: Nicholas Hance <nhance@reenhanced.com>
+  Date:   Thu Jul 11 15:33:29 2013 -0400
+  ...
+  
+==== How it works
+This is what we do behind the scenes when you do +deliver+
+
+* Does a pull request exist?
+
+  If not, stop here. You need to run +review+.
+
+* Has the review been completed? Did we get a +LGTM+ from everyone who's participated?
+
+  If not, show a list of authors that need to provide a +LGTM+.
+  
+If the review is done, it's time to merge. Here's what happens:
+
+First, update our local +master+ so we don't get conflicts
+  git checkout master
+  git pull origin master
+
+Next, squash merge our feature branch
+  git merge --squash nh-branch-name
+  
+Now, we'll apply a little magic so we have a great commit message by default. Your editor will open and you'll see a nice default for your commit message based on the pull request body.
+
+Once you've saved the commit, prompt the user to see if we should continue
+  Merge complete!
+  Would you like to push this branch to your remote repo and cleanup your feature branch?
+  
+If 'y', then we'll push to +master+ and delete the feature branch
+  git push origin master
+  git push origin :nh-branch-name
+  git branch -D nh-branch-name
+  
+If 'n', then just stop here. The user can reset his local +master+.
+
+And we're done.
+
 
 == Guiding principles:
 * You should already know what you're doing.
@@ -178,16 +242,17 @@ This is what it looks like:
   Squash commits to master mean every commit represents the whole feature, not a "typo fix".
 
 
-`$ git reflow deliver [branch]`
-    - Do we have lgtm after last commit?
-      - If no, print "Still waiting for review" (Maybe provide a way to skip this with `--lgtm`?)
-    - Prompt "Accepted by:" and get name/email/github username of person who does acceptance
-    - Checkout destination branch
-    - Update destination from origin (`git pull origin [branch]`)
-    - Merge squashed (`git merge --squash branch-name`)
-    - Prepare commit message (Adds Closes #pull-request-number)
-    - Perform the commit
-    - Push to branch
-    - Delete the remote branch
-    - Delete the local branch
-    - Deploy (Maybe with flag `--deploy`)
+---
+
+== Contributing
+Pull requests are welcome. Please fork and submit. We use this tool every single day and as long as what you want to add doesn't change our workflow, we are happy to accept your updates.
+
+Authors:
+* @codenamev
+* @armyofgnomes
+* @nhance
+
+Built by Reenhanced:
+http://www.reenhanced.com
+
+<em>Licensed using the MIT license. Do whatever you like with this, but don't blame us if it breaks anything. You're a professional, and you're responsible for the tools you use.</em>

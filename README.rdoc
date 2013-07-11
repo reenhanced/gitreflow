@@ -6,7 +6,7 @@ Reflow is a no bullshit git workflow designed to help you maintain quality and g
 
 == Benefits:
 * Save minutes every day that add up to hours of more productive time.
-* Enforce code reviews across your team without the chance accidentally skip the review.
+* Enforce code reviews across your team without the chance of accidentally skipping the review.
 * Stop worrying about how to deliver your code and just get work done.
 * Know that your entire team delivers code the same way.
 * Reduce the risk of improper merges.

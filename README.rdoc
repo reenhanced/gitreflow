@@ -1,5 +1,7 @@
 = git-reflow
 
+http://www.reenhanced.com/images/reflow.jpg
+
 Reflow is a no bullshit git workflow designed to help you maintain quality and get things done.
 
 == Benefits:
@@ -11,14 +13,14 @@ Reflow is a no bullshit git workflow designed to help you maintain quality and g
   Covers 90% of your needs without junk you'll never use.
 
 == Quickstart
+Create and switch to new branch +nh-branchy-branch+:
   $ git reflow start nh-branchy-branch
-Create and switch to new branch +nh-branchy-branch+
 
+Create a pull request for your branch against +master+:
   $ git reflow review
-Create a pull request for your branch against master
 
+If your code is 'LGTM'd, squash merge to +master+ and delete the feature branch:
   $ git reflow deliver
-If your code is 'LGTM'd, merge to master and delete the feature branch
 
 == Using Reflow
 
@@ -35,7 +37,7 @@ After installation, run:
   git reflow setup
 
 It looks like this:
-  $ git reflow setup                                                                                                                                                                                               [11:43:06]
+  $ git reflow setup
   Please enter your GitHub username: nhance
   Please enter your GitHub password (we do NOT store this):
 
@@ -57,7 +59,7 @@ All of the work we do is reviewed by our team. This helps spread knowledge to mu
 The +review+ process within reflow creates a pull request for the currently checked out feature branch against master. That's all you want to do most of the time.
 We assume you know what you're doing, so if you need something different, do it by hand.
 
-After making commits to your branch, run +review+. Didn't push it up? We don't care, we'll do it for you.
+After making commits to your branch, run +reflow review+. Didn't push it up? We don't care, we'll do it for you.
 
   $ git reflow review
 
@@ -71,7 +73,7 @@ After making commits to your branch, run +review+. Didn't push it up? We don't c
   To git@github.com:reenhanced/gitreflow.git
      c2ec1b1..1103006  nh-readme-update -> nh-readme-update
 
-  Successfully created pull request #35: Bootstrapping the readme. This commit is so I can show how review works
+  Successfully created pull request #35: Bootstrapping the readme. This is so I can show how review works
   Pull Request URL: https://github.com/reenhanced/gitreflow/pull/35
   Would you like to open it in your browser? y
 
@@ -81,7 +83,7 @@ After making commits to your branch, run +review+. Didn't push it up? We don't c
 We output the pull request URL so you can distribute it to your team without leaving the terminal. But don't be a jerk, update the title and description before you do that.
 
 ==== How it works
-Behind the scenes, this is how +review+ works:
+Behind the scenes, this is how +reflow review+ works:
   git fetch origin
 
 Are we up-to-date with changes from master?
@@ -109,10 +111,14 @@ This gives you details on who's reviewed your pull request. If someone has parti
 +status+ prevents you from having to open a browser to find out where your pull request is at. But in case you want to take a look, we give you the option to open it for you.
 
 === Delivering approved code
-You kick butt. You've got your code reviewed and now you're ready to merge it down to master and deploy. +deliver+ will take care of all of the steps for you to make this happen.
+You kick butt. You've got your code reviewed and now you're ready to merge it down to +master+ and deploy. +reflow deliver+ will take care of all of the steps for you to make this happen.
 
-+deliver+ requires you to have a pull request, so you'll be protected on those mornings when the coffee isn't working yet.
++reflow deliver+ requires you to have a pull request, so you'll be protected on those mornings when the coffee isn't working yet.
 We built this to get in your way and make you follow the process. If you don't like it, do it by hand. You already know what you're doing.
+
+You'll be presented with a prefilled commit message based on the body of your pull request and it includes the text +Closes #XX+ that will automatically close the associated pull request on github when deliver completes.
+
+Make a mistake and deliver too early? It happens. You'll be prompted after you edit your commit message if you want to push your updated +master+ to github. If you answer 'n', then you'll want to do +git reset --hard origin/master+ and checkout your branch again.
 
 This is what it looks like:
   $ git reflow deliver
@@ -147,6 +153,29 @@ This is what it looks like:
 
   Deleted branch nh-fail-without-lgtm (was f90e111).
   Nice job buddy.
+  
+This is what the default commit message looks like:
+  Enforces LGTM before deliver, even with no comments.
+  Removes the need to review the pull request yourself if you make a
+  comment.
+  
+  Better error message if setup fails.
+  
+  Bug fixes.
+  
+  Closes #36
+  
+  LGTM given by: @codenamev
+  
+  Squashed commit of the following:
+  
+  commit f90e111
+  Author: Nicholas Hance <nhance@reenhanced.com>
+  Date:   Thu Jul 11 15:33:29 2013 -0400
+  ...
+  
+==== How it works
+This is what we do behind the scenes when you do +reflow deliver+
 
 == Guiding principles:
 * You should already know what you're doing.

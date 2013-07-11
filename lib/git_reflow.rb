@@ -16,13 +16,16 @@ module GitReflow
     gh_user     = ask("Please enter your GitHub username: ")
     gh_password = ask("Please enter your GitHub password (we do NOT store this): ") { |q| q.echo = false }
 
-    puts "\nYour GitHub account was successfully setup!"
-
-    github        = Github.new :basic_auth => "#{gh_user}:#{gh_password}"
-    authorization = github.oauth.create 'scopes' => ['repo']
-    oauth_token   = authorization[:token]
-
-    set_oauth_token(oauth_token)
+    begin
+      github        = Github.new :basic_auth => "#{gh_user}:#{gh_password}"
+      authorization = github.oauth.create 'scopes' => ['repo']
+      oauth_token   = authorization[:token]
+      set_oauth_token(oauth_token)
+    rescue
+      puts "\nInvalid username or password"
+    else
+      puts "\nYour GitHub account was successfully setup!"
+    end
   end
 
   def status(destination_branch)
@@ -78,9 +81,10 @@ module GitReflow
       else
 
         open_comment_authors = find_authors_of_open_pull_request_comments(existing_pull_request)
+        has_comments         = has_pull_request_comments?(existing_pull_request)
 
         # if there any comment_authors left, then they haven't given a lgtm after the last commit
-        if open_comment_authors.empty? or options['skip-lgtm']
+        if (has_comments and open_comment_authors.empty?) or options['skip-lgtm']
           lgtm_authors   = comment_authors_for_pull_request(existing_pull_request, :with => LGTM)
           commit_message = existing_pull_request[:body] || get_first_commit_message
           puts "Merging pull request ##{existing_pull_request.number}: '#{existing_pull_request.title}', from '#{existing_pull_request.head.label}' into '#{existing_pull_request.base.label}'"
@@ -105,8 +109,10 @@ module GitReflow
           else
             puts "There were problems commiting your feature... please check the errors above and try again."
           end
-        else
+        elsif open_comment_authors.count > 0
           puts "[deliver halted] You still need a LGTM from: #{open_comment_authors.join(', ')}"
+        else
+          puts "[deliver halted] Your code has not been reviewed yet."
         end
       end
 
@@ -191,40 +197,28 @@ module GitReflow
          break
       end
     end
+
     existing_pull_request
   end
 
   def pull_request_comments(pull_request)
-    comments        = github.issues.comments.all remote_user, remote_repo_name, pull_request.number
+    comments        = github.issues.comments.all        remote_user, remote_repo_name, pull_request.number
     review_comments = github.pull_requests.comments.all remote_user, remote_repo_name, pull_request.number
-    comments + review_comments
+
+    review_comments + comments
+  end
+
+  def has_pull_request_comments?(pull_request)
+    pull_request_comments(pull_request).count > 0
   end
 
   def find_authors_of_open_pull_request_comments(pull_request)
     # first we'll gather all the authors that have commented on the pull request
-    all_comments    = pull_request_comments(pull_request)
-    comment_authors = comment_authors_for_pull_request(pull_request)
-    lgtm_authors    = []
+    pull_last_committed_at = get_commited_time(pull_request.head.sha)
+    comment_authors        = comment_authors_for_pull_request(pull_request)
+    lgtm_authors           = comment_authors_for_pull_request(pull_request, :with => LGTM, :after => pull_last_committed_at)
 
-    # now we need to check that all the commented authors have given a lgtm after the last commit
-    all_comments.each do |comment|
-      next unless comment_authors.include?(comment.user.login)
-      pull_last_committed_at = get_commited_time(pull_request.head.sha)
-      comment_created_at     = Time.parse(comment.created_at)
-      if comment_created_at > pull_last_committed_at
-        if comment[:body] =~ LGTM
-          lgtm_authors |= [comment.user.login]
-        else
-          comment_authors |= [comment.user.login] unless comment_authors.include?(comment.user.login)
-        end
-      else
-        comment_authors -= [comment.user.login] if comment_authors.include?(comment.user.login)
-      end
-    end
-
-    comment_authors -= lgtm_authors
-
-    comment_authors || []
+    comment_authors - lgtm_authors
   end
 
   def comment_authors_for_pull_request(pull_request, options = {})
@@ -233,7 +227,9 @@ module GitReflow
 
     all_comments.each do |comment|
       next if options[:after] and Time.parse(comment.created_at) < options[:after]
-      comment_authors |= [comment.user.login] if !comment_authors.include?(comment.user.login) and (options[:with].nil? or comment[:body] =~ options[:with])
+      if (options[:with].nil? or comment[:body] =~ options[:with])
+        comment_authors |= [comment.user.login]
+      end
     end
 
     # remove the current user from the list to check
@@ -257,7 +253,7 @@ module GitReflow
       last_committed_at    = get_commited_time(pull_request.head.sha)
       lgtm_authors         = comment_authors_for_pull_request(pull_request, :with => LGTM, :after => last_committed_at)
 
-      summary_data.merge!("Last comment"  => pull_comments.last.body)
+      summary_data.merge!("Last comment"  => pull_comments.last[:body].inspect)
 
       if lgtm_authors.any?
         reviewed_by.map! { |author| lgtm_authors.include?(author.uncolorize) ? author.colorize(:green) : author }
@@ -265,7 +261,7 @@ module GitReflow
 
       notices << "[notice] You still need a LGTM from: #{open_comment_authors.join(', ')}\n" if open_comment_authors.any?
     else
-      notices << "[notice] No one has reviewed your pull request...\n"
+      notices << "[notice] No one has reviewed your pull request.\n"
     end
 
     summary_data['reviewed by'] = reviewed_by.join(', ')
@@ -276,7 +272,7 @@ module GitReflow
       printf string_format, "#{name}:", summary_data[name]
     end
 
-    puts "\n#{notices}" if notices != ''
+    puts "\n#{notices}" unless notices.empty?
   end
 
   def get_commited_time(commit_sha)

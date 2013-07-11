@@ -39,29 +39,104 @@ Reflow is a no bullshit git workflow designed to help you maintain quality and g
 * Git blame becomes your friend. You'll know who to blame and can see the full context of changes.
   Squash commits to master mean every commit represents the whole feature, not a "typo fix".
 
+---
 
+== Using Reflow
 
-How it works
--------------
-`$ git reflow setup`
-  Sets up your Github credentials
+=== Installation
+  $ gem install reflow
+or
+  $ gem install git_reflow
 
-`$ git reflow start branch-name`
-  Creates new branch
-  Prompts for PT ticket numbers? (Keep the PT stuff as a plugin?)
+=== Setup
+On your first install, you'll need to setup your Github credentials. These are used only to get an oauth token that's stored in your global git config.
+We use the Github credentials so we can create pull requests from the command line.
 
-`$ git reflow review [branch]`
-  Assumes remote 'origin'
-  Performs the following against [branch] or master if branch is not specified:
-    `git fetch origin`
-    - Are we up-to-date with changes from the destination?
-      - Fail with "origin/[branch] has newer changes" if no
-    - Run the test suite
-      - If fails, do not continue
-      - If not configured, fail with "Run test suite then use flag --green"
-    `git push origin current-branch` # Updates remote branch
-    - Do we have pull request?
-      - if no, create it and print "Pull request created at http://pull-url/"
+After installation, run:
+  git reflow setup
+
+It looks like this:
+  $ git reflow setup                                                                                                                                                                                               [11:43:06]
+  Please enter your GitHub username: nhance
+  Please enter your GitHub password (we do NOT store this):
+
+  Your GitHub account was successfully setup!
+
+This is safe to run multiple times. We don't care.
+
+=== Starting a feature branch
+This sets up a feature branch remotely and brings a local copy to your machine. Yeah, you can do this by hand pretty easily, so feel free to do that. This is just a handy shortcut.
+
+  $ git reflow start nh-branch-name
+
+[PROTIP]  Use your initials at the beginning of each branch so your team knows
+          who is responsible for each. Mine are 'NH', so all of my branches start with +nh-+
+
+=== Reviewing your work
+All of the work we do is reviewed by our team. This helps spread knowledge to multiple parties and keeps the quality of our code consistent.
+
+The +review+ process within reflow creates a pull request for the currently checked out feature branch against master. That's all you want to do most of the time.
+We assume you know what you're doing, so if you need something different, do it by hand.
+
+After making commits to your branch, run +review+. Didn't push it up? We don't care, we'll do it for you.
+
+  $ git reflow review
+
+  From github.com:reenhanced/gitreflow
+   * branch            master     -> FETCH_HEAD
+  Counting objects: 5, done.
+  Delta compression using up to 16 threads.
+  Compressing objects: 100% (3/3), done.
+  Writing objects: 100% (3/3), 1.68 KiB, done.
+  Total 3 (delta 1), reused 0 (delta 0)
+  To git@github.com:reenhanced/gitreflow.git
+     c2ec1b1..1103006  nh-readme-update -> nh-readme-update
+
+  Successfully created pull request #35: Bootstrapping the readme. This commit is so I can show how review works
+  Pull Request URL: https://github.com/reenhanced/gitreflow/pull/35
+  Would you like to open it in your browser? y
+
+[OSX/Ubuntu only]  You can automatically open your default web browser to the pull request.
+                   This lets you edit the pull request with all of the detailed information you'll need before submitting it to your team.
+
+We output the pull request URL so you can distribute it to your team without leaving the terminal. But don't be a jerk, update the title and description before you do that.
+
+==== How it works
+Behind the scenes, this is how +review+ works:
+  git fetch origin
+
+Are we up-to-date with changes from master?
+If not, fail with "master has newer changes".
+  git push origin current-branch # Updates remote branch
+
+Do we have pull request?
+If not, create it and print "Pull request created at http://pull-url/"
+
+=== Checking your branch status
+Sometimes you start working on a branch and can't get back to it for a while. It happens. Use +status+ to check on the status of your work.
+
+  $ git reflow status
+
+  Here's the status of your review:
+    branches:     reenhanced:nh-readme-update -> reenhanced:master
+    number:       35
+    reviewed by:
+    url:          https://github.com/reenhanced/gitreflow/pull/35
+
+  [notice] No one has reviewed your pull request...
+  Would you like to open it in your browser? n
+
+This gives you details on who's reviewed your pull request. If someone has participated, but not given you a 'LGTM', this will tell you.
++status+ prevents you from having to open a browser to find out where your pull request is at. But in case you want to take a look, we give you the option to open it for you.
+
+=== Delivering approved code
+You kick butt. You've got your code reviewed and now you're ready to merge it down to master and deploy. +deliver+ will take care of all of the steps for you to make this happen.
+
++deliver+ requires you to have a pull request, so you'll be protected on those mornings when the coffee isn't working yet.
+We built this to get in your way and make you follow the process. If you don't like it, do it by hand. You already know what you're doing.
+
+This is what it looks like:
+  $ git reflow deliver
 
 `$ git reflow deliver [branch]`
     - Do we have lgtm after last commit?

@@ -253,7 +253,7 @@ module GitReflow
       last_committed_at    = get_commited_time(pull_request.head.sha)
       lgtm_authors         = comment_authors_for_pull_request(pull_request, :with => LGTM, :after => last_committed_at)
 
-      summary_data.merge!("Last comment"  => pull_comments.last.body)
+      summary_data.merge!("Last comment"  => pull_comments.last[:body].inspect)
 
       if lgtm_authors.any?
         reviewed_by.map! { |author| lgtm_authors.include?(author.uncolorize) ? author.colorize(:green) : author }
@@ -272,7 +272,7 @@ module GitReflow
       printf string_format, "#{name}:", summary_data[name]
     end
 
-    puts "\n#{notices}" if notices != ''
+    puts "\n#{notices}" unless notices.empty?
   end
 
   def get_commited_time(commit_sha)

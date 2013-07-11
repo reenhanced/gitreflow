@@ -1,5 +1,5 @@
-git-reflow
-==========
+= git-reflow
+
 Reflow is a no bullshit git workflow designed to help you maintain quality and get things done.
 
 == Benefits:
@@ -9,6 +9,19 @@ Reflow is a no bullshit git workflow designed to help you maintain quality and g
 * Stop worrying about how to deliver your code and just do it.
 * The last git workflow you'll ever need.
   Covers 90% of your needs without junk you'll never use.
+
+== Quickstart
+  $ git reflow setup
+Link your github account so we can create pull requests
+
+  $ git reflow start nh-branchy-branch
+Create and switch to new branch +nh-branchy-branch+
+
+  $ git reflow review
+Create a pull request for your branch against master
+
+  $ git reflow deliver
+If your code is 'LGTM'd, merge to master and delete the feature branch
 
 == Guiding principles:
 * You should already know what you're doing.
@@ -38,8 +51,6 @@ Reflow is a no bullshit git workflow designed to help you maintain quality and g
 
 * Git blame becomes your friend. You'll know who to blame and can see the full context of changes.
   Squash commits to master mean every commit represents the whole feature, not a "typo fix".
-
----
 
 == Using Reflow
 

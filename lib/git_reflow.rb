@@ -117,8 +117,6 @@ module GitReflow
     end
   end
 
-  private
-
   def github
     @github ||= Github.new :oauth_token => get_oauth_token
   end

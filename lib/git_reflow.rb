@@ -75,7 +75,7 @@ module GitReflow
       else
 
         open_comment_authors = find_authors_of_open_pull_request_comments(existing_pull_request)
-        comment_count        = pull_request_comments(pull_request).count
+        comment_count        = pull_request_comments(existing_pull_request).count
 
         # if there any comment_authors left, then they haven't given a lgtm after the last commit
         if (comment_count > 0 and open_comment_authors.empty?) or options['skip-lgtm']
@@ -104,7 +104,7 @@ module GitReflow
             puts "There were problems commiting your feature... please check the errors above and try again."
           end
         elsif comment_count == 0
-          puts "[deliver halted] Your code has not been reviewed"
+          puts "[deliver halted] Your code has not been reviewed yet."
         else
           puts "[deliver halted] You still need a LGTM from: #{open_comment_authors.join(', ')}"
         end

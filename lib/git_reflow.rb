@@ -75,10 +75,10 @@ module GitReflow
       else
 
         open_comment_authors = find_authors_of_open_pull_request_comments(existing_pull_request)
-        comment_count        = pull_request_comments(existing_pull_request).count
+        has_comments         = has_pull_request_comments?(existing_pull_request)
 
         # if there any comment_authors left, then they haven't given a lgtm after the last commit
-        if (comment_count > 0 and open_comment_authors.empty?) or options['skip-lgtm']
+        if (has_comments and open_comment_authors.empty?) or options['skip-lgtm']
           lgtm_authors   = comment_authors_for_pull_request(existing_pull_request, :with => LGTM)
           commit_message = existing_pull_request[:body] || get_first_commit_message
           puts "Merging pull request ##{existing_pull_request.number}: '#{existing_pull_request.title}', from '#{existing_pull_request.head.label}' into '#{existing_pull_request.base.label}'"
@@ -103,10 +103,10 @@ module GitReflow
           else
             puts "There were problems commiting your feature... please check the errors above and try again."
           end
-        elsif comment_count == 0
-          puts "[deliver halted] Your code has not been reviewed yet."
-        else
+        elsif open_comment_authors.count > 0
           puts "[deliver halted] You still need a LGTM from: #{open_comment_authors.join(', ')}"
+        else
+          puts "[deliver halted] Your code has not been reviewed yet."
         end
       end
 
@@ -116,6 +116,8 @@ module GitReflow
       puts error_messages
     end
   end
+
+  private
 
   def github
     @github ||= Github.new :oauth_token => get_oauth_token
@@ -198,6 +200,10 @@ module GitReflow
     comments        = github.issues.comments.all remote_user, remote_repo_name, pull_request.number
     review_comments = github.pull_requests.comments.all remote_user, remote_repo_name, pull_request.number
     comments + review_comments
+  end
+
+  def has_pull_request_comments?(pull_request)
+    pull_request_comments(pull_request).count > 0
   end
 
   def find_authors_of_open_pull_request_comments(pull_request)

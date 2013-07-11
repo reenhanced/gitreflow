@@ -13,13 +13,19 @@ module GitReflow
   LGTM = /lgtm|looks good to me|:\+1:|:thumbsup:/i
 
   def setup
-    gh_user = ask "Please enter your GitHub username: "
+    gh_user     = ask("Please enter your GitHub username: ")
     gh_password = ask("Please enter your GitHub password (we do NOT store this): ") { |q| q.echo = false }
-    puts "\nYour GitHub account was successfully setup!"
-    github = Github.new :basic_auth => "#{gh_user}:#{gh_password}"
-    authorization = github.oauth.create 'scopes' => ['repo']
-    oauth_token = authorization[:token]
-    set_oauth_token(oauth_token)
+
+    begin
+      github        = Github.new :basic_auth => "#{gh_user}:#{gh_password}"
+      authorization = github.oauth.create 'scopes' => ['repo']
+      oauth_token   = authorization[:token]
+      set_oauth_token(oauth_token)
+    rescue
+      puts "\nInvalid username or password"
+    else
+      puts "\nYour GitHub account was successfully setup!"
+    end
   end
 
   def status(destination_branch)

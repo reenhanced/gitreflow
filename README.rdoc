@@ -32,6 +32,8 @@ or
   $ gem install git_reflow
 
 === Setup
+  git reflow setup
+
 On your first install, you'll need to setup your Github credentials. These are used only to get an oauth token that's stored in your global git config.
 We use the Github credentials so we can create pull requests from the command line.
 
@@ -48,6 +50,8 @@ It looks like this:
 This is safe to run multiple times. We don't care.
 
 === Starting a feature branch
+  git reflow start
+
 This sets up a feature branch remotely and brings a local copy to your machine. Yeah, you can do this by hand pretty easily, so feel free to do that. This is just a handy shortcut.
 
   $ git reflow start nh-branch-name
@@ -56,6 +60,8 @@ This sets up a feature branch remotely and brings a local copy to your machine. 
           who is responsible for each. Mine are 'NH', so all of my branches start with +nh-+
 
 === Reviewing your work
+  git reflow review
+
 All of the work we do is reviewed by our team. This helps spread knowledge to multiple parties and keeps the quality of our code consistent.
 
 The +review+ process within reflow creates a pull request for the currently checked out feature branch against master. That's all you want to do most of the time.
@@ -96,6 +102,8 @@ Do we have pull request?
 If not, create it and print "Pull request created at http://pull-url/"
 
 === Checking your branch status
+  git reflow status
+
 Sometimes you start working on a branch and can't get back to it for a while. It happens. Use +status+ to check on the status of your work.
 
   $ git reflow status
@@ -113,6 +121,8 @@ This gives you details on who's reviewed your pull request. If someone has parti
 +status+ prevents you from having to open a browser to find out where your pull request is at. But in case you want to take a look, we give you the option to open it for you.
 
 === Delivering approved code
+  git reflow deliver
+
 You kick butt. You've got your code reviewed and now you're ready to merge it down to +master+ and deploy. Reflow +deliver+ will take care of all of the steps for you to make this happen.
 
 Reflow's +deliver+ requires you to have a pull request, so you'll be protected on those mornings when the coffee isn't working yet.

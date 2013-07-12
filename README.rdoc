@@ -1,39 +1,268 @@
-git-reflow
-==========
-Tools to help build software that just works.
+= git-reflow
 
-How it works
--------------
-`$ git reflow setup`
-  Sets up your Github credentials
+http://www.reenhanced.com/images/reflow.jpg
 
-`$ git reflow start branch-name`
-  Creates new branch
-  Prompts for PT ticket numbers? (Keep the PT stuff as a plugin?)
+Reflow is a no bullshit git workflow designed to help you maintain quality and get things done.
 
-`$ git reflow review [branch]`
-  Assumes remote 'origin'
-  Performs the following against [branch] or master if branch is not specified:
-    `git fetch origin`
-    - Are we up-to-date with changes from the destination?
-      - Fail with "origin/[branch] has newer changes" if no
-    - Run the test suite
-      - If fails, do not continue
-      - If not configured, fail with "Run test suite then use flag --green"
-    `git push origin current-branch` # Updates remote branch
-    - Do we have pull request?
-      - if no, create it and print "Pull request created at http://pull-url/"
+== Benefits:
+* Save minutes every day that add up to hours of more productive time.
+* Enforce code reviews across your team without the chance accidentally skip the review.
+* Stop worrying about how to deliver your code and just get work done.
+* Know that your entire team delivers code the same way.
+* Reduce the risk of improper merges.
+* Work with diverse teams with less worry about different processes.
+* Stop searching for other git workflows.
+  Reflow covers 90% of your needs without junk you'll never use.
 
-`$ git reflow deliver [branch]`
-    - Do we have lgtm after last commit?
-      - If no, print "Still waiting for review" (Maybe provide a way to skip this with `--lgtm`?)
-    - Prompt "Accepted by:" and get name/email/github username of person who does acceptance
-    - Checkout destination branch
-    - Update destination from origin (`git pull origin [branch]`)
-    - Merge squashed (`git merge --squash branch-name`)
-    - Prepare commit message (Adds Closes #pull-request-number)
-    - Perform the commit
-    - Push to branch
-    - Delete the remote branch
-    - Delete the local branch
-    - Deploy (Maybe with flag `--deploy`)
+== Quickstart
+Create and switch to new branch +nh-branchy-branch+:
+  $ git reflow start nh-branchy-branch
+
+Create a pull request for your branch against +master+:
+  $ git reflow review
+
+If your code is 'LGTM'd, squash merge to +master+ and delete the feature branch:
+  $ git reflow deliver
+
+== Using Reflow
+
+=== Installation
+  $ gem install reflow
+or
+  $ gem install git_reflow
+
+=== Setup
+  git reflow setup
+
+On your first install, you'll need to setup your Github credentials. These are used only to get an oauth token that's stored in your global git config.
+We use the Github credentials so we can create pull requests from the command line.
+
+After installation, run:
+  git reflow setup
+
+It looks like this:
+  $ git reflow setup
+  Please enter your GitHub username: nhance
+  Please enter your GitHub password (we do NOT store this):
+
+  Your GitHub account was successfully setup!
+
+This is safe to run multiple times. We don't care.
+
+=== Starting a feature branch
+  git reflow start
+
+This sets up a feature branch remotely and brings a local copy to your machine. Yeah, you can do this by hand pretty easily, so feel free to do that. This is just a handy shortcut.
+
+  $ git reflow start nh-branch-name
+
+[PROTIP]  Use your initials at the beginning of each branch so your team knows
+          who is responsible for each. Mine are 'NH', so all of my branches start with +nh-+
+
+=== Reviewing your work
+  git reflow review
+
+All of the work we do is reviewed by our team. This helps spread knowledge to multiple parties and keeps the quality of our code consistent.
+
+The +review+ process within reflow creates a pull request for the currently checked out feature branch against master. That's all you want to do most of the time.
+We assume you know what you're doing, so if you need something different, do it by hand.
+
+After making commits to your branch, run +review+. Didn't push it up? We don't care, we'll do it for you.
+
+  $ git reflow review
+
+  From github.com:reenhanced/gitreflow
+   * branch            master     -> FETCH_HEAD
+  Counting objects: 5, done.
+  Delta compression using up to 16 threads.
+  Compressing objects: 100% (3/3), done.
+  Writing objects: 100% (3/3), 1.68 KiB, done.
+  Total 3 (delta 1), reused 0 (delta 0)
+  To git@github.com:reenhanced/gitreflow.git
+     c2ec1b1..1103006  nh-readme-update -> nh-readme-update
+
+  Successfully created pull request #35: Bootstrapping the readme. This is so I can show how review works
+  Pull Request URL: https://github.com/reenhanced/gitreflow/pull/35
+  Would you like to open it in your browser? y
+
+[OSX/Ubuntu only]  You can automatically open your default web browser to the pull request.
+                   This lets you edit the pull request with all of the detailed information you'll need before submitting it to your team.
+
+We output the pull request URL so you can distribute it to your team without leaving the terminal. But don't be a jerk, update the title and description before you do that.
+
+==== How it works
+Behind the scenes, this is how +review+ works:
+  git fetch origin
+
+Are we up-to-date with changes from master?
+If not, fail with "master has newer changes".
+  git push origin current-branch # Updates remote branch
+
+Do we have pull request?
+If not, create it and print "Pull request created at http://pull-url/"
+
+=== Checking your branch status
+  git reflow status
+
+Sometimes you start working on a branch and can't get back to it for a while. It happens. Use +status+ to check on the status of your work.
+
+  $ git reflow status
+
+  Here's the status of your review:
+    branches:     reenhanced:nh-readme-update -> reenhanced:master
+    number:       35
+    reviewed by:
+    url:          https://github.com/reenhanced/gitreflow/pull/35
+
+  [notice] No one has reviewed your pull request...
+  Would you like to open it in your browser? n
+
+This gives you details on who's reviewed your pull request. If someone has participated, but not given you a 'LGTM', this will tell you.
++status+ prevents you from having to open a browser to find out where your pull request is at. But in case you want to take a look, we give you the option to open it for you.
+
+=== Delivering approved code
+  git reflow deliver
+
+You kick butt. You've got your code reviewed and now you're ready to merge it down to +master+ and deploy. Reflow +deliver+ will take care of all of the steps for you to make this happen.
+
+Reflow's +deliver+ requires you to have a pull request, so you'll be protected on those mornings when the coffee isn't working yet.
+We built this to get in your way and make you follow the process. If you don't like it, do it by hand. You already know what you're doing.
+
+You'll be presented with a prefilled commit message based on the body of your pull request which includes the text <code>Closes #XX</code> that will automatically close the associated pull request on github when deliver completes.
+
+Make a mistake and deliver too early? It happens. You'll be prompted after you edit your commit message if you want to push your updated +master+ to github. If you answer 'n', then you'll want to do <code>git reset --hard origin/master</code> and checkout your branch again.
+
+This is what it looks like:
+  $ git reflow deliver
+  From github.com:reenhanced/gitreflow
+  * branch            master     -> FETCH_HEAD
+  Merging pull request #36: 'Enforce at least one LGTM before delivery', from 'reenhanced:nh-fail-without-lgtm' into 'reenhanced:master'
+  Switched to branch 'master'
+  From github.com:reenhanced/gitreflow
+   * branch            master     -> FETCH_HEAD
+  Already up-to-date.
+  Switched to branch 'nh-fail-without-lgtm'
+  Switched to branch 'master'
+  Updating c2ec1b1..f90e111
+  Fast-forward
+  Squash commit -- not updating HEAD
+   lib/git_reflow.rb | 71 +++++++++++++++++++++++++++----------------------------
+   1 file changed, 35 insertions(+), 36 deletions(-)
+  [master d1b4dd5] Enforces LGTM before deliver, even with no comments.
+   1 file changed, 35 insertions(+), 36 deletions(-)
+  Merge complete!
+  Would you like to push this branch to your remote repo and cleanup your feature branch? y
+  Counting objects: 7, done.
+  Delta compression using up to 16 threads.
+  Compressing objects: 100% (4/4), done.
+  Writing objects: 100% (4/4), 1.38 KiB, done.
+  Total 4 (delta 2), reused 0 (delta 0)
+  To git@github.com:reenhanced/gitreflow.git
+     c2ec1b1..d1b4dd5  master -> master
+
+  To git@github.com:reenhanced/gitreflow.git
+   - [deleted]         nh-fail-without-lgtm
+
+  Deleted branch nh-fail-without-lgtm (was f90e111).
+  Nice job buddy.
+  
+This is what the default commit message looks like:
+  Enforces LGTM before deliver, even with no comments.
+  Removes the need to review the pull request yourself if you make a
+  comment.
+  
+  Better error message if setup fails.
+  
+  Bug fixes.
+  
+  Closes #36
+  
+  LGTM given by: @codenamev
+  
+  Squashed commit of the following:
+  
+  commit f90e111
+  Author: Nicholas Hance <nhance@reenhanced.com>
+  Date:   Thu Jul 11 15:33:29 2013 -0400
+  ...
+  
+==== How it works
+This is what we do behind the scenes when you do +deliver+
+
+* Does a pull request exist?
+
+  If not, stop here. You need to run +review+.
+
+* Has the review been completed? Did we get a +LGTM+ from everyone who's participated?
+
+  If not, show a list of authors that need to provide a +LGTM+.
+  
+If the review is done, it's time to merge. Here's what happens:
+
+First, update our local +master+ so we don't get conflicts
+  git checkout master
+  git pull origin master
+
+Next, squash merge our feature branch
+  git merge --squash nh-branch-name
+  
+Now, we'll apply a little magic so we have a great commit message by default. Your editor will open and you'll see a nice default for your commit message based on the pull request body.
+
+Once you've saved the commit, prompt the user to see if we should continue
+  Merge complete!
+  Would you like to push this branch to your remote repo and cleanup your feature branch?
+  
+If 'y', then we'll push to +master+ and delete the feature branch
+  git push origin master
+  git push origin :nh-branch-name
+  git branch -D nh-branch-name
+  
+If 'n', then just stop here. The user can reset his local +master+.
+
+And we're done.
+
+
+== Guiding principles:
+* You should already know what you're doing.
+  We assume you know how to use git.
+
+* The +master+ branch is your codebase.
+  You don't need multiple branches for code actually want to use.
+
+* +master+ should remain stable at all times.
+  The entire team depends on it.
+
+* No direct commits to +master+.
+  All work happens in feature branches. From a single commit to hundreds.
+
+* All feature branches are reviewed via pull requests.
+
+* Looks Good To Me. All feature branches require approval.
+  We look for the string 'LGTM' in a comment on the pull request to know it's ready to merge.
+
+* If you make a new commit in your branch, you require another review.
+
+* All participants in a pull request must approve the pull request.
+  If 2 guys comment, you need 2 'LGTM's before the code is ready to merge.
+
+* Once approved, your feature branch is squash merged to master.
+  This makes the history of the master branch extremely clean and easy to follow.
+
+* Git blame becomes your friend. You'll know who to blame and can see the full context of changes.
+  Squash commits to master mean every commit represents the whole feature, not a "typo fix".
+
+
+---
+
+== Contributing
+Pull requests are welcome. Please fork and submit. We use this tool every single day and as long as what you want to add doesn't change our workflow, we are happy to accept your updates.
+
+Authors:
+* @codenamev
+* @armyofgnomes
+* @nhance
+
+Built by Reenhanced:
+http://www.reenhanced.com
+
+<em>Licensed using the MIT license. Do whatever you like with this, but don't blame us if it breaks anything. You're a professional, and you're responsible for the tools you use.</em>

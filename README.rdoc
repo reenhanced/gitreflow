@@ -6,13 +6,22 @@ Reflow is a no bullshit git workflow designed to help you maintain quality and g
 
 == Benefits:
 * Save minutes every day that add up to hours of more productive time.
-* Enforce code reviews across your team without the chance of accidentally skipping the review.
+* Enforce code reviews across your team.
 * Stop worrying about how to deliver your code and just get work done.
 * Know that your entire team delivers code the same way.
-* Reduce the risk of improper merges.
-* Work with diverse teams with less worry about different processes.
+* Reduce the knowledge needed to deliver great code.
+* Have a commit history that's clean and actually usable.
+* Revert features with ease (if needed).
+* Work with diverse teams with less worry about the code delivery process.
 * Stop searching for other git workflows.
   Reflow covers 90% of your needs without junk you'll never use.
+
+== Features:
+* Automatically create pull requests to master
+* Automatically ensure that your code is reviewed before merging
+* Start with sensible commit messages by default
+* Squash merge feature branches because results are more important than details
+* Automatically clean up obsolete feature branches after a successful merge
 
 == Quickstart
 Create and switch to new branch +nh-branchy-branch+:
@@ -24,7 +33,7 @@ Create a pull request for your branch against +master+:
 If your code is 'LGTM'd, squash merge to +master+ and delete the feature branch:
   $ git reflow deliver
 
-== Using Reflow
+== How to use
 
 === Installation
   $ gem install reflow
@@ -52,19 +61,19 @@ This is safe to run multiple times. We don't care.
 === Starting a feature branch
   git reflow start
 
-This sets up a feature branch remotely and brings a local copy to your machine. Yeah, you can do this by hand pretty easily, so feel free to do that. This is just a handy shortcut.
+This sets up a feature branch remotely and brings a local copy to your machine. Yeah, you can do this by hand pretty easily, so skip this command if you want. This is just a handy shortcut with no magic.
 
   $ git reflow start nh-branch-name
 
 [PROTIP]  Use your initials at the beginning of each branch so your team knows
-          who is responsible for each. Mine are 'NH', so all of my branches start with +nh-+
+          who is responsible for each. My initials are 'NH', so all of my branches start with +nh-+
 
 === Reviewing your work
   git reflow review
 
-All of the work we do is reviewed by our team. This helps spread knowledge to multiple parties and keeps the quality of our code consistent.
+All of our work is reviewed by our team. This helps spread knowledge to multiple parties and keeps the quality of our code consistent.
 
-The +review+ process within reflow creates a pull request for the currently checked out feature branch against master. That's all you want to do most of the time.
+The +review+ step creates a pull request for the currently checked out feature branch against master. That's all you want to do most of the time.
 We assume you know what you're doing, so if you need something different, do it by hand.
 
 After making commits to your branch, run +review+. Didn't push it up? We don't care, we'll do it for you.
@@ -88,7 +97,7 @@ After making commits to your branch, run +review+. Didn't push it up? We don't c
 [OSX/Ubuntu only]  You can automatically open your default web browser to the pull request.
                    This lets you edit the pull request with all of the detailed information you'll need before submitting it to your team.
 
-We output the pull request URL so you can distribute it to your team without leaving the terminal. But don't be a jerk, update the title and description before you do that.
+We output the pull request URL so you can distribute it to your team without leaving the terminal. But don't be a jerk, update the title and description before you send your work around.
 
 ==== How it works
 Behind the scenes, this is how +review+ works:
@@ -96,10 +105,12 @@ Behind the scenes, this is how +review+ works:
 
 Are we up-to-date with changes from master?
 If not, fail with "master has newer changes".
+
+Then,
   git push origin current-branch # Updates remote branch
 
 Do we have pull request?
-If not, create it and print "Pull request created at http://pull-url/"
+If not, create it and print "Pull request created at http://pull-url/". If so, print the url for the existing request.
 
 === Checking your branch status
   git reflow status
@@ -117,8 +128,8 @@ Sometimes you start working on a branch and can't get back to it for a while. It
   [notice] No one has reviewed your pull request...
   Would you like to open it in your browser? n
 
-This gives you details on who's reviewed your pull request. If someone has participated, but not given you a 'LGTM', this will tell you.
-+status+ prevents you from having to open a browser to find out where your pull request is at. But in case you want to take a look, we give you the option to open it for you.
+This gives you details on who has reviewed your pull request. If someone has participated, but not given you a 'LGTM', this will tell you.
++status+ prevents you from having to open a browser to find out where your pull request is at. But in case you want to take a look, we'll give you the option to open it for you. (OSX/Ubuntu only)
 
 === Delivering approved code
   git reflow deliver
@@ -126,7 +137,7 @@ This gives you details on who's reviewed your pull request. If someone has parti
 You kick butt. You've got your code reviewed and now you're ready to merge it down to +master+ and deploy. Reflow +deliver+ will take care of all of the steps for you to make this happen.
 
 Reflow's +deliver+ requires you to have a pull request, so you'll be protected on those mornings when the coffee isn't working yet.
-We built this to get in your way and make you follow the process. If you don't like it, do it by hand. You already know what you're doing.
+We built this <b>to get in your way and make you follow the process</b>. If you don't like it, do it by hand. You already know what you're doing.
 
 You'll be presented with a prefilled commit message based on the body of your pull request which includes the text <code>Closes #XX</code> that will automatically close the associated pull request on github when deliver completes.
 
@@ -255,7 +266,7 @@ And we're done.
 ---
 
 == Contributing
-Pull requests are welcome. Please fork and submit. We use this tool every single day and as long as what you want to add doesn't change our workflow, we are happy to accept your updates.
+Pull requests are welcome. Please fork and submit. We use this tool every single day and as long as what you want to add doesn't change our workflow, we are happy to accept your updates. Feel free to add your github username to the list below.
 
 Authors:
 * @codenamev
@@ -264,5 +275,7 @@ Authors:
 
 Built by Reenhanced:
 http://www.reenhanced.com
+
+<B>Looking for a capable team for your project? Get in touch. We're looking to grow.</B>
 
 <em>Licensed using the MIT license. Do whatever you like with this, but don't blame us if it breaks anything. You're a professional, and you're responsible for the tools you use.</em>

@@ -227,7 +227,7 @@ And we're done.
   We assume you know how to use git.
 
 * The +master+ branch is your codebase.
-  You don't need multiple branches for code actually want to use.
+  You don't need multiple branches for code you actually want to use.
 
 * +master+ should remain stable at all times.
   The entire team depends on it.

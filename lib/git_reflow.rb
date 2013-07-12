@@ -73,6 +73,8 @@ module GitReflow
     options['base'] ||= 'master'
     fetch_destination options['base']
 
+    update_destination(current_branch)
+
     begin
       existing_pull_request = find_pull_request( :from => current_branch, :to => options['base'] )
 

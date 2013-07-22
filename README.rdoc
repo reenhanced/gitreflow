@@ -25,14 +25,11 @@ If your code is 'LGTM'd, squash merge to +master+ and delete the feature branch:
 ----
 
 == Benefits:
-* Save minutes every day that add up to hours of more productive time.
 * Enforce code reviews across your team.
-* Stop worrying about how to deliver your code and just get work done.
 * Know that your entire team delivers code the same way.
 * Reduce the knowledge needed to deliver great code.
 * Have a commit history that's clean and actually usable.
 * Revert features with ease (if needed).
-* Work with diverse teams with less worry about the code delivery process.
 * Work with diverse teams with less worry about different processes.
 * Stop searching for other git workflows.
   Reflow covers 90% of your needs without junk you'll never use.

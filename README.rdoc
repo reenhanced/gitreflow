@@ -2,7 +2,15 @@
 
 http://www.reenhanced.com/images/reflow.jpg
 
-Reflow is a no bullshit git workflow designed to help you maintain quality and get things done.
+If your workflow looks like this:
+1. Create a feature branch
+2. Write great code
+3. Create a pull request against master
+4. Get 'lgtm' through a code review
+5. Squash merge to master
+6. Delete the feature branch
+
+Reflow will make your life easier.
 
 == Benefits:
 * Save minutes every day that add up to hours of more productive time.

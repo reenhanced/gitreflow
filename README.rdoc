@@ -12,6 +12,18 @@ If your workflow looks like this:
 
 Reflow will make your life easier.
 
+== Quickstart
+Create and switch to new branch +nh-branchy-branch+:
+  $ git reflow start nh-branchy-branch
+
+Create a pull request for your branch against +master+:
+  $ git reflow review
+
+If your code is 'LGTM'd, squash merge to +master+ and delete the feature branch:
+  $ git reflow deliver
+
+----
+
 == Benefits:
 * Save minutes every day that add up to hours of more productive time.
 * Enforce code reviews across your team.
@@ -32,15 +44,7 @@ Reflow will make your life easier.
 * Squash merge feature branches because results are more important than details
 * Automatically clean up obsolete feature branches after a successful merge
 
-== Quickstart
-Create and switch to new branch +nh-branchy-branch+:
-  $ git reflow start nh-branchy-branch
-
-Create a pull request for your branch against +master+:
-  $ git reflow review
-
-If your code is 'LGTM'd, squash merge to +master+ and delete the feature branch:
-  $ git reflow deliver
+----
 
 == How to use
 

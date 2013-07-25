@@ -3,6 +3,7 @@ require File.join([File.dirname(__FILE__),'lib','git_reflow/version.rb'])
 spec = Gem::Specification.new do |s|
   s.name             = 'git_reflow'
   s.version          = GitReflow::VERSION
+  s.license          = 'MIT'
   s.authors          = ["Valentino Stoll", "Robert Stern", "Nicholas Hance"]
   s.email            = ["dev@reenhanced.com"]
   s.homepage         = "http://github.com/reenhanced/gitreflow"

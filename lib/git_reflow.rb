@@ -17,7 +17,13 @@ module GitReflow
     gh_password = ask("Please enter your GitHub password (we do NOT store this): ") { |q| q.echo = false }
 
     begin
-      github        = Github.new :basic_auth => "#{gh_user}:#{gh_password}"
+      github = Github.new do |config|
+        config.basic_auth = "#{gh_user}:#{gh_password}"
+        config.endpoint    = github_api_endpoint
+        config.site        = github_site_url
+        config.adapter     = :net_http
+        config.ssl         = {:verify => false}
+      end
       authorization = github.oauth.create 'scopes' => ['repo']
       oauth_token   = authorization[:token]
       set_oauth_token(oauth_token)
@@ -126,10 +132,24 @@ module GitReflow
   end
 
   def github
-    @github ||= Github.new :oauth_token => get_oauth_token
+    @github ||= Github.new do |config|
+      config.oauth_token = github_oauth_token
+      config.endpoint    = github_api_endpoint
+      config.site        = github_site_url
+      config.adapter     = :net_http
+      config.ssl         = {:verify => false}
+    end
   end
 
-  def get_oauth_token
+  def github_api_endpoint
+    `git config --get github.endpoint`.strip || Github::Configuration::DEFAULT_ENDPOINT
+  end
+
+  def github_site_url
+    `git config --get github.site`.strip || Github::Configuration::DEFAULT_SITE
+  end
+
+  def github_oauth_token
     `git config --get github.oauth-token`.strip
   end
 

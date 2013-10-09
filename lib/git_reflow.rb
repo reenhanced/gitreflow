@@ -54,10 +54,10 @@ module GitReflow
     begin
       puts push_current_branch
       pull_request = github.pull_requests.create(remote_user, remote_repo_name,
-                                          'title' => options['title'],
-                                          'body' => options['body'],
-                                          'head' => "#{remote_user}:#{current_branch}",
-                                          'base' => options['base'])
+                                                 'title' => options['title'],
+                                                 'body'  => options['body'],
+                                                 'head'  => "#{remote_user}:#{current_branch}",
+                                                 'base'  => options['base'])
 
       puts "Successfully created pull request ##{pull_request.number}: #{pull_request.title}\nPull Request URL: #{pull_request.html_url}\n"
       ask_to_open_in_browser(pull_request.html_url)
@@ -103,15 +103,16 @@ module GitReflow
                                :pull_request_number => existing_pull_request.number,
                                :message => "\nCloses ##{existing_pull_request.number}\n\nLGTM given by: @#{lgtm_authors.join(', @')}\n")
           append_to_squashed_commit_message(commit_message)
+          puts "git commit".color(:green)
           committed = system('git commit')
 
           if committed
             puts "Merge complete!"
             deploy_and_cleanup = ask "Would you like to push this branch to your remote repo and cleanup your feature branch? "
             if deploy_and_cleanup =~ /^y/i
-              puts `git push origin #{options['base']}`
-              puts `git push origin :#{feature_branch}`
-              puts `git branch -D #{feature_branch}`
+              run_command_with_label "git push origin #{options['base']}"
+              run_command_with_label "git push origin :#{feature_branch}"
+              run_command_with_label "git branch -D #{feature_branch}"
               puts "Nice job buddy."
             end
           else
@@ -181,26 +182,26 @@ module GitReflow
   end
 
   def push_current_branch
-    `git push origin #{current_branch}`
+    run_command_with_label "git push origin #{current_branch}"
   end
 
   def fetch_destination(destination_branch)
-    `git fetch origin #{destination_branch}`
+    run_command_with_label "git fetch origin #{destination_branch}"
   end
 
   def update_destination(destination_branch)
     origin_branch = current_branch
-    `git checkout #{destination_branch}`
-    puts `git pull origin #{destination_branch}`
-    `git checkout #{origin_branch}`
+    run_command_with_label "git checkout #{destination_branch}"
+    run_command_with_label "git pull origin #{destination_branch}"
+    run_command_with_label "git checkout #{origin_branch}"
   end
 
   def merge_feature_branch(options = {})
     options[:destination_branch] ||= 'master'
     message                        = options[:message] || "\nCloses ##{options[:pull_request_number]}\n"
 
-    `git checkout #{options[:destination_branch]}`
-    puts `git merge --squash #{options[:feature_branch]}`
+    run_command_with_label "git checkout #{options[:destination_branch]}"
+    run_command_with_label "git merge --squash #{options[:feature_branch]}"
     # append pull request number to commit message
     append_to_squashed_commit_message(message)
   end
@@ -316,5 +317,16 @@ module GitReflow
         end
       end
     end
+  end
+
+  def run_command_with_label(command, options = {})
+    label_color = options.delete(:color) || :green
+    puts command.color(label_color)
+    #puts command_divider(command)
+    puts `#{command}`
+  end
+
+  def command_divider(command_string = "")
+    "-" * (command_string.try(:length) || 20)
   end
 end

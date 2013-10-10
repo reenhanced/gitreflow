@@ -137,8 +137,6 @@ module GitReflow
       config.oauth_token = GitReflow.github_oauth_token
       config.endpoint    = GitReflow.github_api_endpoint
       config.site        = GitReflow.github_site_url
-      config.adapter     = :net_http
-      config.ssl         = {:verify => false}
     end
   end
 

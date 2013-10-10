@@ -8,9 +8,12 @@ command :review do |c|
   c.action do |global_options,options,args|
     review_options = {
       'base' => args[0],
-      'title' => global_options[:title] || GitReflow.get_first_commit_message,
-      'body' => global_options[:message] || global_options[:title]
+      'title' => global_options[:title],
+      'body' => global_options[:message]
     }
+
+    review_options[:title] ||=  GitReflow.get_first_commit_message
+    review_options[:body]  ||=  review_options[:title]
 
     GitReflow.review review_options
   end

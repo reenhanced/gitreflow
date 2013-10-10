@@ -19,15 +19,15 @@ module GitReflow
     begin
       github = Github.new do |config|
         config.basic_auth = "#{gh_user}:#{gh_password}"
-        config.endpoint    = github_api_endpoint
-        config.site        = github_site_url
+        config.endpoint    = GitReflow.github_api_endpoint
+        config.site        = GitReflow.github_site_url
         config.adapter     = :net_http
         config.ssl         = {:verify => false}
       end
       authorization = github.oauth.create 'scopes' => ['repo']
       oauth_token   = authorization[:token]
       set_oauth_token(oauth_token)
-    rescue
+    rescue StandardError => e
       puts "\nInvalid username or password"
     else
       puts "\nYour GitHub account was successfully setup!"
@@ -103,7 +103,7 @@ module GitReflow
                                :pull_request_number => existing_pull_request.number,
                                :message => "\nCloses ##{existing_pull_request.number}\n\nLGTM given by: @#{lgtm_authors.join(', @')}\n")
           append_to_squashed_commit_message(commit_message)
-          puts "git commit".color(:green)
+          puts "git commit".colorize(:green)
           committed = system('git commit')
 
           if committed
@@ -134,20 +134,22 @@ module GitReflow
 
   def github
     @github ||= Github.new do |config|
-      config.oauth_token = github_oauth_token
-      config.endpoint    = github_api_endpoint
-      config.site        = github_site_url
+      config.oauth_token = GitReflow.github_oauth_token
+      config.endpoint    = GitReflow.github_api_endpoint
+      config.site        = GitReflow.github_site_url
       config.adapter     = :net_http
       config.ssl         = {:verify => false}
     end
   end
 
   def github_api_endpoint
-    `git config --get github.endpoint`.strip || Github::Configuration::DEFAULT_ENDPOINT
+    endpoint = `git config --get github.endpoint`.strip
+    (endpoint.length > 0) ? endpoint : Github::Configuration::DEFAULT_ENDPOINT
   end
 
   def github_site_url
-    `git config --get github.site`.strip || Github::Configuration::DEFAULT_SITE
+    site_url = `git config --get github.site`.strip
+    (site_url.length > 0) ? site_url : Github::Configuration::DEFAULT_SITE
   end
 
   def github_oauth_token
@@ -321,7 +323,7 @@ module GitReflow
 
   def run_command_with_label(command, options = {})
     label_color = options.delete(:color) || :green
-    puts command.color(label_color)
+    puts command.colorize(label_color)
     #puts command_divider(command)
     puts `#{command}`
   end

@@ -51,7 +51,10 @@ or
   $ gem install git_reflow
 
 === Setup
-  git reflow setup
+[PROTIP]  To use GitReflow with a GitHub Enterprise account, before do the following setup you need to make sure you have the following git config setup:
+
+  git config github.endpoint "https://github.company.com/api/v3"
+  git config github.site "https://github.company.com"
 
 On your first install, you'll need to setup your Github credentials. These are used only to get an oauth token that's stored in your global git config.
 We use the Github credentials so we can create pull requests from the command line.

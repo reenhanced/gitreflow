@@ -28,7 +28,7 @@ spec = Gem::Specification.new do |s|
   s.add_dependency('gli', '2.8.1')
   s.add_dependency('highline')
   s.add_dependency('httpclient')
-  s.add_dependency('github_api', '0.7.0')
+  s.add_dependency('github_api', '0.10.2')
 
   s.post_install_message = "You need to setup your GitHub OAuth token\nPlease run 'git-reflow setup'"
 end

@@ -1,11 +1,12 @@
 require 'rubygems'
-require 'git_reflow/version.rb'
 require 'open-uri'
 require "highline/import"
 require 'httpclient'
 require 'github_api'
 require 'json/pure'
 require 'colorize'
+
+require 'git_reflow/version.rb' unless defined?(GitReflow::VERSION)
 
 module GitReflow
   extend self
@@ -322,11 +323,6 @@ module GitReflow
   def run_command_with_label(command, options = {})
     label_color = options.delete(:color) || :green
     puts command.colorize(label_color)
-    #puts command_divider(command)
     puts `#{command}`
-  end
-
-  def command_divider(command_string = "")
-    "-" * (command_string.try(:length) || 20)
   end
 end

@@ -50,12 +50,26 @@ If your code is 'LGTM'd, squash merge to +master+ and delete the feature branch:
 or
   $ gem install git_reflow
 
-=== Setup
-[PROTIP]  To use GitReflow with a GitHub Enterprise account, before do the following setup you need to make sure you have the following git config setup:
+=== Usage with Github Enterprise
+To use GitReflow with a GitHub Enterprise account, you will need to add some additional git configuration settings.
+
+If you use a GitHub Enterprise account for the majority of your repositories, you'll want to setup these global git config settings:
+
+  git config --global github.endpoint "https://github.company.com/api/v3"
+  git config --global github.site "https://github.company.com"
+
+And in the future, if you want to use a regular Github account for a certain project, just `cd` into your project directory and run the folowing setup command:
+
+  git reflow setup --local
+
+This will setup your project's git config with the OAuth token generated from the credentials you provide
+
+If you only use GitHub Enterprise for a select few repositories, then you'll want to add these git config settings to every project that uses GitHub Enterprise:
 
   git config github.endpoint "https://github.company.com/api/v3"
   git config github.site "https://github.company.com"
 
+=== Setup
 On your first install, you'll need to setup your Github credentials. These are used only to get an oauth token that's stored in your global git config.
 We use the Github credentials so we can create pull requests from the command line.
 

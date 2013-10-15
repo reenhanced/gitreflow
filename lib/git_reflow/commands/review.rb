@@ -12,8 +12,8 @@ command :review do |c|
       'body' => global_options[:message]
     }
 
-    review_options[:title] ||=  GitReflow.get_first_commit_message
-    review_options[:body]  ||=  review_options[:title]
+    review_options['title'] ||=  GitReflow.get_first_commit_message
+    review_options['body']  ||=  review_options['title']
 
     GitReflow.review review_options
   end

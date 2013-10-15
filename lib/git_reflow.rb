@@ -273,7 +273,7 @@ module GitReflow
     comments        = github.issues.comments.all        remote_user, remote_repo_name, pull_request.number
     review_comments = github.pull_requests.comments.all remote_user, remote_repo_name, pull_request.number
 
-    review_comments + comments
+    review_comments.to_a + comments.to_a
   end
 
   def has_pull_request_comments?(pull_request)

@@ -1,5 +1,4 @@
 require 'rubygems'
-require 'git_reflow/version.rb'
 require 'open-uri'
 require "highline/import"
 require 'httpclient'
@@ -7,21 +6,54 @@ require 'github_api'
 require 'json/pure'
 require 'colorize'
 
+require 'git_reflow/version.rb' unless defined?(GitReflow::VERSION)
+
 module GitReflow
   extend self
 
-  LGTM = /lgtm|looks good to me|:\+1:|:thumbsup:/i
+  LGTM = /lgtm|looks good to me|:\+1:|:thumbsup:|:shipit:/i
 
-  def setup
+  def setup(options = {})
+    project_only     = options.delete(:project_only)
+    using_enterprise = options.delete(:enterprise)
+    gh_site_url      = github_site_url
+    gh_api_endpoint  = github_api_endpoint
+
+    if using_enterprise
+      gh_site_url     = ask("Please enter your Enterprise site URL (e.g. https://github.company.com):")
+      gh_api_endpoint = ask("Please enter your Enterprise API endpoint (e.g. https://github.company.com/api/v3):")
+    end
+
+    if project_only
+      set_github_site_url(gh_site_url, local: true)
+      set_github_api_endpoint(gh_api_endpoint, local: true)
+    else
+      set_github_site_url(gh_site_url)
+      set_github_api_endpoint(gh_api_endpoint)
+    end
+
     gh_user     = ask("Please enter your GitHub username: ")
     gh_password = ask("Please enter your GitHub password (we do NOT store this): ") { |q| q.echo = false }
 
     begin
-      github        = Github.new :basic_auth => "#{gh_user}:#{gh_password}"
+
+      github = Github.new do |config|
+        config.basic_auth = "#{gh_user}:#{gh_password}"
+        config.endpoint    = GitReflow.github_api_endpoint
+        config.site        = GitReflow.github_site_url
+        config.adapter     = :net_http
+        config.ssl         = {:verify => false}
+      end
+
       authorization = github.oauth.create 'scopes' => ['repo']
       oauth_token   = authorization[:token]
-      set_oauth_token(oauth_token)
-    rescue
+
+      if project_only
+        set_oauth_token(oauth_token, local: true)
+      else
+        set_oauth_token(oauth_token)
+      end
+    rescue StandardError => e
       puts "\nInvalid username or password"
     else
       puts "\nYour GitHub account was successfully setup!"
@@ -48,10 +80,10 @@ module GitReflow
     begin
       puts push_current_branch
       pull_request = github.pull_requests.create(remote_user, remote_repo_name,
-                                          'title' => options['title'],
-                                          'body' => options['body'],
-                                          'head' => "#{remote_user}:#{current_branch}",
-                                          'base' => options['base'])
+                                                 'title' => options['title'],
+                                                 'body'  => options['body'],
+                                                 'head'  => "#{remote_user}:#{current_branch}",
+                                                 'base'  => options['base'])
 
       puts "Successfully created pull request ##{pull_request.number}: #{pull_request.title}\nPull Request URL: #{pull_request.html_url}\n"
       ask_to_open_in_browser(pull_request.html_url)
@@ -86,9 +118,10 @@ module GitReflow
         has_comments         = has_pull_request_comments?(existing_pull_request)
 
         # if there any comment_authors left, then they haven't given a lgtm after the last commit
-        if (has_comments and open_comment_authors.empty?) or options['skip-lgtm']
-          lgtm_authors   = comment_authors_for_pull_request(existing_pull_request, :with => LGTM)
-          commit_message = existing_pull_request[:body] || get_first_commit_message
+        if (has_comments and open_comment_authors.empty?) or options['skip_lgtm']
+          lgtm_authors    = comment_authors_for_pull_request(existing_pull_request, :with => LGTM)
+          commit_message  = existing_pull_request[:title] || ""
+          commit_message << (existing_pull_request[:body] || get_first_commit_message)
           puts "Merging pull request ##{existing_pull_request.number}: '#{existing_pull_request.title}', from '#{existing_pull_request.head.label}' into '#{existing_pull_request.base.label}'"
 
           update_destination(options['base'])
@@ -97,15 +130,16 @@ module GitReflow
                                :pull_request_number => existing_pull_request.number,
                                :message => "\nCloses ##{existing_pull_request.number}\n\nLGTM given by: @#{lgtm_authors.join(', @')}\n")
           append_to_squashed_commit_message(commit_message)
+          puts "git commit".colorize(:green)
           committed = system('git commit')
 
           if committed
             puts "Merge complete!"
             deploy_and_cleanup = ask "Would you like to push this branch to your remote repo and cleanup your feature branch? "
             if deploy_and_cleanup =~ /^y/i
-              puts `git push origin #{options['base']}`
-              puts `git push origin :#{feature_branch}`
-              puts `git branch -D #{feature_branch}`
+              run_command_with_label "git push origin #{options['base']}"
+              run_command_with_label "git push origin :#{feature_branch}"
+              run_command_with_label "git branch -D #{feature_branch}"
               puts "Nice job buddy."
             end
           else
@@ -126,10 +160,40 @@ module GitReflow
   end
 
   def github
-    @github ||= Github.new :oauth_token => get_oauth_token
+    @github ||= Github.new do |config|
+      config.oauth_token = GitReflow.github_oauth_token
+      config.endpoint    = GitReflow.github_api_endpoint
+      config.site        = GitReflow.github_site_url
+    end
   end
 
-  def get_oauth_token
+  def github_api_endpoint
+    endpoint = `git config --get github.endpoint`.strip
+    (endpoint.length > 0) ? endpoint : Github::Configuration::DEFAULT_ENDPOINT
+  end
+
+  def set_github_api_endpoint(api_endpoint, options = {local: false})
+    if options[:local]
+      `git config --replace-all github.endpoint #{api_endpoint}`
+    else
+      `git config --global --replace-all github.endpoint #{api_endpoint}`
+    end
+  end
+
+  def github_site_url
+    site_url = `git config --get github.site`.strip
+    (site_url.length > 0) ? site_url : Github::Configuration::DEFAULT_SITE
+  end
+
+  def set_github_site_url(site_url, options = {local: false})
+    if options[:local]
+      `git config --replace-all github.site #{site_url}`
+    else
+      `git config --global --replace-all github.site #{site_url}`
+    end
+  end
+
+  def github_oauth_token
     `git config --get github.oauth-token`.strip
   end
 
@@ -155,32 +219,35 @@ module GitReflow
     `git log --pretty=format:"%s" --no-merges -n 1`.strip
   end
 
-
-  def set_oauth_token(oauth_token)
-    `git config --global --replace-all github.oauth-token #{oauth_token}`
+  def set_oauth_token(oauth_token, options = {})
+    if options.delete(:local)
+      `git config --replace-all github.oauth-token #{oauth_token}`
+    else
+      `git config --global --replace-all github.oauth-token #{oauth_token}`
+    end
   end
 
   def push_current_branch
-    `git push origin #{current_branch}`
+    run_command_with_label "git push origin #{current_branch}"
   end
 
   def fetch_destination(destination_branch)
-    `git fetch origin #{destination_branch}`
+    run_command_with_label "git fetch origin #{destination_branch}"
   end
 
   def update_destination(destination_branch)
     origin_branch = current_branch
-    `git checkout #{destination_branch}`
-    puts `git pull origin #{destination_branch}`
-    `git checkout #{origin_branch}`
+    run_command_with_label "git checkout #{destination_branch}"
+    run_command_with_label "git pull origin #{destination_branch}"
+    run_command_with_label "git checkout #{origin_branch}"
   end
 
   def merge_feature_branch(options = {})
     options[:destination_branch] ||= 'master'
     message                        = options[:message] || "\nCloses ##{options[:pull_request_number]}\n"
 
-    `git checkout #{options[:destination_branch]}`
-    puts `git merge --squash #{options[:feature_branch]}`
+    run_command_with_label "git checkout #{options[:destination_branch]}"
+    run_command_with_label "git merge --squash #{options[:feature_branch]}"
     # append pull request number to commit message
     append_to_squashed_commit_message(message)
   end
@@ -207,7 +274,7 @@ module GitReflow
     comments        = github.issues.comments.all        remote_user, remote_repo_name, pull_request.number
     review_comments = github.pull_requests.comments.all remote_user, remote_repo_name, pull_request.number
 
-    review_comments + comments
+    review_comments.to_a + comments.to_a
   end
 
   def has_pull_request_comments?(pull_request)
@@ -296,5 +363,11 @@ module GitReflow
         end
       end
     end
+  end
+
+  def run_command_with_label(command, options = {})
+    label_color = options.delete(:color) || :green
+    puts command.colorize(label_color)
+    puts `#{command}`
   end
 end

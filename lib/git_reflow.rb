@@ -11,7 +11,7 @@ require 'git_reflow/version.rb' unless defined?(GitReflow::VERSION)
 module GitReflow
   extend self
 
-  LGTM = /lgtm|looks good to me|:\+1:|:thumbsup:/i
+  LGTM = /lgtm|looks good to me|:\+1:|:thumbsup:|:shipit:/i
 
   def setup(options = {})
     project_only     = options.delete(:project_only)

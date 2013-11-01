@@ -69,7 +69,7 @@ module GitReflow
     else
       puts "Here's the status of your review:"
       display_pull_request_summary(pull_request)
-      ask_to_open_in_browser(pull_request)
+      ask_to_open_in_browser(pull_request.html_url)
     end
   end
 

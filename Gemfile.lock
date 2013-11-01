@@ -7,6 +7,7 @@ PATH
       gli (= 2.8.1)
       highline
       httpclient
+      json_pure
 
 GEM
   remote: https://rubygems.org/
@@ -25,7 +26,7 @@ GEM
       oauth2
     gli (2.8.1)
     hashie (2.0.5)
-    highline (1.6.19)
+    highline (1.6.20)
     httpauth (0.2.0)
     httpclient (2.3.4.1)
     jeweler (1.8.4)
@@ -34,9 +35,10 @@ GEM
       rake
       rdoc
     json (1.7.5)
+    json_pure (1.8.1)
     jwt (0.1.8)
       multi_json (>= 1.5)
-    mini_portile (0.5.1)
+    mini_portile (0.5.2)
     multi_json (1.8.2)
     multi_xml (0.5.5)
     multipart-post (1.2.0)
@@ -58,6 +60,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  bundler
   git_reflow!
   jeweler
   rake

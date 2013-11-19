@@ -195,11 +195,12 @@ module GitReflow
   end
 
   def github_oauth_token
-   github_oauth_token_file = `git config --get github.oauth-token-file`.strip
+    github_oauth_token = `git config --get github.oauth-token`.strip
 
-   if github_oauth_token_file.empty?
-      `git config --get github.oauth-token`.strip
+    if not github_oauth_token.empty?
+      github_oauth_token
     else
+      github_oauth_token_file = `git config --get github.oauth-token-file`.strip
       File.read(File.expand_path(github_oauth_token_file, ENV["HOME"])).strip
     end
   end

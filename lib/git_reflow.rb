@@ -193,7 +193,13 @@ module GitReflow
   end
 
   def github_oauth_token
-    `git config --get github.oauth-token`.strip
+   github_oauth_token_file = `git config --get github.oauth-token-file`.strip
+
+   if github_oauth_token_file.empty?
+      `git config --get github.oauth-token`.strip
+    else
+      File.read(File.expand_path(github_oauth_token_file, ENV["HOME"])).strip
+    end
   end
 
   def current_branch

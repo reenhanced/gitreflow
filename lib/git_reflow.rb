@@ -48,12 +48,10 @@ module GitReflow
       authorization = github.oauth.create 'scopes' => ['repo']
       oauth_token   = authorization[:token]
 
-      oauth_token_file = ask("Please enter where the OAuth token should be stored: ") { |q| q.default = File.expand_path("~/.github-oauth-token") }
-
       if project_only
-        set_oauth_token(oauth_token, oauth_token_file, local: true)
+        set_oauth_token(oauth_token, options[:github_oauth_token_file], local: true)
       else
-        set_oauth_token(oauth_token, oauth_token_file)
+        set_oauth_token(oauth_token, options[:github_oauth_token_file])
       end
     rescue StandardError => e
       puts "\nInvalid username or password"
@@ -228,11 +226,10 @@ module GitReflow
   end
 
   def set_oauth_token(oauth_token, oauth_token_file, options = {})
-    File.open(oauth_token_file, 'w') { |f| f.write(oauth_token) }
-
     if options.delete(:local)
-      `git config --replace-all github.oauth-token-file #{oauth_token_file}`
+      `git config --replace-all github.oauth-token #{oauth_token}`
     else
+      File.open(oauth_token_file, 'w') { |f| f.write(oauth_token) }
       `git config --global --replace-all github.oauth-token-file #{oauth_token_file}`
     end
   end

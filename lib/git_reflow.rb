@@ -1,63 +1,22 @@
-require 'rubygems'
-require 'open-uri'
-require "highline/import"
-require 'httpclient'
-require 'github_api'
-require 'json/pure'
-require 'colorize'
-
-require 'git_reflow/version.rb' unless defined?(GitReflow::VERSION)
-
 module GitReflow
   extend self
+
+  require 'rubygems'
+  require 'open-uri'
+  require "highline/import"
+  require 'httpclient'
+  require 'github_api'
+  require 'json/pure'
+  require 'colorize'
+
+  require 'git_reflow/version.rb' unless defined?(GitReflow::VERSION)
+  require 'git_reflow/git_server'
 
   LGTM = /lgtm|looks good to me|:\+1:|:thumbsup:|:shipit:/i
 
   def setup(options = {})
-    project_only     = options.delete(:project_only)
-    using_enterprise = options.delete(:enterprise)
-    gh_site_url      = github_site_url
-    gh_api_endpoint  = github_api_endpoint
-
-    if using_enterprise
-      gh_site_url     = ask("Please enter your Enterprise site URL (e.g. https://github.company.com):")
-      gh_api_endpoint = ask("Please enter your Enterprise API endpoint (e.g. https://github.company.com/api/v3):")
-    end
-
-    if project_only
-      set_github_site_url(gh_site_url, local: true)
-      set_github_api_endpoint(gh_api_endpoint, local: true)
-    else
-      set_github_site_url(gh_site_url)
-      set_github_api_endpoint(gh_api_endpoint)
-    end
-
-    gh_user     = ask("Please enter your GitHub username: ")
-    gh_password = ask("Please enter your GitHub password (we do NOT store this): ") { |q| q.echo = false }
-
-    begin
-
-      github = Github.new do |config|
-        config.basic_auth = "#{gh_user}:#{gh_password}"
-        config.endpoint    = GitReflow.github_api_endpoint
-        config.site        = GitReflow.github_site_url
-        config.adapter     = :net_http
-        config.ssl         = {:verify => false}
-      end
-
-      authorization = github.oauth.create 'scopes' => ['repo']
-      oauth_token   = authorization[:token]
-
-      if project_only
-        set_oauth_token(oauth_token, local: true)
-      else
-        set_oauth_token(oauth_token)
-      end
-    rescue StandardError => e
-      puts "\nInvalid username or password"
-    else
-      puts "\nYour GitHub account was successfully setup!"
-    end
+    @github = GitServer::GitHub.new(options)
+    @github.authenticate!
   end
 
   def status(destination_branch)
@@ -166,42 +125,8 @@ module GitReflow
     end
   end
 
-  def github_api_endpoint
-    endpoint = `git config --get github.endpoint`.strip
-    (endpoint.length > 0) ? endpoint : Github::Configuration::DEFAULT_ENDPOINT
-  end
-
-  def set_github_api_endpoint(api_endpoint, options = {local: false})
-    if options[:local]
-      `git config --replace-all github.endpoint #{api_endpoint}`
-    else
-      `git config --global --replace-all github.endpoint #{api_endpoint}`
-    end
-  end
-
-  def github_site_url
-    site_url = `git config --get github.site`.strip
-    (site_url.length > 0) ? site_url : Github::Configuration::DEFAULT_SITE
-  end
-
-  def set_github_site_url(site_url, options = {local: false})
-    if options[:local]
-      `git config --replace-all github.site #{site_url}`
-    else
-      `git config --global --replace-all github.site #{site_url}`
-    end
-  end
-
-  def github_oauth_token
-    `git config --get github.oauth-token`.strip
-  end
-
   def current_branch
     `git branch --no-color | grep '^\* ' | grep -v 'no branch' | sed 's/^* //g'`.strip
-  end
-
-  def github_user
-    `git config --get github.user`.strip
   end
 
   def remote_user
@@ -216,14 +141,6 @@ module GitReflow
 
   def get_first_commit_message
     `git log --pretty=format:"%s" --no-merges -n 1`.strip
-  end
-
-  def set_oauth_token(oauth_token, options = {})
-    if options.delete(:local)
-      `git config --replace-all github.oauth-token #{oauth_token}`
-    else
-      `git config --global --replace-all github.oauth-token #{oauth_token}`
-    end
   end
 
   def push_current_branch

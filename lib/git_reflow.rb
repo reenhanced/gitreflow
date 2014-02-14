@@ -146,7 +146,7 @@ module GitReflow
             puts "There were problems commiting your feature... please check the errors above and try again."
           end
         elsif status.state != "success"
-          puts "[deliver halted] Your build was not successful: #{status.target_url}"
+          puts "[#{ 'deliver halted'.colorize(:red) }] #{status.description}: #{status.target_url}"
         elsif open_comment_authors.count > 0
           puts "[deliver halted] You still need a LGTM from: #{open_comment_authors.join(', ')}"
         else
@@ -287,6 +287,15 @@ module GitReflow
     github.repos.statuses.all(remote_user, remote_repo_name, sha).first
   end
 
+  def build_color status
+    colorized_statuses = { pending: :yellow, success: :green, error: :red, failure: :red }
+    colorized_statuses[status.state.to_sym]
+  end
+
+  def colorized_build_description status
+    status.description.colorize( build_color status )
+  end
+
   def find_authors_of_open_pull_request_comments(pull_request)
     # first we'll gather all the authors that have commented on the pull request
     pull_last_committed_at = get_commited_time(pull_request.head.sha)
@@ -324,8 +333,8 @@ module GitReflow
     # check for CI build status
     status = get_build_status pull_request.head.sha
     if status
-      notices << "[notice] Your build status is not successful: #{status.target_url}.\n" if status.state != "success"
-      summary_data.merge!("Build status" => status.description)
+      notices << "[notice] Your build status is not successful: #{status.target_url}.\n" unless status.state == "success"
+      summary_data.merge!( "Build status" => colorized_build_description(status) )
     end
 
     # check for needed lgtm's

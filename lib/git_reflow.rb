@@ -116,9 +116,10 @@ module GitReflow
 
         open_comment_authors = find_authors_of_open_pull_request_comments(existing_pull_request)
         has_comments         = has_pull_request_comments?(existing_pull_request)
+        status = get_build_status existing_pull_request.head.sha
 
         # if there any comment_authors left, then they haven't given a lgtm after the last commit
-        if (has_comments and open_comment_authors.empty?) or options['skip_lgtm']
+        if ((status.nil? or status.state == "success") and has_comments and open_comment_authors.empty?) or options['skip_lgtm']
           lgtm_authors   = comment_authors_for_pull_request(existing_pull_request, :with => LGTM)
           commit_message = "#{(existing_pull_request[:body] || get_first_commit_message)}"
           puts "Merging pull request ##{existing_pull_request.number}: '#{existing_pull_request.title}', from '#{existing_pull_request.head.label}' into '#{existing_pull_request.base.label}'"
@@ -144,6 +145,8 @@ module GitReflow
           else
             puts "There were problems commiting your feature... please check the errors above and try again."
           end
+        elsif status.state != "success"
+          puts "[deliver halted] Your build was not successful: #{status.target_url}"
         elsif open_comment_authors.count > 0
           puts "[deliver halted] You still need a LGTM from: #{open_comment_authors.join(', ')}"
         else
@@ -280,6 +283,10 @@ module GitReflow
     pull_request_comments(pull_request).count > 0
   end
 
+  def get_build_status sha
+    github.repos.statuses.all(remote_user, remote_repo_name, sha).first
+  end
+
   def find_authors_of_open_pull_request_comments(pull_request)
     # first we'll gather all the authors that have commented on the pull request
     pull_last_committed_at = get_commited_time(pull_request.head.sha)
@@ -313,6 +320,13 @@ module GitReflow
 
     notices = ""
     reviewed_by = comment_authors_for_pull_request(pull_request).map {|author| author.colorize(:red) }
+
+    # check for CI build status
+    status = get_build_status pull_request.head.sha
+    if status
+      notices << "[notice] Your build status is not successful: #{status.target_url}.\n" if status.state != "success"
+      summary_data.merge!("Build status" => status.description)
+    end
 
     # check for needed lgtm's
     pull_comments = pull_request_comments(pull_request)

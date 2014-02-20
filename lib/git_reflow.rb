@@ -15,8 +15,13 @@ module GitReflow
   LGTM = /lgtm|looks good to me|:\+1:|:thumbsup:|:shipit:/i
 
   def setup(options = {})
-    @github = GitServer::GitHub.new(options)
-    @github.authenticate!
+    choose do |menu|
+      menu.header = "Available remote Git Server services:"
+      menu.prompt = "Which service would you like to use for this project?  "
+
+      menu.choice('GitHub')    { @github = GitServer::GitHub.new(options) }
+      menu.choice('BitBucket') { say("Comming soon...") }
+    end
   end
 
   def status(destination_branch)

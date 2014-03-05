@@ -45,8 +45,14 @@ module GitReflow
         config.ssl         = {:verify => false}
       end
 
-      authorization = github.oauth.create 'scopes' => ['repo'], 'note' => "git-reflow (#{`hostname`.strip})"
-      oauth_token   = authorization[:token]
+      previous_authorizations = github.oauth.all.select {|auth| auth.note == "git-reflow (#{`hostname`.strip})" }
+      if previous_authorizations.any?
+        authorization = previous_authorizations.last
+      else
+        authorization = github.oauth.create scopes: ['repo'], note: "git-reflow (#{`hostname`.strip})"
+      end
+
+      oauth_token   = authorization.token
 
       if project_only
         set_oauth_token(oauth_token, local: true)

@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    git_reflow (0.3.3)
+    git_reflow (0.3.5)
       colorize (= 0.6.0)
       github_api (= 0.10.2)
       gli (= 2.8.1)
@@ -38,8 +38,8 @@ GEM
     json_pure (1.8.1)
     jwt (0.1.8)
       multi_json (>= 1.5)
-    mini_portile (0.5.2)
-    multi_json (1.8.2)
+    mini_portile (0.5.1)
+    multi_json (1.8.4)
     multi_xml (0.5.5)
     multipart-post (1.2.0)
     nokogiri (1.6.0)

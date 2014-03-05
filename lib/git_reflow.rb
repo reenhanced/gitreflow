@@ -10,7 +10,10 @@ module GitReflow
   require 'colorize'
 
   require 'git_reflow/version.rb' unless defined?(GitReflow::VERSION)
+  require 'git_reflow/config'
   require 'git_reflow/git_server'
+
+  include 'git_reflow/sandbox'
 
   LGTM = /lgtm|looks good to me|:\+1:|:thumbsup:|:shipit:/i
 

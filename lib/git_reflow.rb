@@ -13,7 +13,10 @@ module GitReflow
   require 'git_reflow/config'
   require 'git_reflow/git_server'
 
-  include 'git_reflow/sandbox'
+  require 'git_reflow/git_server/git_hub'
+
+  require 'git_reflow/sandbox'
+  include Sandbox
 
   LGTM = /lgtm|looks good to me|:\+1:|:thumbsup:|:shipit:/i
 
@@ -22,13 +25,13 @@ module GitReflow
       menu.header = "Available remote Git Server services:"
       menu.prompt = "Which service would you like to use for this project?  "
 
-      menu.choice('GitHub')    { @github = GitServer::GitHub.new(options) }
+      menu.choice('GitHub')    { @git_server = GitServer::GitHub.new(options) }
       menu.choice('BitBucket') { say("Comming soon...") }
     end
   end
 
   def status(destination_branch)
-    pull_request = find_pull_request( :from => current_branch, :to => destination_branch )
+    pull_request = git_server.find_pull_request( :from => current_branch, :to => destination_branch )
 
     if pull_request.nil?
       puts "\n[notice] No pull request exists for #{current_branch} -> #{destination_branch}"
@@ -125,12 +128,8 @@ module GitReflow
     end
   end
 
-  def github
-    @github ||= Github.new do |config|
-      config.oauth_token = GitReflow.github_oauth_token
-      config.endpoint    = GitReflow.github_api_endpoint
-      config.site        = GitReflow.github_site_url
-    end
+  def git_server
+    @git_server ||= GitServer.connection
   end
 
   def current_branch
@@ -179,19 +178,6 @@ module GitReflow
   def append_to_squashed_commit_message(message = '')
     `echo "#{message}" | cat - .git/SQUASH_MSG > ./tmp_squash_msg`
     `mv ./tmp_squash_msg .git/SQUASH_MSG`
-  end
-
-  def find_pull_request(options)
-    existing_pull_request = nil
-    github.pull_requests.all(remote_user, remote_repo_name, :state => 'open') do |pull_request|
-      if pull_request.base.label == "#{remote_user}:#{options[:to]}" and
-         pull_request.head.label == "#{remote_user}:#{options[:from]}"
-         existing_pull_request = pull_request
-         break
-      end
-    end
-
-    existing_pull_request
   end
 
   def pull_request_comments(pull_request)

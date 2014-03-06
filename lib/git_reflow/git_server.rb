@@ -1,55 +1,15 @@
-require 'git_reflow/config'
-
 module GitReflow
-  class GitServer
-    @@connection       = nil
-    @@config_key_scope = self.class.to_s.downcase
-    @project_only      = false
-
-    def initialize(options)
-      @project_only = options.delete(:project_only)
-
-      site_url     = self.class.site_url
-      api_endpoint = self.class.api_endpoint
-
-      if @project_only
-        self.class.site_url     = site_url, { local: true }
-        self.class.api_endpoint = api_endpoint, { local: true }
-      else
-        self.class.site_url     = site_url
-        self.class.api_endpoint = api_endpoint
-      end
-
-      authenticate
-    end
-
-    def authenticate
-      raise "#{self.class.to_s}#authenticate method must be implemented"
-    end
+  module GitServer
+    autoload :Base, 'git_reflow/git_server/base'
+    autoload :GitHub,     'git_reflow/git_server/git_hub'
 
     def self.connection
-      raise "#{self.class.to_s}.connection method must be implemented"
+      if git_server_type = GitReflow::Config.get('reflow.git-server').present?
+        return "GitServer type not setup for: #{git_server_type}" unless GitReflow::GitServer.const_defined?(git_server_type)
+        GitReflow::GitServer.const_get(git_server_type).connection
+      else
+        puts "[notice] Reflow hasn't been setup yet.  Run 'git reflow setup' to continue"
+      end
     end
-
-    def self.api_endpoint
-      raise "#{self.class.to_s}.api_endpoint method must be implemented"
-    end
-
-    def self.api_endpoint=(api_endpoint, options = {local: false})
-      GitReflow::Config.set("#{@@config_key_scope}.endpoint}", api_endpoint, options)
-      @@api_endpoint = api_endpoint
-    end
-
-    def self.site_url
-      raise "#{self.class.to_s}.site_url method must be implemented"
-    end
-
-    def self.site_url=(site_url, options = {local: false})
-      GitReflow::Config.set("#{@@config_key_scope}.site}", site_url, options)
-      @@site_url = site_url
-    end
-
   end
-
-  require 'git_reflow/git_server/git_hub'
 end

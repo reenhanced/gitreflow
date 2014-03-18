@@ -3,7 +3,6 @@ require 'git_reflow/config'
 module GitReflow
   class GitServer::Base
     @@connection       = nil
-    @@config_key_scope = self.class.to_s.downcase
     @project_only      = false
 
     def initialize(options)
@@ -40,8 +39,7 @@ module GitReflow
     end
 
     def self.api_endpoint=(api_endpoint, options = {local: false})
-      GitReflow::Config.set("#{@@config_key_scope}.endpoint}", api_endpoint, options)
-      @@api_endpoint = api_endpoint
+      raise "#{self.class.to_s}.api_endpoint= method must be implemented"
     end
 
     def self.site_url
@@ -49,8 +47,7 @@ module GitReflow
     end
 
     def self.site_url=(site_url, options = {local: false})
-      GitReflow::Config.set("#{@@config_key_scope}.site}", site_url, options)
-      @@site_url = site_url
+      raise "#{self.class.to_s}.site_url= method must be implemented"
     end
   end
 end

@@ -1,6 +1,4 @@
 module GitReflow
-  extend self
-
   require 'rubygems'
   require 'open-uri'
   require "highline/import"
@@ -12,23 +10,16 @@ module GitReflow
   require 'git_reflow/version.rb' unless defined?(GitReflow::VERSION)
   require 'git_reflow/config'
   require 'git_reflow/git_server'
-
   require 'git_reflow/git_server/git_hub'
-
   require 'git_reflow/sandbox'
+  require 'git_reflow/git_helpers'
+
   include Sandbox
+  include GitHelpers
+
+  extend self
 
   LGTM = /lgtm|looks good to me|:\+1:|:thumbsup:|:shipit:/i
-
-  def setup(options = {})
-    choose do |menu|
-      menu.header = "Available remote Git Server services:"
-      menu.prompt = "Which service would you like to use for this project?  "
-
-      menu.choice('GitHub')    { @git_server = GitServer::GitHub.new(options) }
-      menu.choice('BitBucket') { say("Comming soon...") }
-    end
-  end
 
   def status(destination_branch)
     pull_request = git_server.find_pull_request( :from => current_branch, :to => destination_branch )
@@ -129,55 +120,7 @@ module GitReflow
   end
 
   def git_server
-    @git_server ||= GitServer.connection
-  end
-
-  def current_branch
-    `git branch --no-color | grep '^\* ' | grep -v 'no branch' | sed 's/^* //g'`.strip
-  end
-
-  def remote_user
-    gh_remote_user = `git config --get remote.origin.url`.strip
-    gh_remote_user.slice!(/github\.com[\/:](\w|-|\.)+/i)[11..-1]
-  end
-
-  def remote_repo_name
-    gh_repo = `git config --get remote.origin.url`.strip
-    gh_repo.slice(/\/(\w|-|\.)+$/i)[1..-5]
-  end
-
-  def get_first_commit_message
-    `git log --pretty=format:"%s" --no-merges -n 1`.strip
-  end
-
-  def push_current_branch
-    run_command_with_label "git push origin #{current_branch}"
-  end
-
-  def fetch_destination(destination_branch)
-    run_command_with_label "git fetch origin #{destination_branch}"
-  end
-
-  def update_destination(destination_branch)
-    origin_branch = current_branch
-    run_command_with_label "git checkout #{destination_branch}"
-    run_command_with_label "git pull origin #{destination_branch}"
-    run_command_with_label "git checkout #{origin_branch}"
-  end
-
-  def merge_feature_branch(options = {})
-    options[:destination_branch] ||= 'master'
-    message                        = options[:message] || "\nCloses ##{options[:pull_request_number]}\n"
-
-    run_command_with_label "git checkout #{options[:destination_branch]}"
-    run_command_with_label "git merge --squash #{options[:feature_branch]}"
-    # append pull request number to commit message
-    append_to_squashed_commit_message(message)
-  end
-
-  def append_to_squashed_commit_message(message = '')
-    `echo "#{message}" | cat - .git/SQUASH_MSG > ./tmp_squash_msg`
-    `mv ./tmp_squash_msg .git/SQUASH_MSG`
+    @git_server ||= GitServer.connect provider: 'GitHub'
   end
 
   def pull_request_comments(pull_request)
@@ -257,27 +200,5 @@ module GitReflow
   def get_commited_time(commit_sha)
     last_commit = github.repos.commits.find remote_user, remote_repo_name, commit_sha
     Time.parse last_commit.commit.author[:date]
-  end
-
-  # WARNING: this currently only supports OS X and UBUNTU
-  def ask_to_open_in_browser(url)
-    if RUBY_PLATFORM =~ /darwin|linux/i
-      open_in_browser = ask "Would you like to open it in your browser? "
-      if open_in_browser =~ /^y/i
-        if RUBY_PLATFORM =~ /darwin/i
-          # OS X
-          `open #{url}`
-        else
-          # Ubuntu
-          `xdg-open #{url}`
-        end
-      end
-    end
-  end
-
-  def run_command_with_label(command, options = {})
-    label_color = options.delete(:color) || :green
-    puts command.colorize(label_color)
-    puts `#{command}`
   end
 end

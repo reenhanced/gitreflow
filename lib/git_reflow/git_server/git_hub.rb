@@ -1,13 +1,17 @@
 require 'github_api'
+require 'git_reflow/git_helpers'
 
 module GitReflow
   module GitServer
     class GitHub < Base
+      include GitHelpers
+
       @@connection      = nil
       @project_only     = false
       @using_enterprise = false
 
       def initialize(config_options)
+        return if self.class.connection
         @project_only     = config_options.delete(:project_only)
         @using_enterprise = config_options.delete(:enterprise)
 
@@ -79,9 +83,9 @@ module GitReflow
 
       def find_pull_request(options)
         existing_pull_request = nil
-        self.class.connection.pull_requests.all(remote_user, remote_repo_name, :state => 'open') do |pull_request|
-          if pull_request.base.label == "#{remote_user}:#{options[:to]}" and
-             pull_request.head.label == "#{remote_user}:#{options[:from]}"
+        self.class.connection.pull_requests.all(self.remote_user, remote_repo_name, :state => 'open') do |pull_request|
+          if pull_request.base.label == "#{self.remote_user}:#{options[:to]}" and
+             pull_request.head.label == "#{self.remote_user}:#{options[:from]}"
              existing_pull_request = pull_request
              break
           end
@@ -118,9 +122,19 @@ module GitReflow
         @@api_endpoint ||= (endpoint.length > 0) ? endpoint : ::Github::Configuration::DEFAULT_ENDPOINT
       end
 
+      def self.api_endpoint=(api_endpoint, options = {local: false})
+        GitReflow::Config.set("github.endpoint", api_endpoint, options)
+        @@api_endpoint = api_endpoint
+      end
+
       def self.site_url
         site_url     = GitReflow::Config.get('github.site')
         @@site_url ||= (site_url.length > 0) ? site_url : ::Github::Configuration::DEFAULT_SITE
+      end
+
+      def self.site_url=(site_url, options = {local: false})
+        GitReflow::Config.set("github.site", site_url, options)
+        @@site_url = site_url
       end
     end
   end

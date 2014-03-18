@@ -16,14 +16,15 @@ spec = Gem::Specification.new do |s|
   s.has_rdoc         = true
   s.extra_rdoc_files = ['README.rdoc']
   s.bindir           = 'bin'
-
   s.require_paths    << 'lib'
   s.rdoc_options     << '--title' << 'git_reflow' << '--main' << 'README.rdoc' << '-ri'
 
+  s.add_development_dependency('aruba')
   s.add_development_dependency('bundler')
   s.add_development_dependency('rake')
   s.add_development_dependency('rdoc')
-  s.add_development_dependency('jeweler')
+  s.add_development_dependency('rspec')
+  s.add_development_dependency('webmock')
 
   s.add_dependency('colorize', '0.6.0')
   s.add_dependency('gli', '2.8.1')

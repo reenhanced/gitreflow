@@ -1,8 +1,6 @@
 require 'spec_helper'
-require 'aruba/api'
 
 describe :git_reflow do
-  include Aruba::Api
   let(:github) { Github.new }
   let(:user)   { 'reenhanced' }
   let(:repo)   { 'repo' }

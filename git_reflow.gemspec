@@ -19,7 +19,6 @@ spec = Gem::Specification.new do |s|
   s.require_paths    << 'lib'
   s.rdoc_options     << '--title' << 'git_reflow' << '--main' << 'README.rdoc' << '-ri'
 
-  s.add_development_dependency('aruba')
   s.add_development_dependency('bundler')
   s.add_development_dependency('rake')
   s.add_development_dependency('rdoc')

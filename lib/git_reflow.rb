@@ -5,10 +5,17 @@ require 'httpclient'
 require 'github_api'
 require 'json/pure'
 require 'colorize'
+require 'pry'
 
 require 'git_reflow/version.rb' unless defined?(GitReflow::VERSION)
+require 'git_reflow/config'
+require 'git_reflow/sandbox'
+require 'git_reflow/git_helpers'
 
 module GitReflow
+  include Sandbox
+  include GitHelpers
+
   extend self
 
   LGTM = /lgtm|looks good to me|:\+1:|:thumbsup:|:shipit:/i
@@ -176,93 +183,33 @@ module GitReflow
   end
 
   def github_api_endpoint
-    endpoint = `git config --get github.endpoint`.strip
+    endpoint = Config.get 'github.endpoint'
     (endpoint.length > 0) ? endpoint : Github::Configuration::DEFAULT_ENDPOINT
   end
 
   def set_github_api_endpoint(api_endpoint, options = {local: false})
-    if options[:local]
-      `git config --replace-all github.endpoint #{api_endpoint}`
-    else
-      `git config --global --replace-all github.endpoint #{api_endpoint}`
-    end
+    Config.set "github.endpoint", api_endpoint, options
   end
 
   def github_site_url
-    site_url = `git config --get github.site`.strip
+    site_url = Config.get 'github.site'
     (site_url.length > 0) ? site_url : Github::Configuration::DEFAULT_SITE
   end
 
   def set_github_site_url(site_url, options = {local: false})
-    if options[:local]
-      `git config --replace-all github.site #{site_url}`
-    else
-      `git config --global --replace-all github.site #{site_url}`
-    end
+    Config.set 'github.site', site_url, options
   end
 
   def github_oauth_token
-    `git config --get github.oauth-token`.strip
-  end
-
-  def current_branch
-    `git branch --no-color | grep '^\* ' | grep -v 'no branch' | sed 's/^* //g'`.strip
+    Config.get 'github.oauth-token'
   end
 
   def github_user
-    `git config --get github.user`.strip
-  end
-
-  def remote_user
-    gh_remote_user = `git config --get remote.origin.url`.strip
-    gh_remote_user.slice!(/github\.com[\/:](\w|-|\.)+/i)[11..-1]
-  end
-
-  def remote_repo_name
-    gh_repo = `git config --get remote.origin.url`.strip
-    gh_repo.slice(/\/(\w|-|\.)+$/i)[1..-5]
-  end
-
-  def get_first_commit_message
-    `git log --pretty=format:"%s" --no-merges -n 1`.strip
+    Config.get 'github.user'
   end
 
   def set_oauth_token(oauth_token, options = {})
-    if options.delete(:local)
-      `git config --replace-all github.oauth-token #{oauth_token}`
-    else
-      `git config --global --replace-all github.oauth-token #{oauth_token}`
-    end
-  end
-
-  def push_current_branch
-    run_command_with_label "git push origin #{current_branch}"
-  end
-
-  def fetch_destination(destination_branch)
-    run_command_with_label "git fetch origin #{destination_branch}"
-  end
-
-  def update_destination(destination_branch)
-    origin_branch = current_branch
-    run_command_with_label "git checkout #{destination_branch}"
-    run_command_with_label "git pull origin #{destination_branch}"
-    run_command_with_label "git checkout #{origin_branch}"
-  end
-
-  def merge_feature_branch(options = {})
-    options[:destination_branch] ||= 'master'
-    message                        = options[:message] || "\nCloses ##{options[:pull_request_number]}\n"
-
-    run_command_with_label "git checkout #{options[:destination_branch]}"
-    run_command_with_label "git merge --squash #{options[:feature_branch]}"
-    # append pull request number to commit message
-    append_to_squashed_commit_message(message)
-  end
-
-  def append_to_squashed_commit_message(message = '')
-    `echo "#{message}" | cat - .git/SQUASH_MSG > ./tmp_squash_msg`
-    `mv ./tmp_squash_msg .git/SQUASH_MSG`
+    Config.set 'github.oauth-token', oauth_token, options
   end
 
   def find_pull_request(options)
@@ -377,25 +324,4 @@ module GitReflow
     Time.parse last_commit.commit.author[:date]
   end
 
-  # WARNING: this currently only supports OS X and UBUNTU
-  def ask_to_open_in_browser(url)
-    if RUBY_PLATFORM =~ /darwin|linux/i
-      open_in_browser = ask "Would you like to open it in your browser? "
-      if open_in_browser =~ /^y/i
-        if RUBY_PLATFORM =~ /darwin/i
-          # OS X
-          `open #{url}`
-        else
-          # Ubuntu
-          `xdg-open #{url}`
-        end
-      end
-    end
-  end
-
-  def run_command_with_label(command, options = {})
-    label_color = options.delete(:color) || :green
-    puts command.colorize(label_color)
-    puts `#{command}`
-  end
 end

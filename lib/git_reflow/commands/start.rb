@@ -18,7 +18,7 @@ command :start do |c|
       raise "usage: git-reflow start [new-branch-name]"
     else
       `git pull origin #{GitReflow.current_branch}`
-      `git push origin master:refs/heads/#{args[0]}`
+      `git push origin #{GitReflow.current_branch}:refs/heads/#{args[0]}`
       `git checkout --track -b #{args[0]} origin/#{args[0]}`
     end
   end

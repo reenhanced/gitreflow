@@ -55,9 +55,9 @@ module GitReflow
       oauth_token   = authorization.token
 
       if project_only
-        set_oauth_token(oauth_token, local: true)
+        set_oauth_token(oauth_token, options[:github_oauth_token_file], local: true)
       else
-        set_oauth_token(oauth_token)
+        set_oauth_token(oauth_token, options[:github_oauth_token_file])
       end
     rescue StandardError => e
       puts "\nInvalid username or password"
@@ -202,7 +202,14 @@ module GitReflow
   end
 
   def github_oauth_token
-    `git config --get github.oauth-token`.strip
+    github_oauth_token = `git config --get github.oauth-token`.strip
+
+    if not github_oauth_token.empty?
+      github_oauth_token
+    else
+      github_oauth_token_file = `git config --get github.oauth-token-file`.strip
+      File.read(File.expand_path(github_oauth_token_file, ENV["HOME"])).strip
+    end
   end
 
   def current_branch
@@ -227,11 +234,12 @@ module GitReflow
     `git log --pretty=format:"%s" --no-merges -n 1`.strip
   end
 
-  def set_oauth_token(oauth_token, options = {})
+  def set_oauth_token(oauth_token, oauth_token_file, options = {})
     if options.delete(:local)
       `git config --replace-all github.oauth-token #{oauth_token}`
     else
-      `git config --global --replace-all github.oauth-token #{oauth_token}`
+      File.open(oauth_token_file, 'w') { |f| f.write(oauth_token) }
+      `git config --global --replace-all github.oauth-token-file #{oauth_token_file}`
     end
   end
 

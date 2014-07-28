@@ -157,7 +157,7 @@ module GitReflow
           else
             puts "There were problems commiting your feature... please check the errors above and try again."
           end
-        elsif status.state != "success"
+        elsif !status.nil? and status.state != "success"
           puts "[#{ 'deliver halted'.colorize(:red) }] #{status.description}: #{status.target_url}"
         elsif open_comment_authors.count > 0
           puts "[deliver halted] You still need a LGTM from: #{open_comment_authors.join(', ')}"

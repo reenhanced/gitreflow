@@ -1,9 +1,13 @@
+require "highline/import"
+
 module GitReflow
   module Sandbox
+    extend self
+
     def run(command, options = {})
       options = { loud: true }.merge(options)
 
-      if options.delete(:loud)
+      if options[:loud] == true
         puts `#{command}`
       else
         `#{command}`

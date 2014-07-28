@@ -6,12 +6,24 @@ require File.expand_path('../fixtures', __FILE__)
 
 module GithubHelpers
   def stub_github_with(options = {})
-    github = Github.new
-    user = options[:user] || 'reenhanced'
-    repo = options[:repo] || 'repo'
-    branch = options[:branch] || 'new-feature'
-    pull = options[:pull]
 
+    api_endpoint = options[:api_endpoint] || "https://api.github.com"
+    site_url     = options[:site_url] || "http://github.com"
+    user         = options[:user] || 'reenhanced'
+    password     = options[:passwordl] || 'shazam'
+    repo         = options[:repo] || 'repo'
+    branch       = options[:branch] || 'new-feature'
+    pull         = options[:pull]
+
+    github = Github.new do |config|
+      config.basic_auth = "#{user}:#{password}"
+      config.endpoint    = api_endpoint
+      config.site        = site_url
+      config.adapter     = :net_http
+      config.ssl         = {:verify => false}
+    end
+
+    stub_request(:get, "https://#{user}:#{password}@#{api_endpoint.gsub('https://','')}/authorizations").to_return(:body => "[]", status: 200, headers: {})
     Github.stub :new => github
     GitReflow.stub(:push_current_branch).and_return(true)
     GitReflow.stub(:github).and_return(github)

@@ -3,10 +3,12 @@ require 'git_reflow/config'
 module GitReflow
   module GitHelpers
     def remote_user
+      return "" unless "#{GitReflow::Config.get('remote.origin.url')}".length > 0
       GitReflow::Config.get('remote.origin.url')[/[\/:](\w|-|\.)+/i][1..-1]
     end
 
     def remote_repo_name
+      return "" unless "#{GitReflow::Config.get('remote.origin.url')}".length > 0
       GitReflow::Config.get('remote.origin.url')[/\/(\w|-|\.)+$/i][1..-5]
     end
 

@@ -22,7 +22,7 @@ spec = Gem::Specification.new do |s|
   s.add_development_dependency('bundler')
   s.add_development_dependency('rake')
   s.add_development_dependency('rdoc')
-  s.add_development_dependency('rspec')
+  s.add_development_dependency('rspec', '~> 3.0.0')
   s.add_development_dependency('webmock')
 
   s.add_dependency('colorize', '0.6.0')

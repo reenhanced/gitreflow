@@ -5,7 +5,6 @@ require 'httpclient'
 require 'github_api'
 require 'json/pure'
 require 'colorize'
-require 'pry'
 
 require 'git_reflow/version.rb' unless defined?(GitReflow::VERSION)
 require 'git_reflow/config'
@@ -32,11 +31,11 @@ module GitReflow
     end
 
     if project_only
-      set_github_site_url(gh_site_url, local: true)
-      set_github_api_endpoint(gh_api_endpoint, local: true)
+      Config.set 'github.site', gh_site_url, local: true
+      Config.set "github.endpoint", gh_api_endpoint, local: true
     else
-      set_github_site_url(gh_site_url)
-      set_github_api_endpoint(gh_api_endpoint)
+      Config.set 'github.site', gh_site_url
+      Config.set "github.endpoint", gh_api_endpoint
     end
 
     gh_user     = ask("Please enter your GitHub username: ")
@@ -52,19 +51,19 @@ module GitReflow
         config.ssl         = {:verify => false}
       end
 
-      previous_authorizations = github.oauth.all.select {|auth| auth.note == "git-reflow (#{`hostname`.strip})" }
+      previous_authorizations = github.oauth.all.select {|auth| auth.note == "git-reflow (#{run('hostname', loud: false).strip})" }
       if previous_authorizations.any?
         authorization = previous_authorizations.last
       else
-        authorization = github.oauth.create scopes: ['repo'], note: "git-reflow (#{`hostname`.strip})"
+        authorization = github.oauth.create scopes: ['repo'], note: "git-reflow (#{run('hostname', loud: false).strip})"
       end
 
       oauth_token   = authorization.token
 
       if project_only
-        set_oauth_token(oauth_token, local: true)
+        Config.set 'github.oauth-token', oauth_token, local: true
       else
-        set_oauth_token(oauth_token)
+        Config.set 'github.oauth-token', oauth_token
       end
     rescue StandardError => e
       puts "\nInvalid username or password"
@@ -91,7 +90,7 @@ module GitReflow
     fetch_destination options['base']
 
     begin
-      puts push_current_branch
+      push_current_branch
       pull_request = github.pull_requests.create(remote_user, remote_repo_name,
                                                  'title' => options['title'],
                                                  'body'  => options['body'],
@@ -183,21 +182,13 @@ module GitReflow
   end
 
   def github_api_endpoint
-    endpoint = Config.get 'github.endpoint'
+    endpoint = Config.get('github.endpoint') || ''
     (endpoint.length > 0) ? endpoint : Github::Configuration::DEFAULT_ENDPOINT
   end
 
-  def set_github_api_endpoint(api_endpoint, options = {local: false})
-    Config.set "github.endpoint", api_endpoint, options
-  end
-
   def github_site_url
-    site_url = Config.get 'github.site'
+    site_url = Config.get('github.site') || ''
     (site_url.length > 0) ? site_url : Github::Configuration::DEFAULT_SITE
-  end
-
-  def set_github_site_url(site_url, options = {local: false})
-    Config.set 'github.site', site_url, options
   end
 
   def github_oauth_token
@@ -206,10 +197,6 @@ module GitReflow
 
   def github_user
     Config.get 'github.user'
-  end
-
-  def set_oauth_token(oauth_token, options = {})
-    Config.set 'github.oauth-token', oauth_token, options
   end
 
   def find_pull_request(options)

@@ -54,6 +54,8 @@ or
 On your first install, you'll need to setup your Github credentials. These are used only to get an oauth token that's stored in your global git config.
 We use the Github credentials so we can create pull requests from the command line.
 
+*NOTE* You must temporarily turn off two-factor authentication in your [Github account](https://github.com/settings/admin) to run the setup steps!
+
 After installation, run:
   git reflow setup
 

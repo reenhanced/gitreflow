@@ -20,6 +20,7 @@ spec = Gem::Specification.new do |s|
   s.rdoc_options     << '--title' << 'git_reflow' << '--main' << 'README.rdoc' << '-ri'
 
   s.add_development_dependency('bundler')
+  s.add_development_dependency('pry-byebug')
   s.add_development_dependency('rake')
   s.add_development_dependency('rdoc')
   s.add_development_dependency('rspec', '~> 3.0.0')

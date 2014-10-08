@@ -41,8 +41,8 @@
   "deletions": 3,
   "changed_files": 5,
   "head": {
-    "label": "new-topic",
-    "ref": "new-topic",
+    "label": "new-feature",
+    "ref": "new-feature",
     "sha": "6dcb09b5b57875f334f61aebed695e2e4193db5e",
     "user": {
       "login": "reenhanced",

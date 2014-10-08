@@ -2,6 +2,7 @@ require 'rubygems'
 require 'rspec'
 require 'multi_json'
 require 'webmock/rspec'
+require 'pry'
 
 $LOAD_PATH << 'lib'
 require 'git_reflow'
@@ -13,6 +14,7 @@ RSpec.configure do |config|
   config.include WebMock::API
   config.include CommandLineHelpers
   config.include GithubHelpers
+  config.include RspecStubHelpers
 
   config.expect_with :rspec do |c|
     c.syntax = [:should, :expect]

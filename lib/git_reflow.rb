@@ -133,17 +133,16 @@ module GitReflow
         # if there any comment_authors left, then they haven't given a lgtm after the last commit
         if ((status.nil? or status.state == "success") and has_comments and open_comment_authors.empty?) or options['skip_lgtm']
           lgtm_authors   = comment_authors_for_pull_request(existing_pull_request, :with => LGTM)
-          commit_message = "#{(existing_pull_request[:body] || get_first_commit_message)}"
+          commit_message = ("#{existing_pull_request[:body]}".length > 0) ? existing_pull_request[:body] : "#{get_first_commit_message}"
           puts "Merging pull request ##{existing_pull_request.number}: '#{existing_pull_request.title}', from '#{existing_pull_request.head.label}' into '#{existing_pull_request.base.label}'"
 
           update_destination(options['base'])
-          merge_feature_branch(:feature_branch => feature_branch,
-                               :destination_branch => options['base'],
+          merge_feature_branch(feature_branch,
+                               :destination_branch  => options['base'],
                                :pull_request_number => existing_pull_request.number,
-                               :message => "\nCloses ##{existing_pull_request.number}\n\nLGTM given by: @#{lgtm_authors.join(', @')}\n")
-          append_to_squashed_commit_message(commit_message)
-          puts "git commit".colorize(:green)
-          committed = system('git commit')
+                               :lgtm_authors        => lgtm_authors,
+                               :message             => commit_message)
+          committed = run_command_with_label 'git commit'
 
           if committed
             puts "Merge complete!"

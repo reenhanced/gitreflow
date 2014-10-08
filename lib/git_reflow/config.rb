@@ -8,9 +8,9 @@ module GitReflow
 
     def set(key, value, options = { local: false })
       if options.delete(:local)
-        GitReflow::Sandbox.run "git config --replace-all #{key} #{value}", loud: false
+        GitReflow::Sandbox.run "git config --replace-all #{key} \"#{value}\"", loud: false
       else
-        GitReflow::Sandbox.run "git config --global --replace-all #{key} #{value}", loud: false
+        GitReflow::Sandbox.run "git config --global --replace-all #{key} \"#{value}\"", loud: false
       end
     end
   end

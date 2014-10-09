@@ -7,7 +7,7 @@ If your workflow looks like this:
 2. Write great code
 3. Create a pull request against master
 4. Get 'lgtm' through a code review
-5. Squash merge to master
+5. Squash merge to master (Why is squash merging our preferred workflow? https://github.com/reenhanced/gitreflow/issues/52)
 6. Delete the feature branch
 
 Reflow will make your life easier.

@@ -3,7 +3,9 @@ module GitReflow
     def run(command, options = {})
       options = { loud: true }.merge(options)
 
-      if options.delete(:loud)
+      if options[:with_system] == true
+        system(command)
+      elsif options[:loud] == true
         puts `#{command}`
       else
         `#{command}`
@@ -13,7 +15,7 @@ module GitReflow
     def run_command_with_label(command, options = {})
       label_color = options.delete(:color) || :green
       puts command.colorize(label_color)
-      run(command)
+      run(command, options)
     end
 
     # WARNING: this currently only supports OS X and UBUNTU

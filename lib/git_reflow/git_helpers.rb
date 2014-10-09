@@ -1,12 +1,17 @@
 require 'git_reflow/config'
+require 'git_reflow/sandbox'
 
 module GitReflow
   module GitHelpers
+    include Sandbox
+
     def remote_user
+      return "" unless "#{GitReflow::Config.get('remote.origin.url')}".length > 0
       GitReflow::Config.get('remote.origin.url')[/[\/:](\w|-|\.)+/i][1..-1]
     end
 
     def remote_repo_name
+      return "" unless "#{GitReflow::Config.get('remote.origin.url')}".length > 0
       GitReflow::Config.get('remote.origin.url')[/\/(\w|-|\.)+$/i][1..-5]
     end
 
@@ -33,18 +38,27 @@ module GitReflow
       run_command_with_label "git checkout #{origin_branch}"
     end
 
-    def merge_feature_branch(options = {})
+    def merge_feature_branch(feature_branch_name, options = {})
       options[:destination_branch] ||= 'master'
-      message                        = options[:message] || "\nCloses ##{options[:pull_request_number]}\n"
+
+      message = "#{options[:message]}"
+
+      if "#{options[:pull_request_number]}".length > 0
+        message << "\nCloses ##{options[:pull_request_number]}\n"
+      end
+
+      if lgtm_authors = Array(options[:lgtm_authors]) and lgtm_authors.any?
+        message << "\nLGTM given by: @#{lgtm_authors.join(', @')}\n"
+      end
 
       run_command_with_label "git checkout #{options[:destination_branch]}"
-      run_command_with_label "git merge --squash #{options[:feature_branch]}"
-      # append pull request number to commit message
-      append_to_squashed_commit_message(message)
+      run_command_with_label "git merge --squash #{feature_branch_name}"
+
+      append_to_squashed_commit_message(message) if message.length > 0
     end
 
     def append_to_squashed_commit_message(message = '')
-      run "echo "#{message}" | cat - .git/SQUASH_MSG > ./tmp_squash_msg"
+      run "echo \"#{message}\" | cat - .git/SQUASH_MSG > ./tmp_squash_msg"
       run 'mv ./tmp_squash_msg .git/SQUASH_MSG'
     end
   end

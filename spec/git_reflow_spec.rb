@@ -30,6 +30,16 @@ describe GitReflow do
     end
   end
 
+  context :github do
+    before do
+      GitReflow.stub(:github_oauth_token).and_return(oauth_token_hash[:token])
+    end
+
+    it "creates a new authorization from the stored oauth token" do
+      GitReflow.github.oauth_token.should == oauth_token_hash[:token]
+    end
+  end
+
   context :setup do
     let(:setup_options) { {} }
     subject             { GitReflow.setup(setup_options) }

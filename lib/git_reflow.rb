@@ -182,12 +182,12 @@ module GitReflow
 
   def github_api_endpoint
     endpoint = Config.get('github.endpoint') || ''
-    (endpoint.length > 0) ? endpoint : github.endpoint
+    (endpoint.length > 0) ? endpoint : Github::Configuration.new.endpoint
   end
 
   def github_site_url
     site_url = Config.get('github.site') || ''
-    (site_url.length > 0) ? site_url : github.site
+    (site_url.length > 0) ? site_url : Github::Configuration.new.site
   end
 
   def github_oauth_token

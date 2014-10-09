@@ -151,6 +151,9 @@ module GitReflow
               run_command_with_label "git push origin :#{feature_branch}"
               run_command_with_label "git branch -D #{feature_branch}"
               puts "Nice job buddy."
+            else
+              puts "Cleanup haulted.  Local changes were not pushed to remote repo.".colorize(:red)
+              puts "To reset and go back to your branch run \`git reset --hard origin/master && git checkout new-feature\`"
             end
           else
             puts "There were problems commiting your feature... please check the errors above and try again."

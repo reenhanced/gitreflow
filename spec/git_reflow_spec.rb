@@ -408,6 +408,10 @@ describe GitReflow do
               it "doesn't delete the local feature branch" do
                 expect { subject }.to_not have_run_command('git branch -D new-feature')
               end
+
+              it "provides instructions to undo the steps taken" do
+                expect { subject }.to have_output("To reset and go back to your branch run \`git reset --hard origin/master && git checkout new-feature\`")
+              end
             end
 
             context "and there were issues commiting the squash merge to the base branch" do

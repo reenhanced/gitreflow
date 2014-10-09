@@ -94,14 +94,14 @@ describe GitReflow::GitHelpers do
 
     context "with a message" do
       let(:merge_options) {{ message: "don't throw doo doo" }}
-      it "appends the message to the suqashed commit message" do
+      it "appends the message to the squashed commit message" do
         Gitacular.should_receive(:append_to_squashed_commit_message).with("don't throw doo doo")
         subject
       end
 
       context 'and a pull reuqest number' do
         before { merge_options.merge!(pull_request_number: 3) }
-        it "appends the message to the suqashed commit message" do
+        it "appends the message to the squashed commit message" do
           Gitacular.should_receive(:append_to_squashed_commit_message).with("don't throw doo doo\nCloses #3\n")
           subject
         end
@@ -110,7 +110,7 @@ describe GitReflow::GitHelpers do
 
     context "with a pull request number" do
       let(:merge_options) {{ pull_request_number: 3 }}
-      it "appends the message to the suqashed commit message" do
+      it "appends the message to the squashed commit message" do
         Gitacular.should_receive(:append_to_squashed_commit_message).with("\nCloses #3\n")
         subject
       end
@@ -118,7 +118,7 @@ describe GitReflow::GitHelpers do
 
     context "with one LGTM author" do
       let(:merge_options) {{ lgtm_authors: 'codenamev' }}
-      it "appends the message to the suqashed commit message" do
+      it "appends the message to the squashed commit message" do
         Gitacular.should_receive(:append_to_squashed_commit_message).with("\nLGTM given by: @#{merge_options[:lgtm_authors]}\n")
         subject
       end
@@ -126,7 +126,7 @@ describe GitReflow::GitHelpers do
 
     context "with LGTM authors" do
       let(:merge_options) {{ lgtm_authors: ['codenamev', 'nhance'] }}
-      it "appends the message to the suqashed commit message" do
+      it "appends the message to the squashed commit message" do
         Gitacular.should_receive(:append_to_squashed_commit_message).with("\nLGTM given by: @#{merge_options[:lgtm_authors].join(', @')}\n")
         subject
       end

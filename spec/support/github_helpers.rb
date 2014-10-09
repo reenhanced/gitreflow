@@ -24,7 +24,7 @@ module GithubHelpers
     end
 
     stub_request(:get, "https://#{user}:#{password}@#{api_endpoint.gsub('https://','')}/authorizations").to_return(:body => "[]", status: 200, headers: {})
-    Github.stub :new => github
+    Github.stub(:new).and_return(github)
     GitReflow.stub(:push_current_branch).and_return(true)
     GitReflow.stub(:github).and_return(github)
     GitReflow.stub(:current_branch).and_return(branch)
@@ -43,6 +43,8 @@ module GithubHelpers
       stub_get("/repos/#{user}/#{repo}/pulls").with(:query => {'state' => 'open'}).
         to_return(:body => fixture('pull_requests/pull_requests.json'), :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
     end
+
+    github
   end
 end
 

@@ -91,24 +91,23 @@ module GitReflow
 
     begin
       push_current_branch
-      pull_request = github.pull_requests.create(remote_user, remote_repo_name,
-                                                 'title' => options['title'],
-                                                 'body'  => options['body'],
-                                                 'head'  => "#{remote_user}:#{current_branch}",
-                                                 'base'  => options['base'])
 
-      puts "Successfully created pull request ##{pull_request.number}: #{pull_request.title}\nPull Request URL: #{pull_request.html_url}\n"
-      ask_to_open_in_browser(pull_request.html_url)
-    rescue Github::Error::UnprocessableEntity => e
-      error_message = e.to_s
-      if error_message =~ /request already exists/i
-        existing_pull_request = find_pull_request( :from => current_branch, :to => options['base'] )
+      if existing_pull_request = find_pull_request( :from => current_branch, :to => options['base'] )
         puts "A pull request already exists for these branches:"
         display_pull_request_summary(existing_pull_request)
         ask_to_open_in_browser(existing_pull_request.html_url)
       else
-        puts error_message
+        pull_request = github.pull_requests.create(remote_user, remote_repo_name,
+                                                   'title' => options['title'],
+                                                   'body'  => options['body'],
+                                                   'head'  => "#{remote_user}:#{current_branch}",
+                                                   'base'  => options['base'])
+
+        puts "Successfully created pull request ##{pull_request.number}: #{pull_request.title}\nPull Request URL: #{pull_request.html_url}\n"
+        ask_to_open_in_browser(pull_request.html_url)
       end
+    rescue Github::Error::UnprocessableEntity => e
+      puts e.to_s
     end
   end
 
@@ -177,17 +176,18 @@ module GitReflow
       config.oauth_token = GitReflow.github_oauth_token
       config.endpoint    = GitReflow.github_api_endpoint
       config.site        = GitReflow.github_site_url
+      config.ssl         = { verify: false }
     end
   end
 
   def github_api_endpoint
     endpoint = Config.get('github.endpoint') || ''
-    (endpoint.length > 0) ? endpoint : Github::Configuration::DEFAULT_ENDPOINT
+    (endpoint.length > 0) ? endpoint : github.endpoint
   end
 
   def github_site_url
     site_url = Config.get('github.site') || ''
-    (site_url.length > 0) ? site_url : Github::Configuration::DEFAULT_SITE
+    (site_url.length > 0) ? site_url : github.site
   end
 
   def github_oauth_token

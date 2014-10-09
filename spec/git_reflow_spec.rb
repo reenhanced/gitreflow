@@ -12,7 +12,7 @@ describe GitReflow do
   let(:enterprise_api)   { 'https://github.reenhanced.com' }
   let(:hostname)         { 'hostname.local' }
 
-  let(:github_authorizations) { Github::Authorizations.new }
+  let(:github_authorizations) { Github::Client::Authorizations.new }
   let(:existing_pull_request) { Hashie::Mash.new(JSON.parse(fixture('pull_requests/pull_request.json').read)) }
 
   before do
@@ -58,8 +58,8 @@ describe GitReflow do
 
       it "creates git config keys for github connections" do
         expect { subject }.to have_run_commands_in_order [
-          "git config --global --replace-all github.site \"#{Github::Configuration::DEFAULT_SITE}\"",
-          "git config --global --replace-all github.endpoint \"#{Github::Configuration::DEFAULT_ENDPOINT}\"" ,
+          "git config --global --replace-all github.site \"#{github.site}\"",
+          "git config --global --replace-all github.endpoint \"#{github.endpoint}\"" ,
           "git config --global --replace-all github.oauth-token \"#{oauth_token_hash[:token]}\""
         ]
       end
@@ -68,8 +68,8 @@ describe GitReflow do
         let(:setup_options) {{ project_only: true }}
         it "creates _local_ git config keys for github connections" do
         expect { subject }.to have_run_commands_in_order [
-            "git config --replace-all github.site \"#{Github::Configuration::DEFAULT_SITE}\"",
-            "git config --replace-all github.endpoint \"#{Github::Configuration::DEFAULT_ENDPOINT}\"" ,
+            "git config --replace-all github.site \"#{github.site}\"",
+            "git config --replace-all github.endpoint \"#{github.endpoint}\"" ,
             "git config --replace-all github.oauth-token \"#{oauth_token_hash[:token]}\""
           ]
         end
@@ -114,17 +114,6 @@ describe GitReflow do
     end
   end
 
-  context :github do
-    before do
-      GitReflow.stub(:github_oauth_token).and_return(oauth_token_hash[:token])
-    end
-
-    it "creates a new authorization from the stored oauth token" do
-      github = GitReflow.github
-      github.oauth_token.should == oauth_token_hash[:token]
-    end
-  end
-
   context :status do
     subject { GitReflow.status(base_branch) }
 
@@ -165,7 +154,7 @@ describe GitReflow do
       }
     }
 
-    before do
+    let(:github) do
       stub_github_with({
         :user         => user,
         :password     => password,
@@ -179,24 +168,31 @@ describe GitReflow do
 
     it "fetches the latest changes to the destination branch" do
       GitReflow.should_receive(:fetch_destination).with(inputs['base'])
-      github.pull_requests.should_receive(:create)
+      GitReflow.should_receive(:find_pull_request).and_return(nil)
+      github.stub_chain(:pull_requests, :create).and_return(existing_pull_request)
       subject
     end
 
     it "pushes the latest current branch to the origin repo" do
       GitReflow.should_receive(:push_current_branch)
+      GitReflow.should_receive(:find_pull_request).and_return(nil)
+      github.stub_chain(:pull_requests, :create).and_return(existing_pull_request)
       subject
     end
 
     context "pull request doesn't exist" do
+      before { GitReflow.stub(:find_pull_request).and_return(nil) }
+
       it "successfully creates a pull request if I do not provide one" do
+        existing_pull_request.stub(:title).and_return(inputs['title'])
+        github.stub_chain(:pull_requests, :create).and_return(existing_pull_request)
         github.pull_requests.should_receive(:create).with(user, repo, inputs.except('state'))
-        expect { subject }.to have_output "Successfully created pull request #1: #{inputs['title']}\nPull Request URL: http://github.com/#{user}/#{repo}/pulls/1\n"
+        expect { subject }.to have_output "Successfully created pull request #1: #{inputs['title']}\nPull Request URL: https://github.com/#{user}/#{repo}/pulls/1\n"
       end
     end
 
     context "pull request exists" do
-      let(:existing_pull_request) { Hashie::Mash.new({ html_url: "http://github.com/#{user}/#{repo}/pulls/1" }) }
+      let(:existing_pull_request) { Hashie::Mash.new({ html_url: "https://github.com/#{user}/#{repo}/pulls/1" }) }
 
       before do
         GitReflow.stub(:push_current_branch)

@@ -11,7 +11,7 @@ module GitReflow
       @@project_only     = false
       @@using_enterprise = false
 
-      def initialize(config_options)
+      def initialize(config_options = {})
         @@project_only     = !!config_options.delete(:project_only)
         @@using_enterprise = !!config_options.delete(:enterprise)
 
@@ -31,8 +31,6 @@ module GitReflow
         else
           GitReflow::Config.set('reflow.git-server', 'GitHub')
         end
-
-        authenticate
       end
 
       def authenticate
@@ -53,40 +51,38 @@ module GitReflow
               config.ssl        = {:verify => false}
             end
 
-            previous_authorizations = @connection.oauth.all.select {|auth| auth.note == "git-reflow (#{`hostname`.strip})" }
-             if previous_authorizations.any?
-               authorization = previous_authorizations.last
-             else
-               authorization = @connection.oauth.create scopes: ['repo'], note: "git-reflow (#{`hostname`.strip})"
-             end
-
-             oauth_token   = authorization.token
-
-            if @@project_only
-              self.class.oauth_token = oauth_token, { local: true }
+            previous_authorizations = @connection.oauth.all.select {|auth| auth.note == "git-reflow (#{run('hostname', loud: false).strip})" }
+            if previous_authorizations.any?
+              authorization = previous_authorizations.last
             else
-              self.class.oauth_token = oauth_token
+              authorization = @connection.oauth.create scopes: ['repo'], note: "git-reflow (#{run('hostname', loud: false).strip})"
             end
+
+            oauth_token   = authorization.token
+
+            self.class.oauth_token = oauth_token
             puts "\nYour GitHub account was successfully setup!"
+
           rescue StandardError => e
             puts "\nInvalid username or password: #{e.inspect}"
           else
             puts "\nYour GitHub account was successfully setup!"
           end
         end
+
+        @connection
+      end
+
+      def create_pull_request(options = {})
+        pull_request = connection.pull_requests.create(remote_user, remote_repo_name,
+                                                       title: options[:title],
+                                                       body:  options[:body],
+                                                       head:  "#{remote_user}:#{current_branch}",
+                                                       base:  options[:base])
       end
 
       def find_pull_request(options)
-        existing_pull_request = nil
-        @connection.pull_requests.all(self.remote_user, remote_repo_name, :state => 'open') do |pull_request|
-          if pull_request.base.label == "#{self.remote_user}:#{options[:to]}" and
-             pull_request.head.label == "#{self.remote_user}:#{options[:from]}"
-             existing_pull_request = pull_request
-             break
-          end
-        end
-
-        existing_pull_request
+        connection.pull_requests.all(self.remote_user, remote_repo_name, base: options[:to], head: options[:from], :state => 'open').first
       end
 
       def self.connection
@@ -131,6 +127,60 @@ module GitReflow
         GitReflow::Config.set("github.site", site_url, local: @@project_only)
         site_url
       end
+
+      def connection
+        @connection ||= self.class.connection
+      end
+
+      def pull_request_comments(pull_request)
+        comments        = connection.issues.comments.all        remote_user, remote_repo_name, issue_id:   pull_request.number
+        review_comments = connection.pull_requests.comments.all remote_user, remote_repo_name, request_id: pull_request.number
+
+        review_comments.to_a + comments.to_a
+      end
+
+      def has_pull_request_comments?(pull_request)
+        pull_request_comments(pull_request).count > 0
+      end
+
+      def get_build_status sha
+        connection.repos.statuses.all(remote_user, remote_repo_name, sha).first
+      end
+
+      def colorized_build_description status
+        colorized_statuses = { pending: :yellow, success: :green, error: :red, failure: :red }
+        status.description.colorize( colorized_statuses[status.state.to_sym] )
+      end
+
+      def find_authors_of_open_pull_request_comments(pull_request)
+        # first we'll gather all the authors that have commented on the pull request
+        pull_last_committed_at = get_commited_time(pull_request.head.sha)
+        comment_authors        = comment_authors_for_pull_request(pull_request)
+        lgtm_authors           = comment_authors_for_pull_request(pull_request, :with => LGTM, :after => pull_last_committed_at)
+
+        comment_authors - lgtm_authors
+      end
+
+      def comment_authors_for_pull_request(pull_request, options = {})
+        all_comments    = pull_request_comments(pull_request)
+        comment_authors = []
+
+        all_comments.each do |comment|
+          next if options[:after] and Time.parse(comment.created_at) < options[:after]
+          if (options[:with].nil? or comment[:body] =~ options[:with])
+            comment_authors |= [comment.user.login]
+          end
+        end
+
+        # remove the current user from the list to check
+        comment_authors -= [self.class.user]
+      end
+
+      def get_commited_time(commit_sha)
+        last_commit = connection.repos.commits.find remote_user, remote_repo_name, commit_sha
+        Time.parse last_commit.commit.author[:date]
+      end
+
     end
   end
 end

@@ -41,16 +41,15 @@ module GitReflow
     begin
       push_current_branch
 
-      if existing_pull_request = find_pull_request( :from => current_branch, :to => options['base'] )
+      if existing_pull_request = git_server.find_pull_request( :from => current_branch, :to => options['base'] )
         puts "A pull request already exists for these branches:"
         display_pull_request_summary(existing_pull_request)
         ask_to_open_in_browser(existing_pull_request.html_url)
       else
-        pull_request = github.pull_requests.create(remote_user, remote_repo_name,
-                                                   'title' => options['title'],
-                                                   'body'  => options['body'],
-                                                   'head'  => "#{remote_user}:#{current_branch}",
-                                                   'base'  => options['base'])
+        pull_request = git_server.create_pull_request(title: options['title'],
+                                                      body:  options['body'],
+                                                      head:  "#{remote_user}:#{current_branch}",
+                                                      base:  options['base'])
 
         puts "Successfully created pull request ##{pull_request.number}: #{pull_request.title}\nPull Request URL: #{pull_request.html_url}\n"
         ask_to_open_in_browser(pull_request.html_url)
@@ -68,19 +67,19 @@ module GitReflow
     update_destination(current_branch)
 
     begin
-      existing_pull_request = find_pull_request( :from => current_branch, :to => options['base'] )
+      existing_pull_request = git_server.find_pull_request( :from => current_branch, :to => options['base'] )
 
       if existing_pull_request.nil?
         puts "Error: No pull request exists for #{remote_user}:#{current_branch}\nPlease submit your branch for review first with \`git reflow review\`"
       else
 
-        open_comment_authors = find_authors_of_open_pull_request_comments(existing_pull_request)
-        has_comments         = has_pull_request_comments?(existing_pull_request)
-        status = get_build_status existing_pull_request.head.sha
+        open_comment_authors = git_server.find_authors_of_open_pull_request_comments(existing_pull_request)
+        has_comments         = git_server.has_pull_request_comments?(existing_pull_request)
+        status = git_server.get_build_status existing_pull_request.head.sha
 
         # if there any comment_authors left, then they haven't given a lgtm after the last commit
         if ((status.nil? or status.state == "success") and has_comments and open_comment_authors.empty?) or options['skip_lgtm']
-          lgtm_authors   = comment_authors_for_pull_request(existing_pull_request, :with => LGTM)
+          lgtm_authors   = git_server.comment_authors_for_pull_request(existing_pull_request, :with => LGTM)
           commit_message = ("#{existing_pull_request[:body]}".length > 0) ? existing_pull_request[:body] : "#{get_first_commit_message}"
           puts "Merging pull request ##{existing_pull_request.number}: '#{existing_pull_request.title}', from '#{existing_pull_request.head.label}' into '#{existing_pull_request.base.label}'"
 
@@ -127,54 +126,6 @@ module GitReflow
     @git_server ||= GitServer.connect provider: 'GitHub'
   end
 
-  def pull_request_comments(pull_request)
-    comments        = github.issues.comments.all        remote_user, remote_repo_name, issue_id:   pull_request.number
-    review_comments = github.pull_requests.comments.all remote_user, remote_repo_name, request_id: pull_request.number
-
-    review_comments.to_a + comments.to_a
-  end
-
-  def has_pull_request_comments?(pull_request)
-    pull_request_comments(pull_request).count > 0
-  end
-
-  def get_build_status sha
-    github.repos.statuses.all(remote_user, remote_repo_name, sha).first
-  end
-
-  def build_color status
-    colorized_statuses = { pending: :yellow, success: :green, error: :red, failure: :red }
-    colorized_statuses[status.state.to_sym]
-  end
-
-  def colorized_build_description status
-    status.description.colorize( build_color status )
-  end
-
-  def find_authors_of_open_pull_request_comments(pull_request)
-    # first we'll gather all the authors that have commented on the pull request
-    pull_last_committed_at = get_commited_time(pull_request.head.sha)
-    comment_authors        = comment_authors_for_pull_request(pull_request)
-    lgtm_authors           = comment_authors_for_pull_request(pull_request, :with => LGTM, :after => pull_last_committed_at)
-
-    comment_authors - lgtm_authors
-  end
-
-  def comment_authors_for_pull_request(pull_request, options = {})
-    all_comments    = pull_request_comments(pull_request)
-    comment_authors = []
-
-    all_comments.each do |comment|
-      next if options[:after] and Time.parse(comment.created_at) < options[:after]
-      if (options[:with].nil? or comment[:body] =~ options[:with])
-        comment_authors |= [comment.user.login]
-      end
-    end
-
-    # remove the current user from the list to check
-    comment_authors -= [github_user]
-  end
-
   def display_pull_request_summary(pull_request)
     summary_data = {
       "branches"    => "#{pull_request.head.label} -> #{pull_request.base.label}",
@@ -219,10 +170,5 @@ module GitReflow
     end
 
     puts "\n#{notices}" unless notices.empty?
-  end
-
-  def get_commited_time(commit_sha)
-    last_commit = github.repos.commits.find remote_user, remote_repo_name, commit_sha
-    Time.parse last_commit.commit.author[:date]
   end
 end

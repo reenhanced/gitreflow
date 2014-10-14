@@ -10,7 +10,7 @@ module GitReflow
     def connect(options = nil)
       options ||= { provider: 'GitHub' }
       begin
-        provider_class_for(options.delete(:provider)).new(options)
+        provider = provider_class_for(options.delete(:provider)).new(options)
       rescue ConnectionError => e
         puts e.message
       end

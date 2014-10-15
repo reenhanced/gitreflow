@@ -10,9 +10,10 @@ module GitReflow
     def connect(options = nil)
       options ||= { provider: 'GitHub' }
       begin
+        provider_name = options[:provider]
         provider = provider_class_for(options.delete(:provider)).new(options)
       rescue ConnectionError => e
-        puts e.message
+        puts "Error connecting to #{options[:provider]}: #{e.message}"
       end
     end
 
@@ -42,7 +43,7 @@ module GitReflow
     private
 
     def provider_class_for(provider)
-      raise ConnectionError, "GitServer not setup for: #{provider}" unless self.can_connect_to?(provider)
+      raise ConnectionError, "GitServer not setup for \"#{provider}\"" unless self.can_connect_to?(provider)
       GitReflow::GitServer.const_get(provider)
     end
   end

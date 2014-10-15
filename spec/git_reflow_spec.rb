@@ -5,7 +5,7 @@ describe GitReflow do
   let(:github)           { Github.new basic_auth: "#{user}:#{password}" }
   let(:user)             { 'reenhanced' }
   let(:password)         { 'shazam' }
-  let(:oauth_token_hash) { Hashie::Mash.new({ token: 'a1b2c3d4e5f6g7h8i9j0'}) }
+  let(:oauth_token_hash) { Hashie::Mash.new({ token: 'a1b2c3d4e5f6g7h8i9j0', note: 'hostname.local git-reflow'}) }
   let(:repo)             { 'repo' }
   let(:base_branch)      { 'master' }
   let(:feature_branch)   { 'new-feature' }
@@ -13,19 +13,21 @@ describe GitReflow do
   let(:enterprise_api)   { 'https://github.reenhanced.com' }
   let(:hostname)         { 'hostname.local' }
 
-  let(:github_authorizations) { Github::Client::Authorizations.new }
-  let(:existing_pull_request) { Hashie::Mash.new(JSON.parse(fixture('pull_requests/pull_request.json').read)) }
+  let(:github_authorizations)  { Github::Client::Authorizations.new }
+  let(:existing_pull_requests) { JSON.parse(fixture('pull_requests/pull_requests.json').read).collect { |pull| Hashie::Mash.new(pull)} }
+  let(:existing_pull_request)  { existing_pull_requests.first }
 
   before do
     HighLine.any_instance.stub(:ask) do |terminal, question|
       values = {
-        "Please enter your GitHub username: "                                                 => user,
-        "Please enter your GitHub password (we do NOT store this): "                          => password,
-        "Please enter your Enterprise site URL (e.g. https://github.company.com):"            => enterprise_site,
-        "Please enter your Enterprise API endpoint (e.g. https://github.company.com/api/v3):" => enterprise_api,
-        "Would you like to open it in your browser?"                                          => 'n'
+        "Please enter your GitHub username: "                                                      => user,
+        "Please enter your GitHub password (we do NOT store this): "                               => password,
+        "Please enter your Enterprise site URL (e.g. https://github.company.com):"                 => enterprise_site,
+        "Please enter your Enterprise API endpoint (e.g. https://github.company.com/api/v3):"      => enterprise_api,
+        "Would you like to push this branch to your remote repo and cleanup your feature branch? " => 'yes',
+        "Would you like to open it in your browser?"                                               => 'n'
       }
-     return_value = values[question]
+     return_value = values[question] || values[terminal]
      question = ""
      return_value
     end
@@ -43,13 +45,13 @@ describe GitReflow do
     end
 
     context 'with no existing pull request' do
-      before { git_server.stub(:find_pull_request).with(from: feature_branch, to: base_branch).and_return(nil) }
+      before { git_server.stub(:find_pull_request).with({from: feature_branch, to: base_branch}).and_return(nil) }
       it     { expect{ subject }.to have_output "\n[notice] No pull request exists for #{feature_branch} -> #{base_branch}" }
       it     { expect{ subject }.to have_output "[notice] Run 'git reflow review #{base_branch}' to start the review process" }
     end
 
     context 'with an existing pull request' do
-      before { git_server.stub(:find_pull_request).with(from: feature_branch, to: base_branch).and_return(existing_pull_request) }
+      before { git_server.stub(:find_pull_request).with({from: feature_branch, to: base_branch}).and_return(existing_pull_request) }
 
       it 'displays a summary of the pull request and asks to open it in the browser' do
         GitReflow.should_receive(:display_pull_request_summary).with(existing_pull_request)
@@ -111,13 +113,11 @@ describe GitReflow do
     end
 
     context "pull request exists" do
-      let(:existing_pull_request) { Hashie::Mash.new({ html_url: "https://github.com/#{user}/#{repo}/pulls/1" }) }
-
       before do
         GitReflow.stub(:push_current_branch)
         github_error = Github::Error::UnprocessableEntity.new( eval(fixture('pull_requests/pull_request_exists_error.json').read) )
         github.stub(:create_pull_request).with(inputs.except('state')).and_raise(github_error)
-        github.stub(:find_pull_request).with( from: branch, to: 'master').and_return(existing_pull_request)
+        #github.stub(:find_pull_request).with({from: branch, to: 'master'}).and_return(existing_pull_request)
         GitReflow.stub(:display_pull_request_summary).with(existing_pull_request)
       end
 
@@ -138,12 +138,13 @@ describe GitReflow do
   context :deliver do
     let(:branch)                { 'new-feature' }
     let(:inputs)                { {} }
-    let(:github) do
+    let!(:github) do
       stub_github_with({
         :user         => user,
         :password     => password,
         :repo         => repo,
-        :branch       => branch
+        :branch       => branch,
+        :pull         => existing_pull_request
       })
     end
 
@@ -160,7 +161,6 @@ describe GitReflow do
 
     it "fetches the latest changes to the destination branch" do
       GitReflow.should_receive(:fetch_destination).with('master')
-      github.stub(:find_pull_request)
       subject
     end
 
@@ -171,7 +171,6 @@ describe GitReflow do
 
     context "and pull request exists for the feature branch to the destination branch" do
       before do
-        github.stub(:find_pull_request).and_return(existing_pull_request)
         github.stub(:get_build_status).and_return(build_status)
         github.stub(:has_pull_request_comments?).and_return(true)
         github.stub(:find_authors_of_open_pull_request_comments).and_return([])
@@ -235,6 +234,7 @@ describe GitReflow do
 
               before do
                 existing_pull_request[:body] = ''
+                github.stub(:find_pull_request).and_return(existing_pull_request)
                 GitReflow.stub(:get_first_commit_message).and_return(first_commit_message)
                 github.stub(:comment_authors_for_pull_request).and_return(lgtm_comment_authors)
               end
@@ -278,7 +278,7 @@ describe GitReflow do
                     "Would you like to push this branch to your remote repo and cleanup your feature branch? " => 'yes',
                     "Would you like to open it in your browser?"                                               => 'no'
                   }
-                 return_value = values[question]
+                 return_value = values[question] || values[terminal]
                  question = ""
                  return_value
                 end
@@ -308,7 +308,7 @@ describe GitReflow do
                     "Would you like to push this branch to your remote repo and cleanup your feature branch? " => 'no',
                     "Would you like to open it in your browser?"                                               => 'no'
                   }
-                 return_value = values[question]
+                 return_value = values[question] || values[terminal]
                  question = ""
                  return_value
                 end

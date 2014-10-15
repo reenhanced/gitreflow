@@ -14,7 +14,7 @@
     "closed_at": "2011-01-26T19:01:12Z",
     "merged_at": "2011-01-26T19:01:12Z",
     "head": {
-      "label": "reenhanced:new-feature",
+      "label": "new-feature",
       "ref": "new-feature",
       "sha": "6dcb09b5b57875f334f61aebed695e2e4193db5e",
       "user": {
@@ -57,7 +57,7 @@
       }
     },
     "base": {
-      "label": "reenhanced:master",
+      "label": "master",
       "ref": "master",
       "sha": "6dcb09b5b57875f334f61aebed695e2e4193db5e",
       "user": {

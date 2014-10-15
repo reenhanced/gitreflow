@@ -27,7 +27,7 @@ spec = Gem::Specification.new do |s|
   s.add_development_dependency('webmock')
 
   s.add_dependency('colorize', '0.6.0')
-  s.add_dependency('gli', '2.8.1')
+  s.add_dependency('gli', '2.12.2')
   s.add_dependency('highline')
   s.add_dependency('httpclient')
   s.add_dependency('json_pure')

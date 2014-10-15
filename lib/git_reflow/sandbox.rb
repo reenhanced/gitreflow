@@ -1,5 +1,7 @@
 module GitReflow
   module Sandbox
+    extend self
+
     def run(command, options = {})
       options = { loud: true }.merge(options)
 

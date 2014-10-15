@@ -41,7 +41,7 @@ module GitReflow
     begin
       push_current_branch
 
-      if existing_pull_request = git_server.find_pull_request( :from => current_branch, :to => options['base'] )
+      if existing_pull_request = git_server.find_pull_request( from: current_branch, to: options['base'] )
         puts "A pull request already exists for these branches:"
         display_pull_request_summary(existing_pull_request)
         ask_to_open_in_browser(existing_pull_request.html_url)
@@ -56,6 +56,8 @@ module GitReflow
       end
     rescue Github::Error::UnprocessableEntity => e
       puts "Github Error: #{e.to_s}"
+    rescue StandardError => e
+      puts "Error: #{e.inspect}"
     end
   end
 
@@ -134,21 +136,21 @@ module GitReflow
     }
 
     notices = ""
-    reviewed_by = comment_authors_for_pull_request(pull_request).map {|author| author.colorize(:red) }
+    reviewed_by = git_server.comment_authors_for_pull_request(pull_request).map {|author| author.colorize(:red) }
 
     # check for CI build status
-    status = get_build_status pull_request.head.sha
+    status = git_server.get_build_status pull_request.head.sha
     if status
       notices << "[notice] Your build status is not successful: #{status.target_url}.\n" unless status.state == "success"
-      summary_data.merge!( "Build status" => colorized_build_description(status) )
+      summary_data.merge!( "Build status" => git_server.colorized_build_description(status) )
     end
 
     # check for needed lgtm's
-    pull_comments = pull_request_comments(pull_request)
-    if pull_comments.reject {|comment| comment.user.login == github_user}.any?
-      open_comment_authors = find_authors_of_open_pull_request_comments(pull_request)
-      last_committed_at    = get_commited_time(pull_request.head.sha)
-      lgtm_authors         = comment_authors_for_pull_request(pull_request, :with => LGTM, :after => last_committed_at)
+    pull_comments = git_server.pull_request_comments(pull_request)
+    if pull_comments.reject {|comment| comment.user.login == git_server.class.user}.any?
+      open_comment_authors = git_server.find_authors_of_open_pull_request_comments(pull_request)
+      last_committed_at    = git_server.get_commited_time(pull_request.head.sha)
+      lgtm_authors         = git_server.comment_authors_for_pull_request(pull_request, :with => LGTM, :after => last_committed_at)
 
       summary_data.merge!("Last comment"  => pull_comments.last[:body].inspect)
 

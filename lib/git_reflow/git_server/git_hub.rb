@@ -17,7 +17,7 @@ module GitReflow
 
         gh_site_url     = self.class.site_url
         gh_api_endpoint = self.class.api_endpoint
-
+        
         if @@using_enterprise
           gh_site_url     = ask("Please enter your Enterprise site URL (e.g. https://github.company.com):")
           gh_api_endpoint = ask("Please enter your Enterprise API endpoint (e.g. https://github.company.com/api/v3):")
@@ -33,11 +33,13 @@ module GitReflow
         end
       end
 
-      def authenticate
-        if @connection
-          puts "Your GitHub account was already setup with: "
-          puts "\tUser Name: #{self.class.user}"
-          puts "\tEndpoint: #{self.class.api_endpoint}"
+      def authenticate(options = {silent: false})
+        if connection
+          unless options[:silent]
+            puts "Your GitHub account was already setup with: "
+            puts "\tUser Name: #{self.class.user}"
+            puts "\tEndpoint: #{self.class.api_endpoint}"
+          end
         else
           begin
             gh_user     = ask("Please enter your GitHub username: ")
@@ -81,8 +83,8 @@ module GitReflow
                                                        base:  options[:base])
       end
 
-      def find_pull_request(options)
-        connection.pull_requests.all(self.remote_user, remote_repo_name, base: options[:to], head: options[:from], :state => 'open').first
+      def find_pull_request(options = {})
+        connection.pull_requests.all(remote_user, remote_repo_name, base: options[:to], head: "#{remote_user}:#{options[:from]}", :state => 'open').first
       end
 
       def self.connection
@@ -133,8 +135,8 @@ module GitReflow
       end
 
       def pull_request_comments(pull_request)
-        comments        = connection.issues.comments.all        remote_user, remote_repo_name, issue_id:   pull_request.number
-        review_comments = connection.pull_requests.comments.all remote_user, remote_repo_name, request_id: pull_request.number
+        comments        = connection.issues.comments.all        remote_user, remote_repo_name, number: pull_request.number
+        review_comments = connection.pull_requests.comments.all remote_user, remote_repo_name, number: pull_request.number
 
         review_comments.to_a + comments.to_a
       end

@@ -117,7 +117,6 @@ describe GitReflow do
         GitReflow.stub(:push_current_branch)
         github_error = Github::Error::UnprocessableEntity.new( eval(fixture('pull_requests/pull_request_exists_error.json').read) )
         github.stub(:create_pull_request).with(inputs.except('state')).and_raise(github_error)
-        #github.stub(:find_pull_request).with({from: branch, to: 'master'}).and_return(existing_pull_request)
         GitReflow.stub(:display_pull_request_summary).with(existing_pull_request)
       end
 

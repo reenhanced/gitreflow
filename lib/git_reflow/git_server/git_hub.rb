@@ -141,10 +141,6 @@ module GitReflow
         review_comments.to_a + comments.to_a
       end
 
-      def has_pull_request_comments?(pull_request)
-        pull_request_comments(pull_request).count > 0
-      end
-
       def get_build_status sha
         connection.repos.statuses.all(remote_user, remote_repo_name, sha).first
       end

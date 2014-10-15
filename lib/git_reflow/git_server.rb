@@ -12,8 +12,10 @@ module GitReflow
       begin
         provider_name = options[:provider]
         provider = provider_class_for(options.delete(:provider)).new(options)
+        provider.authenticate(options.keep_if {|key, value| key == :silent })
+        provider
       rescue ConnectionError => e
-        puts "Error connecting to #{options[:provider]}: #{e.message}"
+        puts "Error connecting to #{provider_name}: #{e.message}"
       end
     end
 

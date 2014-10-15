@@ -125,7 +125,7 @@ module GitReflow
   end
 
   def git_server
-    @git_server ||= GitServer.connect provider: 'GitHub'
+    @git_server ||= GitServer.connect provider: 'GitHub', silent: true
   end
 
   def display_pull_request_summary(pull_request)

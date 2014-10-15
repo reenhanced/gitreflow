@@ -9,7 +9,7 @@ command :setup do |c|
       menu.header = "Available remote Git Server services:"
       menu.prompt = "Which service would you like to use for this project?  "
 
-      menu.choice('GitHub')    { GitReflow::GitServer.connect reflow_options.merge({ provider: 'GitHub' }) }
+      menu.choice('GitHub')    { GitReflow::GitServer.connect reflow_options.merge({ provider: 'GitHub', silent: false }) }
       menu.choice('BitBucket') { say("Comming soon...") }
     end
   end

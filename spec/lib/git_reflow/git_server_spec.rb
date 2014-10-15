@@ -14,6 +14,9 @@ describe GitReflow::GitServer do
           "Initialized with #{options}"
         end
 
+        def authenticate(options={})
+        end
+
         def connection
           'Connected!'
         end
@@ -23,7 +26,9 @@ describe GitReflow::GitServer do
 
   describe '.connect(options)' do
     it 'initializes a new GitHub server provider by default' do
-      GitReflow::GitServer::GitHub.should_receive(:new)
+      stubbed_github = Class.new
+      stubbed_github.stub(:authenticate)
+      GitReflow::GitServer::GitHub.should_receive(:new).and_return(stubbed_github)
       subject
     end
 

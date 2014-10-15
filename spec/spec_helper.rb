@@ -27,6 +27,7 @@ RSpec.configure do |config|
   config.before(:each) do
     WebMock.reset!
     stub_command_line
+    allow_message_expectations_on_nil
   end
 
   config.after(:each) do

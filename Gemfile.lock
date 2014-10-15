@@ -4,7 +4,7 @@ PATH
     git_reflow (0.3.5)
       colorize (= 0.6.0)
       github_api (= 0.12.1)
-      gli (= 2.8.1)
+      gli (= 2.12.2)
       highline
       httpclient
       json_pure
@@ -36,7 +36,7 @@ GEM
       multi_json (>= 1.7.5, < 2.0)
       nokogiri (~> 1.6.3)
       oauth2
-    gli (2.8.1)
+    gli (2.12.2)
     hashie (3.3.1)
     highline (1.6.21)
     httpclient (2.4.0)

@@ -1,5 +1,3 @@
-require "highline/import"
-
 module GitReflow
   module Sandbox
     extend self

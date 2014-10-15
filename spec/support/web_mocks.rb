@@ -1,8 +1,8 @@
-def stub_get(path, endpoint = Github.endpoint.to_s)
+def stub_get(path, endpoint = GitReflow.git_server.class.api_endpoint)
   stub_request(:get, endpoint + path)
 end
 
-def stub_post(path, endpoint = Github.endpoint.to_s)
+def stub_post(path, endpoint = GitReflow.git_server.class.api_endpoint)
   stub_request(:post, endpoint + path)
 end
 

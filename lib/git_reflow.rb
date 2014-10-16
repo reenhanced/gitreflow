@@ -10,6 +10,7 @@ require 'git_reflow/version.rb' unless defined?(GitReflow::VERSION)
 require 'git_reflow/config'
 require 'git_reflow/git_server'
 require 'git_reflow/git_server/git_hub'
+require 'git_reflow/git_server/bit_bucket'
 require 'git_reflow/sandbox'
 require 'git_reflow/git_helpers'
 

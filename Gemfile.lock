@@ -3,7 +3,7 @@ PATH
   specs:
     git_reflow (0.4.0)
       colorize (= 0.6.0)
-      github_api (= 0.12.1)
+      github_api (= 0.12.2)
       gli (= 2.12.2)
       highline
       httpclient
@@ -28,18 +28,18 @@ GEM
     diff-lcs (1.2.5)
     faraday (0.9.0)
       multipart-post (>= 1.2, < 3)
-    github_api (0.12.1)
+    github_api (0.12.2)
       addressable (~> 2.3)
       descendants_tracker (~> 0.0.4)
       faraday (~> 0.8, < 0.10)
-      hashie (>= 3.2)
+      hashie (>= 3.3)
       multi_json (>= 1.7.5, < 2.0)
       nokogiri (~> 1.6.3)
       oauth2
     gli (2.12.2)
     hashie (3.3.1)
     highline (1.6.21)
-    httpclient (2.4.0)
+    httpclient (2.5.1)
     json (1.7.5)
     json_pure (1.8.1)
     jwt (1.0.0)

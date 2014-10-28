@@ -34,7 +34,7 @@ module GitReflow
       end
 
       def authenticate(options = {silent: false})
-        if connection
+        if connection and self.class.oauth_token.length > 0
           unless options[:silent]
             puts "Your GitHub account was already setup with: "
             puts "\tUser Name: #{self.class.user}"
@@ -42,8 +42,8 @@ module GitReflow
           end
         else
           begin
-            gh_user     = ask("Please enter your GitHub username: ")
-            gh_password = ask("Please enter your GitHub password (we do NOT store this): ") { |q| q.echo = false }
+            gh_user     = options[:user] || ask("Please enter your GitHub username: ")
+            gh_password = options[:password] || ask("Please enter your GitHub password (we do NOT store this): ") { |q| q.echo = false }
 
             @connection = ::Github.new do |config|
               config.basic_auth = "#{gh_user}:#{gh_password}"
@@ -60,13 +60,39 @@ module GitReflow
               authorization = @connection.oauth.create scopes: ['repo'], note: "git-reflow (#{run('hostname', loud: false).strip})"
             end
 
-            oauth_token   = authorization.token
-
-            self.class.oauth_token = oauth_token
+            self.class.oauth_token = authorization.token
             puts "\nYour GitHub account was successfully setup!"
 
+          rescue ::Github::Error::Unauthorized => e
+            if e.inspect.to_s.include?('two-factor')
+              two_factor_code         = ask("Please enter your two-factor authentication code: ")
+              github_authorizations   = @connection.oauth.class.new(
+                basic_auth: "#{gh_user}:#{gh_password}",
+                endpoint:   GitServer::GitHub.api_endpoint,
+                site:       GitServer::GitHub.site_url,
+                ssl:        {:verify => false},
+                headers:    { "X-GitHub-OTP" => two_factor_code }
+              )
+
+              previous_authorizations = github_authorizations.all.select {|auth|
+                auth.note == "git-reflow (#{run('hostname', loud: false).strip})"
+              }
+
+              self.class.user = gh_user
+
+              if previous_authorizations.any?
+                authorization = previous_authorizations.last
+              else
+                authorization = github_authorizations.create scopes: ['repo'], note: "git-reflow (#{run('hostname', loud: false).strip})"
+              end
+
+              self.class.oauth_token = authorization.token
+              puts "\nYour GitHub account was successfully setup!"
+            else
+              puts "\nGithub Authentication Error: #{e.inspect}"
+            end
           rescue StandardError => e
-            puts "\nInvalid username or password: #{e.inspect}"
+            puts "\nInvalid username or password: #{e.body}"
           else
             puts "\nYour GitHub account was successfully setup!"
           end
@@ -101,18 +127,22 @@ module GitReflow
         GitReflow::Config.get('github.user')
       end
 
+      def self.user=(github_user)
+        GitReflow::Config.set('github.user', github_user, local: @@project_only)
+      end
+
       def self.oauth_token
         GitReflow::Config.get('github.oauth-token')
       end
 
-      def self.oauth_token=(oauth_token, options = {})
+      def self.oauth_token=(oauth_token)
         GitReflow::Config.set('github.oauth-token', oauth_token, local: @@project_only)
         oauth_token
       end
 
       def self.api_endpoint
         endpoint         = GitReflow::Config.get('github.endpoint')
-        (endpoint.length > 0) ? endpoint : ::Github::Configuration.new.endpoint
+        (endpoint.length > 0) ? endpoint : ::Github.endpoint
       end
 
       def self.api_endpoint=(api_endpoint)
@@ -122,7 +152,7 @@ module GitReflow
 
       def self.site_url
         site_url     = GitReflow::Config.get('github.site')
-        (site_url.length > 0) ? site_url : ::Github::Configuration.new.site
+        (site_url.length > 0) ? site_url : ::Github.site
       end
 
       def self.site_url=(site_url)

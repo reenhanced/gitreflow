@@ -10,6 +10,8 @@ If your workflow looks like this:
 5. Squash merge to master (Why is squash merging our preferred workflow? https://github.com/reenhanced/gitreflow/issues/52)
 6. Delete the feature branch
 
+This is a sample change
+
 Reflow will make your life easier.
 
 == Quickstart

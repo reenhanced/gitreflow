@@ -73,7 +73,7 @@ module GithubHelpers
       # Stubbing pull request finder
       stub_get("/repos/#{user}/pulls").with(:query => {'access_token' => 'a1b2c3d4e5f6g7h8i9j0', 'base' => 'master', 'head' => "#{user}:#{branch}", 'state' => 'open'}).
         to_return(:body => fixture('pull_requests/pull_requests.json'), :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
-      stub_get("/repos/#{user}/#{repo}/pulls").with(:query => {'base' => 'master', 'head' => "#{user}:#{branch}", 'state' => 'open'}).
+      stub_get("/repos/#{user}/#{repo}/pulls").with(:query => {'access_token' => 'a1b2c3d4e5f6g7h8i9j0', 'base' => 'master', 'head' => "#{user}:#{branch}", 'state' => 'open'}).
         to_return(:body => fixture('pull_requests/pull_requests.json'), :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
       # Stubbing pull request comments
       stub_get("/repos/#{user}/pulls/#{pull[:number]}/comments?").with(:query => {'access_token' => 'a1b2c3d4e5f6g7h8i9j0'}).

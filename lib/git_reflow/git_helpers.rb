@@ -7,12 +7,12 @@ module GitReflow
 
     def remote_user
       return "" unless "#{GitReflow::Config.get('remote.origin.url')}".length > 0
-      GitReflow::Config.get('remote.origin.url')[/[\/:](\w|-|\.)+/i][1..-1]
+      extract_remote_user_and_repo_from_remote_url(GitReflow::Config.get('remote.origin.url'))[:user]
     end
 
     def remote_repo_name
       return "" unless "#{GitReflow::Config.get('remote.origin.url')}".length > 0
-      GitReflow::Config.get('remote.origin.url')[/\/(\w|-|\.)+$/i][1..-5]
+      extract_remote_user_and_repo_from_remote_url(GitReflow::Config.get('remote.origin.url'))[:repo]
     end
 
     def current_branch
@@ -60,6 +60,23 @@ module GitReflow
     def append_to_squashed_commit_message(message = '')
       run "echo \"#{message}\" | cat - .git/SQUASH_MSG > ./tmp_squash_msg"
       run 'mv ./tmp_squash_msg .git/SQUASH_MSG'
+    end
+    
+    private
+
+    def extract_remote_user_and_repo_from_remote_url(remote_url)
+      result = { user: '', repo: '' }
+      return result unless "#{remote_url}".length > 0
+
+      if remote_url =~ /\Agit@/i
+        result[:user] = remote_url[/[\/:](\w|-|\.)+/i][1..-1]
+        result[:repo] = remote_url[/\/(\w|-|\.)+$/i][1..-5]
+      elsif remote_url =~ /\Ahttps?/i
+        result[:user] = remote_url.split('/')[-2]
+        result[:repo] = remote_url.split('/')[-1].gsub(/.git\Z/i, '')
+      end
+
+      result
     end
   end
 end

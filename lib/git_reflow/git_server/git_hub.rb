@@ -53,6 +53,8 @@ module GitReflow
               config.ssl        = {:verify => false}
             end
 
+            @connection.connection_options = {headers: {"X-GitHub-OTP" => options[:two_factor_auth_code]}} if options[:two_factor_auth_code]
+
             previous_authorizations = @connection.oauth.all.select {|auth| auth.note == "git-reflow (#{run('hostname', loud: false).strip})" }
             if previous_authorizations.any?
               authorization = previous_authorizations.last
@@ -61,33 +63,11 @@ module GitReflow
             end
 
             self.class.oauth_token = authorization.token
-            puts "\nYour GitHub account was successfully setup!"
 
           rescue ::Github::Error::Unauthorized => e
             if e.inspect.to_s.include?('two-factor')
-              two_factor_code         = ask("Please enter your two-factor authentication code: ")
-              github_authorizations   = @connection.oauth.class.new(
-                basic_auth: "#{gh_user}:#{gh_password}",
-                endpoint:   GitServer::GitHub.api_endpoint,
-                site:       GitServer::GitHub.site_url,
-                ssl:        {:verify => false},
-                headers:    { "X-GitHub-OTP" => two_factor_code }
-              )
-
-              previous_authorizations = github_authorizations.all.select {|auth|
-                auth.note == "git-reflow (#{run('hostname', loud: false).strip})"
-              }
-
-              self.class.user = gh_user
-
-              if previous_authorizations.any?
-                authorization = previous_authorizations.last
-              else
-                authorization = github_authorizations.create scopes: ['repo'], note: "git-reflow (#{run('hostname', loud: false).strip})"
-              end
-
-              self.class.oauth_token = authorization.token
-              puts "\nYour GitHub account was successfully setup!"
+              two_factor_code = ask("Please enter your two-factor authentication code: ")
+              self.authenticate options.merge({user: gh_user, password: gh_password, two_factor_auth_code: two_factor_code})
             else
               puts "\nGithub Authentication Error: #{e.inspect}"
             end

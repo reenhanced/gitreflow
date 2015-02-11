@@ -35,7 +35,7 @@ module GitReflow
       end
 
       def authenticate(options = {silent: false})
-        if connection
+        if connection and self.class.oauth_token.length > 0
           unless options[:silent]
             puts "Your GitHub account was already setup with: "
             puts "\tUser Name: #{self.class.user}"
@@ -43,8 +43,8 @@ module GitReflow
           end
         else
           begin
-            gh_user     = ask("Please enter your GitHub username: ")
-            gh_password = ask("Please enter your GitHub password (we do NOT store this): ") { |q| q.echo = false }
+            gh_user     = options[:user] || ask("Please enter your GitHub username: ")
+            gh_password = options[:password] || ask("Please enter your GitHub password (we do NOT store this): ") { |q| q.echo = false }
 
             @connection = ::Github.new do |config|
               config.basic_auth = "#{gh_user}:#{gh_password}"
@@ -54,6 +54,8 @@ module GitReflow
               config.ssl        = {:verify => false}
             end
 
+            @connection.connection_options = {headers: {"X-GitHub-OTP" => options[:two_factor_auth_code]}} if options[:two_factor_auth_code]
+
             previous_authorizations = @connection.oauth.all.select {|auth| auth.note == "git-reflow (#{run('hostname', loud: false).strip})" }
             if previous_authorizations.any?
               authorization = previous_authorizations.last
@@ -61,13 +63,17 @@ module GitReflow
               authorization = @connection.oauth.create scopes: ['repo'], note: "git-reflow (#{run('hostname', loud: false).strip})"
             end
 
-            oauth_token   = authorization.token
+            self.class.oauth_token = authorization.token
 
-            self.class.oauth_token = oauth_token
-            puts "\nYour GitHub account was successfully setup!"
-
+          rescue ::Github::Error::Unauthorized => e
+            if e.inspect.to_s.include?('two-factor')
+              two_factor_code = ask("Please enter your two-factor authentication code: ")
+              self.authenticate options.merge({user: gh_user, password: gh_password, two_factor_auth_code: two_factor_code})
+            else
+              puts "\nGithub Authentication Error: #{e.inspect}"
+            end
           rescue StandardError => e
-            puts "\nInvalid username or password: #{e.inspect}"
+            puts "\nInvalid username or password: #{e.body}"
           else
             puts "\nYour GitHub account was successfully setup!"
           end

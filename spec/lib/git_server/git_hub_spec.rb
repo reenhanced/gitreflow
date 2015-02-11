@@ -148,7 +148,7 @@ describe GitReflow::GitServer::GitHub do
         end
 
         it "notifies user of invalid login details" do
-          expect { subject }.to have_output "\nInvalid username or password: #{Github::Error::Unauthorized.new(unauthorized_error_response).inspect}"
+          expect { subject }.to have_output "\nGithub Authentication Error: #{Github::Error::Unauthorized.new(unauthorized_error_response).inspect}"
         end
       end
     end

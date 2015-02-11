@@ -23,6 +23,11 @@ describe GitReflow::GitHelpers do
       let(:origin_url) { nil }
       it { should == '' }
     end
+
+    context "remote origin uses HTTP" do
+      let(:origin_url) { 'https://github.com/reenhanced.spectacular/this-is-the.shit.git' }
+      it               { should == 'reenhanced.spectacular' }
+    end
   end
 
   describe ".remote_repo_name" do
@@ -33,6 +38,11 @@ describe GitReflow::GitHelpers do
     context "remote origin url isn't set" do
       let(:origin_url) { nil }
       it { should == '' }
+    end
+
+    context "remote origin uses HTTP" do
+      let(:origin_url) { 'https://github.com/reenhanced.spectacular/this-is-the.shit.git' }
+      it               { should == 'this-is-the.shit' }
     end
   end
 

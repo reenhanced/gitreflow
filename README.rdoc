@@ -1,8 +1,6 @@
 = git-reflow
 
-http://www.reenhanced.com/images/reflow.png
-
-
+http://reenhanced.com/reflow/git-reflow-deliver.gif
 
 If your workflow looks like this:
 1. Create a feature branch
@@ -12,7 +10,7 @@ If your workflow looks like this:
 5. Squash merge to master (Why is squash merging our preferred workflow? https://github.com/reenhanced/gitreflow/issues/52)
 6. Delete the feature branch
 
-Reflow will make your life easier.
+Reflow will make your life easier. Reflow automatically creates pull requests, ensures the code review is approved, and squash merges finished branches to master with a great commit message template.
 
 == Quickstart
 Create and switch to new branch +nh-branchy-branch+:
@@ -85,6 +83,8 @@ Then for your Enterprise projects, you have to setup GitReflow for each one:
   git reflow setup --enterprise --local
 
 === Starting a feature branch
+http://reenhanced.com/reflow/git-reflow-start.gif
+
   git reflow start
 
 This sets up a feature branch remotely and brings a local copy to your machine. Yeah, you can do this by hand pretty easily, so skip this command if you want. This is just a handy shortcut with no magic.
@@ -95,6 +95,8 @@ This sets up a feature branch remotely and brings a local copy to your machine. 
           who is responsible for each. My initials are 'NH', so all of my branches start with +nh-+
 
 === Reviewing your work
+http://reenhanced.com/reflow/git-reflow-review.gif
+
   git reflow review
 
 All of our work is reviewed by our team. This helps spread knowledge to multiple parties and keeps the quality of our code consistent.
@@ -139,6 +141,8 @@ Do we have pull request?
 If not, create it and print "Pull request created at http://pull-url/". If so, print the url for the existing request.
 
 === Checking your branch status
+http://reenhanced.com/reflow/git-reflow-status.gif
+
   git reflow status
 
 Sometimes you start working on a branch and can't get back to it for a while. It happens. Use +status+ to check on the status of your work.
@@ -158,6 +162,8 @@ This gives you details on who's reviewed your pull request. If someone has parti
 +status+ prevents you from having to open a browser to find out where your pull request is at. But in case you want to take a look, we give you the option to open it for you.
 
 === Delivering approved code
+http://reenhanced.com/reflow/git-reflow-deliver.gif
+
   git reflow deliver
 
 You kick butt. You've got your code reviewed and now you're ready to merge it down to +master+ and deploy. Reflow +deliver+ will take care of all of the steps for you to make this happen.
@@ -258,8 +264,10 @@ If 'n', then just stop here. The user can reset his local +master+.
 
 And we're done.
 
-
 == Guiding principles:
+* Your workflow should resemble the following:
+http://reenhanced.com/images/reflow.png
+
 * You should already know what you're doing.
   We assume you know how to use git.
 

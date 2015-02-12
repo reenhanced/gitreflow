@@ -10,7 +10,9 @@ If your workflow looks like this:
 5. Squash merge to master (Why is squash merging our preferred workflow? https://github.com/reenhanced/gitreflow/issues/52)
 6. Delete the feature branch
 
-Reflow will make your life easier. Reflow automatically creates pull requests, ensures the code review is approved, and squash merges finished branches to master with a great commit message template.
+Reflow will make your life easier.
+
+Reflow automatically creates pull requests, ensures the code review is approved, and squash merges finished branches to master with a great commit message template.
 
 == Quickstart
 Create and switch to new branch +nh-branchy-branch+:

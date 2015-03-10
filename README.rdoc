@@ -1,4 +1,4 @@
-= git-reflow
+= git-reflow (2015 Fukuoka Ruby Award Winner)
 
 http://reenhanced.com/reflow/git-reflow-deliver.gif
 

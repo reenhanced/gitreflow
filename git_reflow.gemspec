@@ -19,12 +19,14 @@ spec = Gem::Specification.new do |s|
   s.require_paths    << 'lib'
   s.rdoc_options     << '--title' << 'git_reflow' << '--main' << 'README.rdoc' << '-ri'
 
+  s.add_development_dependency('appraisal', '1.0.3')
   s.add_development_dependency('bundler')
   s.add_development_dependency('pry-byebug')
   s.add_development_dependency('rake')
   s.add_development_dependency('rdoc')
   s.add_development_dependency('rspec', '~> 3.0.0')
   s.add_development_dependency('webmock')
+  s.add_development_dependency('wwtd', '0.7.0')
 
   s.add_dependency('colorize', '0.6.0')
   s.add_dependency('gli', '2.12.2')

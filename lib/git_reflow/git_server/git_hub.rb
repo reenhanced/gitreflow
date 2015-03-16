@@ -104,6 +104,43 @@ module GitReflow
         end
       end
 
+      def self.user
+        GitReflow::Config.get('github.user')
+      end
+
+      def self.user=(github_user)
+        GitReflow::Config.set('github.user', github_user, local: @@project_only)
+      end
+
+      def self.oauth_token
+        GitReflow::Config.get('github.oauth-token')
+      end
+
+      def self.oauth_token=(oauth_token)
+        GitReflow::Config.set('github.oauth-token', oauth_token, local: @@project_only)
+        oauth_token
+      end
+
+      def self.api_endpoint
+        endpoint         = "#{GitReflow::Config.get('github.endpoint')}".strip
+        (endpoint.length > 0) ? endpoint : ::Github.endpoint
+      end
+
+      def self.api_endpoint=(api_endpoint)
+        GitReflow::Config.set("github.endpoint", api_endpoint, local: @@project_only)
+        api_endpoint
+      end
+
+      def self.site_url
+        site_url     = "#{GitReflow::Config.get('github.site')}".strip
+        (site_url.length > 0) ? site_url : ::Github.site
+      end
+
+      def self.site_url=(site_url)
+        GitReflow::Config.set("github.site", site_url, local: @@project_only)
+        site_url
+      end
+
       def connection
         @connection ||= self.class.connection
       end

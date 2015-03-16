@@ -2,12 +2,11 @@ require 'git_reflow/config'
 
 module GitReflow
   class GitServer::Base
-    @connection       = nil
-    @project_only     = false
-    @git_config_group = 'base'
+    @@connection       = nil
+    @@project_only     = false
 
     def initialize(options)
-      @project_only = !!options.delete(:project_only)
+      @@project_only = !!options.delete(:project_only)
 
       site_url     = self.class.site_url
       api_endpoint = self.class.api_endpoint
@@ -31,36 +30,23 @@ module GitReflow
     end
 
     def self.user
-      GitReflow::Config.get("#{@git_config_group}.user")
-    end
-
-    def self.oauth_token
-      GitReflow::Config.get("#{@git_config_group}.oauth-token")
-    end
-
-    def self.oauth_token=(oauth_token, options = {})
-      GitReflow::Config.set("#{@git_config_group}.oauth-token", oauth_token, local: @project_only)
-      oauth_token
+      raise "#{self.class.to_s}.user method must be implemented"
     end
 
     def self.api_endpoint
-      endpoint         = GitReflow::Config.get("#{@git_config_group}.endpoint")
-      (endpoint.length > 0) ? endpoint : ::Github::Configuration.new.endpoint
+      raise "#{self.class.to_s}.api_endpoint method must be implemented"
     end
 
-    def self.api_endpoint=(api_endpoint)
-      GitReflow::Config.set("#{@git_config_group}.endpoint", api_endpoint, local: @project_only)
-      api_endpoint
+    def self.api_endpoint=(api_endpoint, options = {local: false})
+      raise "#{self.class.to_s}.api_endpoint= method must be implemented"
     end
 
     def self.site_url
-      site_url     = GitReflow::Config.get("#{@git_config_group}.site")
-      (site_url.length > 0) ? site_url : ::Github::Configuration.new.site
+      raise "#{self.class.to_s}.site_url method must be implemented"
     end
 
-    def self.site_url=(site_url)
-      GitReflow::Config.set("#{@git_config_group}.site", site_url, local: @project_only)
-      site_url
+    def self.site_url=(site_url, options = {local: false})
+      raise "#{self.class.to_s}.site_url= method must be implemented"
     end
 
     def connection

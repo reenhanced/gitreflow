@@ -1,13 +1,24 @@
 require 'spec_helper'
 
 describe GitReflow::GitServer::BitBucket do
-  let(:user)                   { 'reenhanced' }
-  let(:password)               { 'shazam' }
-  let(:repo)                   { 'repo' }
-  let(:access_token)           { 'a1b2c3d4e5f6g7h8i9j0' }
-  let(:hostname)               { 'hostname.local' }
+  let(:user)         { 'reenhanced' }
+  let(:password)     { 'shazam' }
+  let(:repo)         { 'repo' }
+  let(:oauth_key)    { 'a1b2c3d4e5f6g7h8i9j0' }
+  let(:oauth_secret) { 'f6g7h8i9j0a1b2c3d4e5' }
+  let(:hostname)     { 'hostname.local' }
+  let(:api_endpoint) { 'https://bitbucket.org/api/1.0' }
+  let(:site)         { 'https://bitbucket.org' }
 
   before do
+    HighLine.any_instance.stub(:ask) do |terminal, question|
+      values = {
+        "Please enter your BitBucket username: " => user
+      }
+     return_value = values[question]
+     question = ""
+     return_value
+    end
   end
 
   describe '#initialize(options)' do
@@ -22,8 +33,6 @@ describe GitReflow::GitServer::BitBucket do
       subject { GitReflow::GitServer::BitBucket.new(project_only: true) }
 
       it 'sets the enterprise site and api as the site and api endpoints for the BitBucket provider in the git config' do
-        GitReflow::Config.should_receive(:set).once.with('bitbucket.site', bitbucket_site, local: true).and_call_original
-        GitReflow::Config.should_receive(:set).once.with('bitbucket.endpoint', bitbucket_api_endpoint, local: true)
         GitReflow::Config.should_receive(:set).once.with('reflow.git-server', 'BitBucket', local: true)
         subject
       end
@@ -32,62 +41,50 @@ describe GitReflow::GitServer::BitBucket do
   end
 
   describe '#authenticate' do
-    let(:bitbucket)                { GitReflow::GitServer::BitBucket.new({}) }
-    let!(:bitbucket_api)           { BitBucket.new }
-    subject                     { butbucket.authenticate }
+    let(:bitbucket)      { GitReflow::GitServer::BitBucket.new( { }) }
+    let!(:bitbucket_api) { BitBucket.new }
+    subject              { bitbucket.authenticate }
 
-    before  do
-      GitReflow::GitServer::BitBucket.stub(:user).and_return('reenhanced')
+    context 'already authenticated' do
+      it "notifies the user of successful setup" do
+        GitReflow::Config.should_receive(:set).once.with('reflow.git-server', 'BitBucket')
+        GitReflow::Config.stub(:get).with('bitbucket.oauth-key').and_return(oauth_key)
+        GitReflow::Config.stub(:get).with('bitbucket.oauth-secret').and_return(oauth_secret)
+        GitReflow::Config.should_receive(:get).once.with('bitbucket.user').and_return(user)
+        expect { subject }.to have_output "\nYour BitBucket account was already setup with:"
+        expect { subject }.to have_output "\tUser Name: #{user}"
+      end
     end
 
     context 'not yet authenticated' do
       context 'with valid BitBucket credentials' do
 
-        it "notifies the user of successful setup" do
-          expect { subject }.to have_output "\nYour BitBucket account was successfully setup!"
-        end
-
-        it "creates a new BitBucket oauth token" do
-          bitbucket_api.oauth.should_receive(:create).and_return(oauth_token_hash)
-          subject
+        it "prompts me to setup an OAuth consumer key and secret" do
+          GitReflow::Config.should_receive(:set).once.with('reflow.git-server', 'BitBucket')
+          GitReflow::Config.should_receive(:set).once.with('bitbucket.user', 'reenhanced', local: false)
+          GitReflow::Config.should_receive(:get).once.with('bitbucket.oauth-key').and_return('')
+          GitReflow::Config.should_receive(:get).once.with('bitbucket.site').and_return('')
+          GitReflow::Config.should_receive(:get).once.with('bitbucket.user').and_return(user)
+          expect { subject }.to have_output "\nIn order to connect your BitBucket account,"
+          expect { subject }.to have_output "\nyou'll need to generate an OAuth consumer key and secret"
+          expect { subject }.to have_output "\n\nVisit https://bitbucket.org/account/user/reenhanced/api, and reference our README"
         end
 
         it "creates git config keys for bitbucket connections" do
-          expect{ subject }.to have_run_command_silently "git config --global --replace-all bitbucket.user \"#{oauth_token_hash[:token]}\""
-          expect{ subject }.to have_run_command_silently "git config --global --replace-all bitbucket.api-token \"#{oauth_token_hash[:token]}\""
+          expect{ subject }.to have_run_command_silently "git config --global --replace-all bitbucket.user \"#{user}\""
           expect{ subject }.to have_run_command_silently "git config --global --replace-all reflow.git-server \"BitBucket\""
         end
 
         context "exclusive to project" do
           let(:bitbucket) { GitReflow::GitServer::BitBucket.new(project_only: true) }
-          before       { GitReflow::GitServer::BitBucket.stub(:@project_only).and_return(true) }
 
           it "creates _local_ git config keys for bitbucket connections" do
-            expect{ subject }.to_not have_run_command_silently "git config --global --replace-all bitbucket.api-token \"#{api_token}\""
             expect{ subject }.to_not have_run_command_silently "git config --global --replace-all reflow.git-server \"BitBucket\""
+            expect{ subject }.to_not have_run_command_silently "git config --global --replace-all bitbucket.user \"#{user}\""
 
-            expect{ subject }.to have_run_command_silently "git config --replace-all bitbucket.site \"#{GitReflow::GitServer::BitBucket.site_url}\""
-            expect{ subject }.to have_run_command_silently "git config --replace-all bitbucket.endpoint \"#{GitReflow::GitServer::BitBucket.api_endpoint}\""
-            expect{ subject }.to have_run_command_silently "git config --replace-all bitbucket.oauth-token \"#{oauth_token_hash[:token]}\""
             expect{ subject }.to have_run_command_silently "git config --replace-all reflow.git-server \"BitBucket\""
+            expect{ subject }.to have_run_command_silently "git config --replace-all bitbucket.user \"#{user}\""
           end
-        end
-      end
-
-      context "with invalid BitBucket credentials" do
-        let(:unauthorized_error_response) {{
-          response_headers: {'content-type' => 'application/json; charset=utf-8', status: 'Unauthorized'},
-          method: 'GET',
-          status: '401',
-          body: { error: "GET https://api.bitbucket.com/authorizations: 401 Bad credentials" }
-        }}
-
-        before do
-          bitbucket.should_receive(:new).and_raise BitBucket::Error::Unauthorized.new(unauthorized_error_response)
-        end
-
-        it "notifies user of invalid login details" do
-          expect { subject }.to have_output "\nInvalid username or password: #{BitBucket::Error::Unauthorized.new(unauthorized_error_response).inspect}"
         end
       end
     end

@@ -121,7 +121,7 @@ module GitReflow
       end
 
       def self.api_endpoint
-        endpoint         = GitReflow::Config.get('github.endpoint')
+        endpoint         = "#{GitReflow::Config.get('github.endpoint')}".strip
         (endpoint.length > 0) ? endpoint : ::Github.endpoint
       end
 
@@ -131,7 +131,7 @@ module GitReflow
       end
 
       def self.site_url
-        site_url     = GitReflow::Config.get('github.site')
+        site_url     = "#{GitReflow::Config.get('github.site')}".strip
         (site_url.length > 0) ? site_url : ::Github.site
       end
 

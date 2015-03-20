@@ -98,7 +98,24 @@ module GitReflow
       end
 
       def find_pull_request(options = {})
-        connection.pull_requests.all(user: remote_user, repo: remote_repo_name).first
+        begin
+          matching_pull = connection.repos.pull_requests.all(remote_user, remote_repo_name).select do |pr|
+            pr.source.branch.name == options[:from] and
+            pr.destination.branch.name == options[:to]
+          end.first
+
+          if matching_pull
+            matching_pull.number = matching_pull.id
+            matching_pull.head   = matching_pull.source
+            matching_pull.head.label = matching_pull.source.branch.name
+            matching_pull
+          end
+        rescue ::BitBucket::Error::NotFound => e
+          say "No BitBucket repo found for #{remote_user}/#{remote_repo_name}", :error
+        rescue ::BitBucket::Error::Forbidden => e
+          puts e.inspect
+          say "You don't have API access to this repo", :error
+        end
       end
 
     end

@@ -2,6 +2,12 @@ module GitReflow
   module Sandbox
     extend self
 
+    COLOR_FOR_LABEL = {
+      notice:  :yellow,
+      error:   :red,
+      success: :green
+    }
+
     def run(command, options = {})
       options = { loud: true }.merge(options)
 
@@ -18,6 +24,14 @@ module GitReflow
       label_color = options.delete(:color) || :green
       puts command.colorize(label_color)
       run(command, options)
+    end
+
+    def say(message, label_type = :plain)
+      if COLOR_FOR_LABEL[label_type]
+        puts "[#{ label_type.to_s.colorize(COLOR_FOR_LABEL[label_type]) }] #{message}"
+      else
+        puts message
+      end
     end
 
     # WARNING: this currently only supports OS X and UBUNTU

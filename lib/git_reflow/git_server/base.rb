@@ -17,14 +17,6 @@ module GitReflow
       authenticate
     end
 
-    def authenticate
-      raise "#{self.class.to_s}#authenticate method must be implemented"
-    end
-
-    def find_pull_request(options)
-      raise "#{self.class.to_s}#find_pull_request(options) method must be implemented"
-    end
-
     def self.connection
       raise "#{self.class.to_s}.connection method must be implemented"
     end
@@ -53,6 +45,14 @@ module GitReflow
       @connection ||= self.class.connection
     end
 
+    def authenticate
+      raise "#{self.class.to_s}#authenticate method must be implemented"
+    end
+
+    def find_pull_request(options)
+      raise "#{self.class.to_s}#find_pull_request(options) method must be implemented"
+    end
+
     def pull_request_comments(pull_request)
       raise "#{self.class.to_s}#pull_request_comments(pull_request) method must be implemented"
     end
@@ -69,12 +69,16 @@ module GitReflow
       raise "#{self.class.to_s}#colorized_build_description(status) method must be implemented"
     end
 
-    def find_authors_of_open_pull_request_comments(pull_request)
-      raise "#{self.class.to_s}#find_authors_of_open_pull_request_comments(pull_request) method must be implemented"
+    def reviewers(pull_request)
+      raise "#{self.class.to_s}#reviewers(pull_request) method must be implemented"
     end
 
-    def get_commited_time(commit_sha)
-      raise "#{self.class.to_s}#get_commited_time(commit_sha) method must be implemented"
+    def reviewers_pending_response(pull_request)
+      reviewers - approvals
+    end
+
+    def approvals(pull_request)
+      raise "#{self.class.to_s}#approvals(pull_request) method must be implemented"
     end
   end
 end

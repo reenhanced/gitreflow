@@ -105,9 +105,12 @@ module GitReflow
           end.first
 
           if matching_pull
-            matching_pull.number = matching_pull.id
-            matching_pull.head   = matching_pull.source
+            matching_pull.number     = matching_pull.id
+            matching_pull.html_url   = matching_pull.links.self.href
+            matching_pull.head       = matching_pull.source
             matching_pull.head.label = matching_pull.source.branch.name
+            matching_pull.base       = matching_pull.destination
+            matching_pull.base.label = matching_pull.destination.branch.name
             matching_pull
           end
         rescue ::BitBucket::Error::NotFound => e
@@ -116,6 +119,37 @@ module GitReflow
           puts e.inspect
           say "You don't have API access to this repo", :error
         end
+      end
+
+      def pull_request_comments(pull_request)
+        connection.repos.pull_requests.comments.all(remote_user, remote_repo_name, pull_request.id)
+      end
+
+      def has_pull_request_comments?(pull_request)
+        pull_request_comments(pull_request).count > 0
+      end
+
+      def get_build_status sha
+        # BitBucket does not currently support build status via API
+        # for updates: https://bitbucket.org/site/master/issue/8548/better-ci-integration-add-a-build-status
+        return nil
+      end
+
+      def colorized_build_description status
+        ""
+      end
+
+      def reviewers(pull_request)
+        return "" unless pull_request.respond_to?(:reviewers) and pull_request.reviewers.size > 0
+        pull_request.participants.map {|p| p.user.username }
+      end
+
+      def reviewers_pending_response(pull_request)
+        reviewers - approvals
+      end
+
+      def approvals(pull_request)
+        pull_request.participants.map {|p| p.user.username if p.approved }.compact
       end
 
     end

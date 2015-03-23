@@ -42,7 +42,8 @@ module GitReflow
     begin
       push_current_branch
 
-      if existing_pull_request = git_server.find_pull_request( from: current_branch, to: options['base'] )
+      existing_pull_request = git_server.find_pull_request( from: current_branch, to: options['base'] )
+      if existing_pull_request
         puts "A pull request already exists for these branches:"
         display_pull_request_summary(existing_pull_request)
         ask_to_open_in_browser(existing_pull_request.html_url)
@@ -137,7 +138,7 @@ module GitReflow
     }
 
     notices = ""
-    reviewed_by = git_server.comment_authors_for_pull_request(pull_request).map {|author| author.colorize(:red) }
+    reviewed_by = git_server.reviewers(pull_request).map {|author| author.colorize(:red) }
 
     # check for CI build status
     status = git_server.get_build_status pull_request.head.sha
@@ -147,19 +148,18 @@ module GitReflow
     end
 
     # check for needed lgtm's
-    pull_comments = git_server.pull_request_comments(pull_request)
-    if pull_comments.reject {|comment| comment.user.login == git_server.class.user}.any?
-      open_comment_authors = git_server.find_authors_of_open_pull_request_comments(pull_request)
-      last_committed_at    = git_server.get_commited_time(pull_request.head.sha)
-      lgtm_authors         = git_server.comment_authors_for_pull_request(pull_request, :with => LGTM, :after => last_committed_at)
+    if git_server.reviewers.any?
+      approvals    = git_server.approvals(pull_request)
+      pending      = git_server.reviewers_pending_response(pull_request)
+      last_comment = git_server.pull_request_comments(pull_request).first
 
       summary_data.merge!("Last comment"  => pull_comments.last[:body].inspect)
 
-      if lgtm_authors.any?
-        reviewed_by.map! { |author| lgtm_authors.include?(author.uncolorize) ? author.colorize(:green) : author }
+      if approvals.any?
+        reviewed_by.map! { |author| approvals.include?(author.uncolorize) ? author.colorize(:green) : author }
       end
 
-      notices << "[notice] You still need a LGTM from: #{open_comment_authors.join(', ')}\n" if open_comment_authors.any?
+      notices << "[notice] You still need a LGTM from: #{pending.join(', ')}\n" if pending.any?
     else
       notices << "[notice] No one has reviewed your pull request.\n"
     end

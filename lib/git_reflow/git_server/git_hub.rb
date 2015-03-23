@@ -34,6 +34,57 @@ module GitReflow
         end
       end
 
+      def self.connection
+        if self.oauth_token.length > 0
+          @connection ||= ::Github.new do |config|
+            config.oauth_token = GitServer::GitHub.oauth_token
+            config.endpoint    = GitServer::GitHub.api_endpoint
+            config.site        = GitServer::GitHub.site_url
+          end
+        end
+      end
+
+      def self.user
+        GitReflow::Config.get('github.user')
+      end
+
+      def self.user=(github_user)
+        GitReflow::Config.set('github.user', github_user, local: @@project_only)
+      end
+
+      def self.oauth_token
+        GitReflow::Config.get('github.oauth-token')
+      end
+
+      def self.oauth_token=(oauth_token)
+        GitReflow::Config.set('github.oauth-token', oauth_token, local: @@project_only)
+        oauth_token
+      end
+
+      def self.api_endpoint
+        endpoint         = "#{GitReflow::Config.get('github.endpoint')}".strip
+        (endpoint.length > 0) ? endpoint : ::Github.endpoint
+      end
+
+      def self.api_endpoint=(api_endpoint)
+        GitReflow::Config.set("github.endpoint", api_endpoint, local: @@project_only)
+        api_endpoint
+      end
+
+      def self.site_url
+        site_url     = "#{GitReflow::Config.get('github.site')}".strip
+        (site_url.length > 0) ? site_url : ::Github.site
+      end
+
+      def self.site_url=(site_url)
+        GitReflow::Config.set("github.site", site_url, local: @@project_only)
+        site_url
+      end
+
+      def connection
+        @connection ||= self.class.connection
+      end
+
       def authenticate(options = {silent: false})
         if connection and self.class.oauth_token.length > 0
           unless options[:silent]
@@ -94,55 +145,13 @@ module GitReflow
         connection.pull_requests.all(remote_user, remote_repo_name, base: options[:to], head: "#{remote_user}:#{options[:from]}", :state => 'open').first
       end
 
-      def self.connection
-        if self.oauth_token.length > 0
-          @connection ||= ::Github.new do |config|
-            config.oauth_token = GitServer::GitHub.oauth_token
-            config.endpoint    = GitServer::GitHub.api_endpoint
-            config.site        = GitServer::GitHub.site_url
-          end
-        end
+      def reviewers(pull_request)
+        comment_authors_for_pull_request(pull_request)
       end
 
-      def self.user
-        GitReflow::Config.get('github.user')
-      end
-
-      def self.user=(github_user)
-        GitReflow::Config.set('github.user', github_user, local: @@project_only)
-      end
-
-      def self.oauth_token
-        GitReflow::Config.get('github.oauth-token')
-      end
-
-      def self.oauth_token=(oauth_token)
-        GitReflow::Config.set('github.oauth-token', oauth_token, local: @@project_only)
-        oauth_token
-      end
-
-      def self.api_endpoint
-        endpoint         = "#{GitReflow::Config.get('github.endpoint')}".strip
-        (endpoint.length > 0) ? endpoint : ::Github.endpoint
-      end
-
-      def self.api_endpoint=(api_endpoint)
-        GitReflow::Config.set("github.endpoint", api_endpoint, local: @@project_only)
-        api_endpoint
-      end
-
-      def self.site_url
-        site_url     = "#{GitReflow::Config.get('github.site')}".strip
-        (site_url.length > 0) ? site_url : ::Github.site
-      end
-
-      def self.site_url=(site_url)
-        GitReflow::Config.set("github.site", site_url, local: @@project_only)
-        site_url
-      end
-
-      def connection
-        @connection ||= self.class.connection
+      def approvals(pull_request)
+        pull_last_committed_at = get_commited_time(pull_request.head.sha)
+        lgtm_authors           = comment_authors_for_pull_request(pull_request, :with => LGTM, :after => pull_last_committed_at)
       end
 
       def pull_request_comments(pull_request)

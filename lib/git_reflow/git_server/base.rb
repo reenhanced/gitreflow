@@ -5,6 +5,22 @@ module GitReflow
     @@connection       = nil
     @@project_only     = false
 
+    class PullRequest
+      attr_accessor :number, :description, :html_url, :feature_branch_name, :base_branch_name, :build_status, :source_object
+
+      def initialize(attributes)
+        raise "PullRequest#initialize must be implemented"
+      end
+
+      def method_missing(method_sym, *arguments, &block)
+        if source_object.respond_to? method_sym
+          source_object.send method_sym
+        else
+          super
+        end
+      end
+    end
+
     def initialize(options)
       @@project_only = !!options.delete(:project_only)
 
@@ -49,8 +65,8 @@ module GitReflow
       raise "#{self.class.to_s}#authenticate method must be implemented"
     end
 
-    def find_pull_request(options)
-      raise "#{self.class.to_s}#find_pull_request(options) method must be implemented"
+    def find_open_pull_request(options)
+      raise "#{self.class.to_s}#find_open_pull_request(options) method must be implemented"
     end
 
     def pull_request_comments(pull_request)
@@ -59,6 +75,10 @@ module GitReflow
 
     def has_pull_request_comments?(pull_request)
       pull_request_comments(pull_request).count > 0
+    end
+
+    def last_comment_for_pull_request(pull_request)
+      raise "#{self.class.to_s}#last_comment_for_pull_request(pull_request) method must be implemented"
     end
 
     def get_build_status sha
@@ -73,12 +93,12 @@ module GitReflow
       raise "#{self.class.to_s}#reviewers(pull_request) method must be implemented"
     end
 
-    def reviewers_pending_response(pull_request)
-      reviewers - approvals
-    end
-
     def approvals(pull_request)
       raise "#{self.class.to_s}#approvals(pull_request) method must be implemented"
+    end
+
+    def reviewers_pending_response(pull_request)
+      reviewers(pull_request) - approvals(pull_request)
     end
   end
 end

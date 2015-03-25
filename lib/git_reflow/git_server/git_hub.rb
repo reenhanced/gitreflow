@@ -6,6 +6,16 @@ module GitReflow
     class GitHub < Base
       include GitHelpers
 
+      class PullRequest < Base::PullRequest
+        def initialize(attributes)
+          self.description         = attributes.body
+          self.feature_branch_name = attributes.head.label
+          self.base_branch_name    = attributes.base.label
+          self.build_status        = attributes.head.sha
+          self.source_object       = attributes
+        end
+      end
+
       attr_accessor :connection
 
       @project_only     = false
@@ -141,8 +151,11 @@ module GitReflow
                                                        base:  options[:base])
       end
 
-      def find_pull_request(options = {})
-        connection.pull_requests.all(remote_user, remote_repo_name, base: options[:to], head: "#{remote_user}:#{options[:from]}", :state => 'open').first
+      def find_open_pull_request(options = {})
+        matching_pull = connection.pull_requests.all(remote_user, remote_repo_name, base: options[:to], head: "#{remote_user}:#{options[:from]}", :state => 'open').first
+        if matching_pull
+          PullRequest.new matching_pull
+        end
       end
 
       def reviewers(pull_request)
@@ -159,6 +172,10 @@ module GitReflow
         review_comments = connection.pull_requests.comments.all remote_user, remote_repo_name, number: pull_request.number
 
         review_comments.to_a + comments.to_a
+      end
+
+      def last_comment_for_pull_request(pull_request)
+        "#{pull_request_comments(pull_request).first.last[:body].inspect}"
       end
 
       def get_build_status sha

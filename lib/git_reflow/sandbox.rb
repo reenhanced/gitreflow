@@ -3,9 +3,10 @@ module GitReflow
     extend self
 
     COLOR_FOR_LABEL = {
-      notice:  :yellow,
-      error:   :red,
-      success: :green
+      notice:          :yellow,
+      error:           :red,
+      deliver_haulted: :red,
+      success:         :green
     }
 
     def run(command, options = {})
@@ -28,7 +29,7 @@ module GitReflow
 
     def say(message, label_type = :plain)
       if COLOR_FOR_LABEL[label_type]
-        puts "[#{ label_type.to_s.colorize(COLOR_FOR_LABEL[label_type]) }] #{message}"
+        puts "[#{ label_type.to_s.gsub('_', ' ').colorize(COLOR_FOR_LABEL[label_type]) }] #{message}"
       else
         puts message
       end

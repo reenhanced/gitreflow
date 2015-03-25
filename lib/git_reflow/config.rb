@@ -7,7 +7,7 @@ module GitReflow
         cached_key_value
       else
         new_value = GitReflow::Sandbox.run "git config --get #{key}", loud: false
-        instance_variable_set(:"@#{key.tr('.-', '_')}", new_value)
+        instance_variable_set(:"@#{key.tr('.-', '_')}", new_value.strip)
       end
     end
 

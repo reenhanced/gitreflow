@@ -3,10 +3,10 @@ module GitReflow
     extend self
 
     COLOR_FOR_LABEL = {
-      notice:          :yellow,
-      error:           :red,
-      deliver_haulted: :red,
-      success:         :green
+      notice:         :yellow,
+      error:          :red,
+      deliver_halted: :red,
+      success:        :green
     }
 
     def run(command, options = {})

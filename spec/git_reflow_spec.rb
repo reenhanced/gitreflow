@@ -184,7 +184,7 @@ describe GitReflow do
         end
 
         it "halts delivery and notifies user of a failed build" do
-          expect { subject }.to have_said "#{build_status.description}: #{build_status.target_url}", :deliver_haulted
+          expect { subject }.to have_said "#{build_status.description}: #{build_status.target_url}", :deliver_halted
         end
       end
 
@@ -341,7 +341,7 @@ describe GitReflow do
             let(:open_comment_authors) { ['nhance', 'codenamev'] }
             before { github.stub(:reviewers_pending_response).and_return(open_comment_authors) }
             it "notifies the user to get their code reviewed" do
-              expect { subject }.to have_said "You still need a LGTM from: #{open_comment_authors.join(', ')}", :deliver_haulted
+              expect { subject }.to have_said "You still need a LGTM from: #{open_comment_authors.join(', ')}", :deliver_halted
             end
           end
         end
@@ -352,7 +352,7 @@ describe GitReflow do
           end
 
           it "notifies the user to get their code reviewed" do
-            expect { subject }.to have_said "Your code has not been reviewed yet.", :deliver_haulted
+            expect { subject }.to have_said "Your code has not been reviewed yet.", :deliver_halted
           end
         end
 
@@ -376,7 +376,7 @@ describe GitReflow do
       before { github.stub(:find_open_pull_request).and_return(nil) }
 
       it "notifies the user of a missing pull request" do
-        expect { subject }.to have_said "No pull request exists for #{user}:#{branch}\nPlease submit your branch for review first with \`git reflow review\`", :deliver_haulted
+        expect { subject }.to have_said "No pull request exists for #{user}:#{branch}\nPlease submit your branch for review first with \`git reflow review\`", :deliver_halted
       end
     end
   end

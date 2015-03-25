@@ -74,7 +74,7 @@ module GitReflow
       existing_pull_request = git_server.find_open_pull_request( :from => current_branch, :to => options['base'] )
 
       if existing_pull_request.nil?
-        say "No pull request exists for #{remote_user}:#{current_branch}\nPlease submit your branch for review first with \`git reflow review\`", :deliver_haulted
+        say "No pull request exists for #{remote_user}:#{current_branch}\nPlease submit your branch for review first with \`git reflow review\`", :deliver_halted
       else
 
         has_comments         = git_server.has_pull_request_comments?(existing_pull_request)
@@ -106,18 +106,18 @@ module GitReflow
               run_command_with_label "git branch -D #{feature_branch}"
               puts "Nice job buddy."
             else
-              puts "Cleanup haulted.  Local changes were not pushed to remote repo.".colorize(:red)
+              puts "Cleanup halted.  Local changes were not pushed to remote repo.".colorize(:red)
               puts "To reset and go back to your branch run \`git reset --hard origin/master && git checkout new-feature\`"
             end
           else
             say "There were problems commiting your feature... please check the errors above and try again.", :error
           end
         elsif !status.nil? and status.state != "success"
-          say "#{status.description}: #{status.target_url}", :deliver_haulted
+          say "#{status.description}: #{status.target_url}", :deliver_halted
         elsif open_comment_authors.count > 0
-          say "You still need a LGTM from: #{open_comment_authors.join(', ')}", :deliver_haulted
+          say "You still need a LGTM from: #{open_comment_authors.join(', ')}", :deliver_halted
         else
-          say "Your code has not been reviewed yet.", :deliver_haulted
+          say "Your code has not been reviewed yet.", :deliver_halted
         end
       end
 

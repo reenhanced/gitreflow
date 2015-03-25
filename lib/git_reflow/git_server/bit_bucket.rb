@@ -8,6 +8,7 @@ module GitReflow
 
       class PullRequest < Base::PullRequest
         def initialize(attributes)
+          self.description = attributes.description
           self.source_object       = attributes
           self.number              = attributes.id
           self.html_url            = "#{attributes.source.repository.links.html.href}/pull-request/#{self.number}"
@@ -22,9 +23,9 @@ module GitReflow
       @project_only     = false
 
       def initialize(config_options = {})
-        @project_only = @@project_only = !!config_options.delete(:project_only)
+        @@project_only = !!config_options.delete(:project_only)
 
-        if @project_only
+        if @@project_only
           GitReflow::Config.set('reflow.git-server', 'BitBucket', local: true)
         else
           GitReflow::Config.set('reflow.git-server', 'BitBucket')
@@ -76,7 +77,7 @@ module GitReflow
           else
             self.class.user = options[:user] || ask("Please enter your BitBucket username: ")
             puts "\nIn order to connect your BitBucket account,"
-            puts "you'll need to generate an API key for your Team"
+            puts "you'll need to generate an API key for your team"
             puts "\nVisit #{self.class.site_url}/account/user/#{remote_user}/api-key, and reference our README"
           end
         rescue ::BitBucket::Error::Unauthorized => e
@@ -122,10 +123,6 @@ module GitReflow
 
       def pull_request_comments(pull_request)
         connection.repos.pull_requests.comments.all(remote_user, remote_repo_name, pull_request.id)
-      end
-
-      def has_pull_request_comments?(pull_request)
-        pull_request_comments(pull_request).count > 0
       end
 
       def last_comment_for_pull_request(pull_request)

@@ -6,14 +6,14 @@ module GitReflow
     @@project_only     = false
 
     class PullRequest
-      attr_accessor :number, :description, :html_url, :feature_branch_name, :base_branch_name, :build_status, :source_object
+      attr_accessor :description, :html_url, :feature_branch_name, :base_branch_name, :build_status, :source_object
 
       def initialize(attributes)
         raise "PullRequest#initialize must be implemented"
       end
 
       def method_missing(method_sym, *arguments, &block)
-        if source_object.respond_to? method_sym
+        if source_object and source_object.respond_to? method_sym
           source_object.send method_sym
         else
           super

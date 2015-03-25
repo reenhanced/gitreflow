@@ -9,6 +9,7 @@ module GitReflow
       class PullRequest < Base::PullRequest
         def initialize(attributes)
           self.description         = attributes.body
+          self.html_url            = attributes.html_url
           self.feature_branch_name = attributes.head.label
           self.base_branch_name    = attributes.base.label
           self.build_status        = attributes.head.sha
@@ -23,13 +24,13 @@ module GitReflow
       @git_config_group = 'github'.freeze
 
       def initialize(config_options = {})
-        @project_only     = !!config_options.delete(:project_only)
-        @using_enterprise = !!config_options.delete(:enterprise)
+        @@project_only     = !!config_options.delete(:project_only)
+        @@using_enterprise = !!config_options.delete(:enterprise)
 
         gh_site_url     = self.class.site_url
         gh_api_endpoint = self.class.api_endpoint
         
-        if @using_enterprise
+        if @@using_enterprise
           gh_site_url     = ask("Please enter your Enterprise site URL (e.g. https://github.company.com):")
           gh_api_endpoint = ask("Please enter your Enterprise API endpoint (e.g. https://github.company.com/api/v3):")
         end
@@ -37,7 +38,7 @@ module GitReflow
         self.class.site_url     = gh_site_url
         self.class.api_endpoint = gh_api_endpoint
 
-        if @project_only
+        if @@project_only
           GitReflow::Config.set('reflow.git-server', 'GitHub', local: true)
         else
           GitReflow::Config.set('reflow.git-server', 'GitHub')
@@ -185,15 +186,6 @@ module GitReflow
       def colorized_build_description status
         colorized_statuses = { pending: :yellow, success: :green, error: :red, failure: :red }
         status.description.colorize( colorized_statuses[status.state.to_sym] )
-      end
-
-      def find_authors_of_open_pull_request_comments(pull_request)
-        # first we'll gather all the authors that have commented on the pull request
-        pull_last_committed_at = get_commited_time(pull_request.head.sha)
-        comment_authors        = comment_authors_for_pull_request(pull_request)
-        lgtm_authors           = comment_authors_for_pull_request(pull_request, :with => LGTM, :after => pull_last_committed_at)
-
-        comment_authors - lgtm_authors
       end
 
       def comment_authors_for_pull_request(pull_request, options = {})

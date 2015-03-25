@@ -66,7 +66,7 @@ module GithubHelpers
 
     if pull
       # Stubbing review
-      github.pull_requests.stub(:create).with(user, repo, pull.except('state')).and_return(Hashie::Mash.new(:number => '1', :title => pull['title'], :html_url => "https://github.com/#{user}/#{repo}/pulls/1"))
+      #github.pull_requests.stub(:create).with(user, repo, pull.except('state')).and_return(GitReflow::GitServer::GitHub::PullRequest.new(:number => '1', :title => pull.title, :html_url => "https://github.com/#{user}/#{repo}/pulls/1"))
       stub_post("/repos/#{user}/#{repo}/pulls").
         to_return(:body => pull.to_s, :status => 201, :headers => {:content_type => "application/json\; charset=utf-8"})
 
@@ -76,10 +76,10 @@ module GithubHelpers
       stub_get("/repos/#{user}/#{repo}/pulls").with(:query => {'access_token' => 'a1b2c3d4e5f6g7h8i9j0', 'base' => 'master', 'head' => "#{user}:#{branch}", 'state' => 'open'}).
         to_return(:body => fixture('pull_requests/pull_requests.json'), :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
       # Stubbing pull request comments
-      stub_get("/repos/#{user}/pulls/#{pull[:number]}/comments?").with(:query => {'access_token' => 'a1b2c3d4e5f6g7h8i9j0'}).
+      stub_get("/repos/#{user}/pulls/#{pull.number}/comments?").with(:query => {'access_token' => 'a1b2c3d4e5f6g7h8i9j0'}).
         to_return(:body => fixture('pull_requests/comments.json'), :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
       # Stubbing issue comments
-      stub_get("/repos/#{user}/issues/#{pull[:number]}/comments?").with(:query => {'access_token' => 'a1b2c3d4e5f6g7h8i9j0'}).
+      stub_get("/repos/#{user}/issues/#{pull.number}/comments?").with(:query => {'access_token' => 'a1b2c3d4e5f6g7h8i9j0'}).
         to_return(:body => fixture('issues/comments.json'), :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
     end
 

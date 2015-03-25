@@ -168,16 +168,19 @@ describe GitReflow::GitServer::GitHub do
     end
   end
 
-  describe '#find_pull_request(from, to)' do
-    subject { github.find_pull_request({ from: 'new-feature', to: 'master'}) }
+  describe '#find_open_pull_request(from, to)' do
+    subject { github.find_open_pull_request({ from: 'new-feature', to: 'master'}) }
 
     it 'looks for an open pull request matching the remote user/repo' do
-      subject.should == existing_pull_requests.first
+      subject.number.should == existing_pull_requests.first.number
     end
 
     context 'no pull request exists' do
-      before { github.stub(:find_pull_request).and_return([]) }
-      it     { should == [] }
+      before do
+        github_api.stub(:pull_requests)
+        github_api.pull_requests.should_receive(:all).and_return([])
+      end
+      it     { should == nil }
     end
   end
 
@@ -198,21 +201,6 @@ describe GitReflow::GitServer::GitHub do
     end
   end
 
-  describe '#has_pull_request_comments?(pull_request)' do
-    let(:existing_pull_request) { Hashie::Mash.new JSON.parse(fixture('pull_requests/pull_request.json').read) }
-    let(:pull_request_comments) { JSON.parse(fixture('pull_requests/comments.json').read).collect {|c| Hashie::Mash.new(c) } }
-
-    before  { github.stub(:pull_request_comments).and_return([pull_request_comments]) }
-    subject { github.has_pull_request_comments?(existing_pull_request) }
-
-    it { should == true }
-
-    context 'no comments exist for the given pull request' do
-      before { github.stub(:pull_request_comments).and_return([]) }
-      it     { should == false }
-    end
-  end
-
   describe '#get_build_status(sha)' do
     let(:sha) { '6dcb09b5b57875f334f61aebed695e2e4193db5e' }
     subject   { github.get_build_status(sha) }
@@ -222,9 +210,6 @@ describe GitReflow::GitServer::GitHub do
       github_api.repos.statuses.should_receive(:all).with(user, repo, sha).and_return([{ state: 'success'}])
       subject
     end
-  end
-
-  describe '#find_authors_of_open_pull_request_comments(pull_request)' do
   end
 
   describe '#comment_authors_for_pull_request(pull_request, options = {})' do

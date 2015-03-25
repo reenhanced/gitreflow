@@ -34,7 +34,7 @@ spec = Gem::Specification.new do |s|
   s.add_dependency('httpclient')
   s.add_dependency('json_pure')
   s.add_dependency('github_api', '0.12.3')
-  s.add_dependency('reenhanced_bitbucket_api', '0.3.0')
+  s.add_dependency('reenhanced_bitbucket_api', '0.3.2')
 
   s.post_install_message = "You need to setup your GitHub OAuth token\nPlease run 'git-reflow setup'"
 end

@@ -8,7 +8,7 @@ PATH
       highline
       httpclient
       json_pure
-      reenhanced_bitbucket_api (= 0.3.0)
+      reenhanced_bitbucket_api (= 0.3.2)
 
 GEM
   remote: https://rubygems.org/
@@ -71,7 +71,7 @@ GEM
     rake (10.4.2)
     rb-readline (0.5.2)
     rdoc (4.2.0)
-    reenhanced_bitbucket_api (0.3.0)
+    reenhanced_bitbucket_api (0.3.2)
       faraday (~> 0.9.0)
       faraday_middleware (~> 0.9.0)
       hashie (>= 3.2)

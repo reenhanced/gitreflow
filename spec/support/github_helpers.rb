@@ -66,7 +66,6 @@ module GithubHelpers
 
     if pull
       # Stubbing review
-      #github.pull_requests.stub(:create).with(user, repo, pull.except('state')).and_return(GitReflow::GitServer::GitHub::PullRequest.new(:number => '1', :title => pull.title, :html_url => "https://github.com/#{user}/#{repo}/pulls/1"))
       stub_post("/repos/#{user}/#{repo}/pulls").
         to_return(:body => pull.to_s, :status => 201, :headers => {:content_type => "application/json\; charset=utf-8"})
 

@@ -86,7 +86,7 @@ module GitReflow
                                end
 
         if  options['skip_lgtm'] or ((status.nil? or status.state == "success") and open_comment_authors.empty?)
-          puts "Merging pull request ##{existing_pull_request.number}: '#{existing_pull_request.title}', from '#{existing_pull_request.head.label}' into '#{existing_pull_request.base.label}'"
+          puts "Merging pull request ##{existing_pull_request.number}: '#{existing_pull_request.title}', from '#{existing_pull_request.feature_branch_name}' into '#{existing_pull_request.base_branch_name}'"
 
           update_destination(options['base'])
           merge_feature_branch(feature_branch,

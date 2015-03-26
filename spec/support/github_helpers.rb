@@ -53,14 +53,16 @@ module GithubHelpers
     github_server.class.stub(:oauth_token).and_return(oauth_token_hash.token)
     github_server.class.stub(:site_url).and_return(site_url)
     github_server.class.stub(:api_endpoint).and_return(api_endpoint)
-    github_server.stub(:remote_user).and_return(user)
-    github_server.stub(:remote_repo).and_return(repo)
-    github_server.stub(:oauth_token).and_return(oauth_token_hash.token)
-    github_server.stub(:get_commited_time).and_return(Time.now)
+    github_server.class.stub(:remote_user).and_return(user)
+    github_server.class.stub(:remote_repo).and_return(repo)
+    github_server.class.stub(:oauth_token).and_return(oauth_token_hash.token)
+    github_server.class.stub(:get_commited_time).and_return(Time.now)
 
     GitReflow.stub(:git_server).and_return(github_server)
 
     # Stubbing statuses for a given commit
+    stub_request(:get, %r{#{GitReflow.git_server.class.api_endpoint}/repos/#{user}/commits/\w+}).
+      to_return(:body => fixture('repositories/commit.json'), :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
     stub_request(:get, %r{#{GitReflow.git_server.class.api_endpoint}/repos/#{user}/commits/\w+/statuses?}).
       to_return(:body => fixture('pull_requests/pull_requests.json'), :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
 

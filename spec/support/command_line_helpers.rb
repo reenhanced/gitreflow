@@ -1,3 +1,10 @@
+module Hashie
+  class Mash < Hash
+    def <=>
+      
+    end
+  end
+end
 module CommandLineHelpers
   def stub_command_line
     $commands_ran = []

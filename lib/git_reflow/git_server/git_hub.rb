@@ -4,7 +4,7 @@ require 'git_reflow/git_helpers'
 module GitReflow
   module GitServer
     class GitHub < Base
-      include GitHelpers
+      extend GitHelpers
 
       class PullRequest < Base::PullRequest
         def initialize(attributes)
@@ -19,18 +19,14 @@ module GitReflow
 
       attr_accessor :connection
 
-      @project_only     = false
-      @using_enterprise = false
-      @git_config_group = 'github'.freeze
-
       def initialize(config_options = {})
-        @@project_only     = !!config_options.delete(:project_only)
-        @@using_enterprise = !!config_options.delete(:enterprise)
+        project_only     = !!config_options.delete(:project_only)
+        using_enterprise = !!config_options.delete(:enterprise)
 
         gh_site_url     = self.class.site_url
         gh_api_endpoint = self.class.api_endpoint
-        
-        if @@using_enterprise
+
+        if using_enterprise
           gh_site_url     = ask("Please enter your Enterprise site URL (e.g. https://github.company.com):")
           gh_api_endpoint = ask("Please enter your Enterprise API endpoint (e.g. https://github.company.com/api/v3):")
         end
@@ -38,9 +34,11 @@ module GitReflow
         self.class.site_url     = gh_site_url
         self.class.api_endpoint = gh_api_endpoint
 
-        if @@project_only
+        if project_only
+          GitReflow::Config.add('reflow.local-projects', "#{self.class.remote_user}/#{self.class.remote_repo_name}")
           GitReflow::Config.set('reflow.git-server', 'GitHub', local: true)
         else
+          GitReflow::Config.unset('reflow.local-projects', value: "#{self.class.remote_user}/#{self.class.remote_repo_name}")
           GitReflow::Config.set('reflow.git-server', 'GitHub')
         end
       end
@@ -60,7 +58,7 @@ module GitReflow
       end
 
       def self.user=(github_user)
-        GitReflow::Config.set('github.user', github_user, local: @@project_only)
+        GitReflow::Config.set('github.user', github_user, local: project_only?)
       end
 
       def self.oauth_token
@@ -68,7 +66,7 @@ module GitReflow
       end
 
       def self.oauth_token=(oauth_token)
-        GitReflow::Config.set('github.oauth-token', oauth_token, local: @@project_only)
+        GitReflow::Config.set('github.oauth-token', oauth_token, local: project_only?)
         oauth_token
       end
 
@@ -78,7 +76,7 @@ module GitReflow
       end
 
       def self.api_endpoint=(api_endpoint)
-        GitReflow::Config.set("github.endpoint", api_endpoint, local: @@project_only)
+        GitReflow::Config.set("github.endpoint", api_endpoint, local: project_only?)
         api_endpoint
       end
 
@@ -88,7 +86,7 @@ module GitReflow
       end
 
       def self.site_url=(site_url)
-        GitReflow::Config.set("github.site", site_url, local: @@project_only)
+        GitReflow::Config.set("github.site", site_url, local: project_only?)
         site_url
       end
 
@@ -145,15 +143,15 @@ module GitReflow
       end
 
       def create_pull_request(options = {})
-        pull_request = connection.pull_requests.create(remote_user, remote_repo_name,
+        pull_request = connection.pull_requests.create(self.class.remote_user, self.class.remote_repo_name,
                                                        title: options[:title],
                                                        body:  options[:body],
-                                                       head:  "#{remote_user}:#{current_branch}",
+                                                       head:  "#{self.class.remote_user}:#{self.class.current_branch}",
                                                        base:  options[:base])
       end
 
       def find_open_pull_request(options = {})
-        matching_pull = connection.pull_requests.all(remote_user, remote_repo_name, base: options[:to], head: "#{remote_user}:#{options[:from]}", :state => 'open').first
+        matching_pull = connection.pull_requests.all(self.class.remote_user, self.class.remote_repo_name, base: options[:to], head: "#{self.class.remote_user}:#{options[:from]}", :state => 'open').first
         if matching_pull
           PullRequest.new matching_pull
         end
@@ -169,8 +167,8 @@ module GitReflow
       end
 
       def pull_request_comments(pull_request)
-        comments        = connection.issues.comments.all        remote_user, remote_repo_name, number: pull_request.number
-        review_comments = connection.pull_requests.comments.all remote_user, remote_repo_name, number: pull_request.number
+        comments        = connection.issues.comments.all        self.class.remote_user, self.class.remote_repo_name, number: pull_request.number
+        review_comments = connection.pull_requests.comments.all self.class.remote_user, self.class.remote_repo_name, number: pull_request.number
 
         review_comments.to_a + comments.to_a
       end
@@ -180,7 +178,7 @@ module GitReflow
       end
 
       def get_build_status sha
-        connection.repos.statuses.all(remote_user, remote_repo_name, sha).first
+        connection.repos.statuses.all(self.class.remote_user, self.class.remote_repo_name, sha).first
       end
 
       def colorized_build_description status
@@ -204,7 +202,7 @@ module GitReflow
       end
 
       def get_commited_time(commit_sha)
-        last_commit = connection.repos.commits.find remote_user, remote_repo_name, commit_sha
+        last_commit = connection.repos.commits.find self.class.remote_user, self.class.remote_repo_name, commit_sha
         Time.parse last_commit.commit.author[:date]
       end
 

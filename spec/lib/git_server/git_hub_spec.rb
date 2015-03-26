@@ -28,9 +28,8 @@ describe GitReflow::GitServer::GitHub do
      return_value
     end
 
-    github.stub(:remote_user).and_return(user)
-    github.stub(:remote_repo_name).and_return(repo)
-    github.stub(:run).with('hostname', loud: false).and_return(hostname)
+    github.class.stub(:remote_user).and_return(user)
+    github.class.stub(:remote_repo_name).and_return(repo)
   end
 
   describe '#initialize(options)' do
@@ -57,6 +56,10 @@ describe GitReflow::GitServer::GitHub do
 
     context 'storing git config settings only for this project' do
       subject { GitReflow::GitServer::GitHub.new(project_only: true) }
+
+      before do
+        GitReflow::Config.should_receive(:get).twice.with('reflow.local-projects', all: true).and_return("#{user}/#{repo}")
+      end
 
       it 'sets the enterprise site and api as the site and api endpoints for the GitHub provider in the git config' do
         GitReflow::Config.should_receive(:set).once.with('github.site', github_site, local: true).and_call_original
@@ -107,8 +110,12 @@ describe GitReflow::GitServer::GitHub do
         end
 
         context "exclusive to project" do
-          let(:github) { GitReflow::GitServer::GitHub.new(project_only: true) }
-          before       { GitReflow::GitServer::GitHub.stub(:@project_only).and_return(true) }
+          let(:github) do
+            allow(GitReflow::GitServer::GitHub).to receive(:project_only?).and_return(true)
+            allow(GitReflow::GitServer::GitHub).to receive(:remote_user).and_return(user)
+            allow(GitReflow::GitServer::GitHub).to receive(:remote_repo_name).and_return(repo)
+            GitReflow::GitServer::GitHub.new(project_only: true)
+          end
 
           it "creates _local_ git config keys for github connections" do
             expect{ subject }.to_not have_run_command_silently "git config --global --replace-all github.site \"#{GitReflow::GitServer::GitHub.site_url}\""
@@ -120,6 +127,7 @@ describe GitReflow::GitServer::GitHub do
             expect{ subject }.to have_run_command_silently "git config --replace-all github.endpoint \"#{GitReflow::GitServer::GitHub.api_endpoint}\""
             expect{ subject }.to have_run_command_silently "git config --replace-all github.oauth-token \"#{oauth_token_hash[:token]}\""
             expect{ subject }.to have_run_command_silently "git config --replace-all reflow.git-server \"GitHub\""
+            expect{ subject }.to have_run_command_silently "git config --global --add reflow.local-projects \"#{user}/#{repo}\""
           end
         end
 
@@ -159,7 +167,7 @@ describe GitReflow::GitServer::GitHub do
     let(:body)           { 'Funky body' }
     let(:current_branch) { 'new-feature' }
 
-    before { github.stub(:current_branch).and_return(current_branch) }
+    before { github.class.stub(:current_branch).and_return(current_branch) }
 
     it 'creates a pull request using the remote user and repo' do
       github_api.stub(:pull_requests)

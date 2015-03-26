@@ -4,7 +4,6 @@ require 'git_reflow/git_helpers'
 module GitReflow
   module GitServer
     class BitBucket < Base
-      include GitHelpers
 
       class PullRequest < Base::PullRequest
         def initialize(attributes)
@@ -20,21 +19,21 @@ module GitReflow
 
       attr_accessor :connection
 
-      @project_only     = false
-
       def initialize(config_options = {})
-        @@project_only = !!config_options.delete(:project_only)
+        project_only = !!config_options.delete(:project_only)
 
-        if @@project_only
+        if project_only
+          GitReflow::Config.add('reflow.local-projects', "#{self.class.remote_user}/#{self.class.remote_repo_name}")
           GitReflow::Config.set('reflow.git-server', 'BitBucket', local: true)
         else
+          GitReflow::Config.unset('reflow.local-projects', value: "#{self.class.remote_user}/#{self.class.remote_repo_name}")
           GitReflow::Config.set('reflow.git-server', 'BitBucket')
         end
       end
 
       def self.connection
         if api_key_setup?
-          @connection ||= ::BitBucket.new login: self.new.remote_user, password: api_key
+          @connection ||= ::BitBucket.new login: remote_user, password: api_key
         end
       end
 
@@ -49,11 +48,11 @@ module GitReflow
       end
 
       def self.api_key
-        GitReflow::Config.get("bitbucket.api-key")
+        GitReflow::Config.get("bitbucket.api-key", reload: true)
       end
 
       def self.api_key=(key)
-        GitReflow::Config.get("bitbucket.api-key", key, local: @@project_only)
+        GitReflow::Config.set("bitbucket.api-key", key, local: project_only?)
       end
       def self.api_key_setup?
         (self.api_key.length > 0)
@@ -64,7 +63,7 @@ module GitReflow
       end
 
       def self.user=(bitbucket_user)
-        GitReflow::Config.set('bitbucket.user', bitbucket_user, local: @@project_only)
+        GitReflow::Config.set('bitbucket.user', bitbucket_user, local: project_only?)
       end
 
       def authenticate(options = {silent: false})
@@ -78,10 +77,14 @@ module GitReflow
             self.class.user = options[:user] || ask("Please enter your BitBucket username: ")
             puts "\nIn order to connect your BitBucket account,"
             puts "you'll need to generate an API key for your team"
-            puts "\nVisit #{self.class.site_url}/account/user/#{remote_user}/api-key, and reference our README"
+            puts "Visit #{self.class.site_url}/account/user/#{self.class.remote_user}/api-key/, to generate it\n"
+            self.class.api_key = ask("Please enter your team's API key: ")
+            connection.repos.all(self.class.remote_user).count
+            self.class.say "Connected to BitBucket\!", :success
           end
         rescue ::BitBucket::Error::Unauthorized => e
-          puts "\nBitBucket Authentication Error: #{e.inspect}"
+          GitReflow::Config.unset('bitbucket.api-key', local: self.class.project_only?)
+          self.class.say "Invalid API key for team #{self.class.remote_user}.", :error
         end
       end
 
@@ -90,12 +93,12 @@ module GitReflow
       end
 
       def create_pull_request(options = {})
-        PullRequest.new connection.repos.pull_requests.create(remote_user, remote_repo_name,
+        PullRequest.new connection.repos.pull_requests.create(self.class.remote_user, self.class.remote_repo_name,
                                                               title: options[:title],
                                                               body: options[:body],
                                                               source: {
-                                                                branch: { name: current_branch },
-                                                                repository: { full_name: "#{remote_user}/#{remote_repo_name}" }
+                                                                branch: { name: self.class.current_branch },
+                                                                repository: { full_name: "#{self.class.remote_user}/#{self.class.remote_repo_name}" }
                                                               },
                                                               destination: {
                                                                 branch: { name: options[:base] }
@@ -105,7 +108,7 @@ module GitReflow
 
       def find_open_pull_request(options = {})
         begin
-          matching_pull = connection.repos.pull_requests.all(remote_user, remote_repo_name, limit: 1).select do |pr|
+          matching_pull = connection.repos.pull_requests.all(self.class.remote_user, self.class.remote_repo_name, limit: 1).select do |pr|
             pr.source.branch.name == options[:from] and
             pr.destination.branch.name == options[:to]
           end.first
@@ -114,15 +117,14 @@ module GitReflow
             PullRequest.new matching_pull
           end
         rescue ::BitBucket::Error::NotFound => e
-          say "No BitBucket repo found for #{remote_user}/#{remote_repo_name}", :error
+          self.class.say "No BitBucket repo found for #{self.class.remote_user}/#{self.class.remote_repo_name}", :error
         rescue ::BitBucket::Error::Forbidden => e
-          puts e.inspect
-          say "You don't have API access to this repo", :error
+          self.class.say "You don't have API access to this repo", :error
         end
       end
 
       def pull_request_comments(pull_request)
-        connection.repos.pull_requests.comments.all(remote_user, remote_repo_name, pull_request.id)
+        connection.repos.pull_requests.comments.all(self.class.remote_user, self.class.remote_repo_name, pull_request.id)
       end
 
       def last_comment_for_pull_request(pull_request)
@@ -151,7 +153,7 @@ module GitReflow
       def approvals(pull_request)
         approved  = []
 
-        connection.repos.pull_requests.activity(remote_user, remote_repo_name, pull_request.id).each do |activity|
+        connection.repos.pull_requests.activity(self.class.remote_user, self.class.remote_repo_name, pull_request.id).each do |activity|
           break unless activity.respond_to?(:approval) and activity.approval.user.username != self.class.user
           approved |= [activity.approval.user.username]
         end

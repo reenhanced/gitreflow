@@ -8,6 +8,7 @@ describe GitReflow::GitServer::BitBucket do
   let(:hostname)     { 'hostname.local' }
   let(:api_endpoint) { 'https://bitbucket.org/api/1.0' }
   let(:site)         { 'https://bitbucket.org' }
+  let(:remote_url)   { "git@bitbucket.org:#{user}/#{repo}.git" }
 
   before do
     HighLine.any_instance.stub(:ask) do |terminal, question|
@@ -46,10 +47,10 @@ describe GitReflow::GitServer::BitBucket do
 
     context 'already authenticated' do
       it "notifies the user of successful setup" do
-        GitReflow::Config.should_receive(:set).twice.with('reflow.git-server', 'BitBucket')
-        GitReflow::Config.stub(:get).with('bitbucket.api-key').and_return(api_key)
-        GitReflow::Config.should_receive(:get).twice.with('remote.origin.url').and_return(user)
-        GitReflow::Config.should_receive(:get).once.with('bitbucket.user').and_return(user)
+        GitReflow::Config.should_receive(:set).with('reflow.git-server', 'BitBucket')
+        allow(GitReflow::Config).to receive(:get).with('remote.origin.url').and_return(remote_url)
+        allow(GitReflow::Config).to receive(:get).with('bitbucket.user').and_return(user)
+        allow(GitReflow::Config).to receive(:get).with('bitbucket.api-key', reload: true).and_return(api_key)
         expect { subject }.to have_output "\nYour BitBucket account was already setup with:"
         expect { subject }.to have_output "\tUser Name: #{user}"
       end
@@ -57,33 +58,20 @@ describe GitReflow::GitServer::BitBucket do
 
     context 'not yet authenticated' do
       context 'with valid BitBucket credentials' do
+        before do
+          GitReflow::Config.stub(:get).and_return('')
+          GitReflow::Config.stub(:set)
+          GitReflow::Config.stub(:set).with('bitbucket.api-key', reload: true).and_return(api_key)
+          allow(GitReflow::Config).to receive(:get).with('bitbucket.api-key', reload: true).and_return('')
+          allow(GitReflow::Config).to receive(:get).with('remote.origin.url').and_return(remote_url)
+          allow(GitReflow::Config).to receive(:get).with('reflow.local-projects').and_return('')
+          bitbucket.stub(:connection).and_return double(repos: double(all: []))
+        end
 
         it "prompts me to setup an API key" do
-          GitReflow::Config.should_receive(:set).once.with('reflow.git-server', 'BitBucket')
-          GitReflow::Config.should_receive(:set).once.with('bitbucket.user', 'reenhanced', local: false)
-          GitReflow::Config.should_receive(:get).once.with('bitbucket.api-key').and_return('')
-          GitReflow::Config.should_receive(:get).once.with('bitbucket.site').and_return('')
-          GitReflow::Config.should_receive(:get).twice.with('remote.origin.url').and_return("git@bitbucket.org:#{user}/#{repo}.git")
           expect { subject }.to have_output "\nIn order to connect your BitBucket account,"
           expect { subject }.to have_output "you'll need to generate an API key for your team"
-          expect { subject }.to have_output "\nVisit https://bitbucket.org/account/user/reenhanced/api-key, and reference our README"
-        end
-
-        it "creates git config keys for bitbucket connections" do
-          expect{ subject }.to have_run_command_silently "git config --global --replace-all bitbucket.user \"#{user}\""
-          expect{ subject }.to have_run_command_silently "git config --global --replace-all reflow.git-server \"BitBucket\""
-        end
-
-        context "exclusive to project" do
-          let(:bitbucket) { GitReflow::GitServer::BitBucket.new(project_only: true) }
-
-          it "creates _local_ git config keys for bitbucket connections" do
-            expect{ subject }.to_not have_run_command_silently "git config --global --replace-all reflow.git-server \"BitBucket\""
-            expect{ subject }.to_not have_run_command_silently "git config --global --replace-all bitbucket.user \"#{user}\""
-
-            expect{ subject }.to have_run_command_silently "git config --replace-all reflow.git-server \"BitBucket\""
-            expect{ subject }.to have_run_command_silently "git config --replace-all bitbucket.user \"#{user}\""
-          end
+          expect { subject }.to have_output "Visit https://bitbucket.org/account/user/reenhanced/api-key/, to generate it\n"
         end
       end
     end

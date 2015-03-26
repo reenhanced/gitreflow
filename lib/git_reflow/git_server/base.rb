@@ -2,8 +2,9 @@ require 'git_reflow/config'
 
 module GitReflow
   class GitServer::Base
-    @@connection       = nil
-    @@project_only     = false
+    extend GitHelpers
+
+    @@connection = nil
 
     class PullRequest
       attr_accessor :description, :html_url, :feature_branch_name, :base_branch_name, :build_status, :source_object
@@ -22,8 +23,6 @@ module GitReflow
     end
 
     def initialize(options)
-      @@project_only = !!options.delete(:project_only)
-
       site_url     = self.class.site_url
       api_endpoint = self.class.api_endpoint
 
@@ -55,6 +54,10 @@ module GitReflow
 
     def self.site_url=(site_url, options = {local: false})
       raise "#{self.class.to_s}.site_url= method must be implemented"
+    end
+
+    def self.project_only?
+      GitReflow::Config.get("reflow.local-projects", all: true).include? "#{remote_user}/#{remote_repo_name}"
     end
 
     def connection

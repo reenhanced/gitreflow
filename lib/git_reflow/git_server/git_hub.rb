@@ -176,7 +176,7 @@ module GitReflow
       end
 
       def last_comment_for_pull_request(pull_request)
-        "#{pull_request_comments(pull_request).first.last[:body].inspect}"
+        "#{pull_request_comments(pull_request).last.body.inspect}"
       end
 
       def get_build_status sha

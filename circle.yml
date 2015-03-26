@@ -1,6 +1,6 @@
 dependencies:
   pre:
-    - rvm install 2.0.0-p643
+    - rvm install 2.0.0
     - rvm install 2.1.5
     - rvm install 2.2.1
 

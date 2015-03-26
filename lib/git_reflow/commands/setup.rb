@@ -10,7 +10,7 @@ command :setup do |c|
       menu.prompt = "Which service would you like to use for this project?  "
 
       menu.choice('GitHub')    { GitReflow::GitServer.connect reflow_options.merge({ provider: 'GitHub', silent: false }) }
-      menu.choice('BitBucket') { say("Coming soon...") }
+      menu.choice('BitBucket (team-owned repos only)') { GitReflow::GitServer.connect reflow_options.merge({ provider: 'BitBucket', silent: false }) }
     end
   end
 end

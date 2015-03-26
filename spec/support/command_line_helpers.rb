@@ -2,6 +2,7 @@ module CommandLineHelpers
   def stub_command_line
     $commands_ran = []
     $output       = []
+    $says         = []
 
     stub_run_for GitReflow
     stub_run_for GitReflow::Sandbox
@@ -17,6 +18,9 @@ module CommandLineHelpers
       options ||= {}
       $commands_ran << Hashie::Mash.new(command: command, options: options)
       command = "" # we need this due to a bug in rspec that will keep this assignment on subsequent runs of the stub
+    end
+    module_to_stub.stub(:say) do |output, type|
+      $says << {message: output, type: type}
     end
   end
 
@@ -84,6 +88,19 @@ RSpec::Matchers.define :have_run_commands_in_order do |commands|
   end
 end
 
+RSpec::Matchers.define :have_said do |expected_message, expected_type|
+  match do |block|
+    block.call
+    $says.include?({message: expected_message, type: expected_type})
+  end
+
+  supports_block_expectations
+
+  failure_message do |block|
+    "expected GitReflow to have said #{expected_message} with #{expected_type.inspect} but didn't: \n\t#{$says.inspect}"
+  end
+end
+
 RSpec::Matchers.define :have_output do |expected_output|
   match do |block|
     block.call
@@ -96,4 +113,3 @@ RSpec::Matchers.define :have_output do |expected_output|
     "expected STDOUT to include #{expected_output} but didn't: \n\t#{$output.inspect}"
   end
 end
-

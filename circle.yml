@@ -1,4 +1,9 @@
 dependencies:
+  pre:
+    - rvm install 2.0.0-p643
+    - rvm install 2.1.5
+    - rvm install 2.2.1
+
   override:
     - 'rvm-exec 2.0.0-p643 bundle install'
     - 'rvm-exec 2.1.5 bundle install'

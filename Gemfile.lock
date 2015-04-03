@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    git_reflow (0.5.1)
+    git_reflow (0.5.2)
       colorize (= 0.6.0)
       github_api (= 0.12.3)
       gli (= 2.12.2)
@@ -42,7 +42,7 @@ GEM
       nokogiri (~> 1.6.3)
       oauth2
     gli (2.12.2)
-    hashie (3.4.0)
+    hashie (3.4.1)
     highline (1.7.1)
     httpclient (2.6.0.1)
     json_pure (1.8.2)

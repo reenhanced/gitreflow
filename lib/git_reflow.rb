@@ -77,7 +77,7 @@ module GitReflow
         say "No pull request exists for #{remote_user}:#{current_branch}\nPlease submit your branch for review first with \`git reflow review\`", :deliver_halted
       else
 
-        has_comments         = (git_server.has_pull_request_comments?(existing_pull_request) or git_server.approvals(existing_pull_request))
+        has_comments         = (git_server.has_pull_request_comments?(existing_pull_request) or git_server.approvals(existing_pull_request).any?)
         open_comment_authors = git_server.reviewers_pending_response(existing_pull_request)
         status               = git_server.get_build_status existing_pull_request.build_status
         commit_message       = if "#{existing_pull_request.description}".length > 0

@@ -5,6 +5,7 @@ module GitReflow
   module GitServer
     class GitHub < Base
       extend GitHelpers
+      include Sandbox
 
       class PullRequest < Base::PullRequest
         def initialize(attributes)
@@ -133,7 +134,7 @@ module GitReflow
               puts "\nGithub Authentication Error: #{e.inspect}"
             end
           rescue StandardError => e
-            puts "\nInvalid username or password: #{e.body}"
+            puts "\nInvalid username or password: #{e.inspect}"
           else
             puts "\nYour GitHub account was successfully setup!"
           end
@@ -199,6 +200,7 @@ module GitReflow
 
         # remove the current user from the list to check
         comment_authors -= [self.class.user]
+        comment_authors.uniq
       end
 
       def get_commited_time(commit_sha)

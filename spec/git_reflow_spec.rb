@@ -349,6 +349,8 @@ describe GitReflow do
         context 'but has no comments' do
           before do
             github.stub(:has_pull_request_comments?).and_return(false)
+            github.stub(:approvals).and_return([])
+            github.stub(:reviewers_pending_response).and_return([])
           end
 
           it "notifies the user to get their code reviewed" do

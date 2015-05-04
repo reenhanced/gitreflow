@@ -58,8 +58,9 @@ module GitReflow
     end
 
     def append_to_squashed_commit_message(message = '')
-      run "echo \"#{message}\" | cat - .git/SQUASH_MSG > ./tmp_squash_msg"
-      run 'mv ./tmp_squash_msg .git/SQUASH_MSG'
+      git_root_dir = run('git rev-parse --show-toplevel').strip
+      run "echo \"#{message}\" | cat - #{git_root_dir}/.git/SQUASH_MSG > #{git_root_dir}/tmp_squash_msg"
+      run "mv #{git_root_dir}/tmp_squash_msg #{git_root_dir}/.git/SQUASH_MSG"
     end
     
     private

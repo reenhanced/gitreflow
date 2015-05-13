@@ -22,8 +22,9 @@ command :review do |c|
     end
 
     if global_options[:edit]
-    File.open(commit_msg_file, 'w') do |file|
-      file.write(GitReflow.get_first_commit_message)
+      File.open(commit_msg_file, 'w') do |file|
+        file.write(GitReflow.get_first_commit_message)
+      end
     end
 
     if edit

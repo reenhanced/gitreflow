@@ -3,6 +3,7 @@ command :setup do |c|
   c.desc 'sets up your api token with GitHub'
   c.switch [:l, :local], default_value: false, desc: 'setup GitReflow for the current project only'
   c.switch [:e, :enterprise], default_value: false, desc: 'setup GitReflow with a Github Enterprise account'
+  c.switch [:trello, :use_trello], default_value: false, desc: 'setup GitReflow for use with a Trello account'
   c.action do |global_options, options, args|
     reflow_options = { project_only: options[:local], enterprise: options[:enterprise] }
     choose do |menu|
@@ -11,6 +12,18 @@ command :setup do |c|
 
       menu.choice('GitHub')    { GitReflow::GitServer.connect reflow_options.merge({ provider: 'GitHub', silent: false }) }
       menu.choice('BitBucket (team-owned repos only)') { GitReflow::GitServer.connect reflow_options.merge({ provider: 'BitBucket', silent: false }) }
+    end
+
+    if options[:use_trello]
+      GitReflow.say "Visit: https://trello.com/app-key"
+      trello_key = ask("Enter your Developer API Key found on the URL above: ")
+      GitReflow.say "Visit: https://trello.com/1/authorize?key=#{trello_key}&response_type=token&expiration=never"
+      trello_member_key = ask("Enter your Member Token generated from the URL above: ")
+
+      Trello.configure do |config|
+        config.developer_public_key = GitReflow::Config.get('trello.api-key')
+        config.member_token         = GitReflow::Config.get('trello.member-token')
+      end
     end
   end
 end

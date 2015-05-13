@@ -21,7 +21,6 @@ spec = Gem::Specification.new do |s|
 
   s.add_development_dependency('appraisal', '1.0.3')
   s.add_development_dependency('bundler')
-  s.add_development_dependency('pry-byebug')
   s.add_development_dependency('rake')
   s.add_development_dependency('rdoc')
   s.add_development_dependency('rspec', '~> 3.0.0')
@@ -35,6 +34,7 @@ spec = Gem::Specification.new do |s|
   s.add_dependency('json_pure')
   s.add_dependency('github_api', '0.12.3')
   s.add_dependency('reenhanced_bitbucket_api', '0.3.2')
+  s.add_dependency('ruby-trello')
 
   s.post_install_message = "You need to setup your GitHub OAuth token\nPlease run 'git-reflow setup'"
 end

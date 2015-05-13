@@ -3,8 +3,9 @@ require 'open-uri'
 require "highline/import"
 require 'httpclient'
 require 'github_api'
-require 'json/pure'
+require 'json'
 require 'colorize'
+require 'trello'
 
 require 'git_reflow/version.rb' unless defined?(GitReflow::VERSION)
 require 'git_reflow/config'
@@ -54,8 +55,17 @@ module GitReflow
                                                       base:  options['base'])
 
         puts "Successfully created pull request ##{pull_request.number}: #{pull_request.title}\nPull Request URL: #{pull_request.html_url}\n"
+
+        if using_trello?
+          current_card = Trello::Card.find(current_trello_card_id)
+          current_card.move_to_list(trello_review_list)
+          say "Moved current trello card to 'Code Review' list", :success
+        end
+
         ask_to_open_in_browser(pull_request.html_url)
       end
+    rescue Trello::Error => e
+      ask_to_open_in_browser(pull_request.html_url)
     rescue Github::Error::UnprocessableEntity => e
       puts "Github Error: #{e.to_s}"
     rescue StandardError => e
@@ -175,5 +185,32 @@ module GitReflow
     end
 
     puts "\n#{notices}" unless notices.empty?
+  end
+
+  def using_trello?
+    trello_presence = (GitReflow::Config.get('trello.board-id').length > 0 and GitReflow::Config.get('trello.next-list-id').length > 0)
+    if trello_presence
+      Trello.configure do |config|
+        config.developer_public_key = GitReflow::Config.get('trello.api-key')
+        config.member_token         = GitReflow::Config.get('trello.member-token')
+      end
+    end
+    trello_presence
+  end
+
+  def current_trello_card_id
+    current_branch.split('-').last
+  end
+
+  def trello_next_list
+    Trello::Board.find(GitReflow::Config.get('trello.board-id', local: true)).lists.select {|l| l.name == GitReflow::Config.get('trello.next-list-id', local: true) }.first
+  end
+
+  def trello_review_list
+    Trello::Board.find(GitReflow::Config.get('trello.board-id', local: true)).lists.select {|l| l.name == GitReflow::Config.get('trello.review-list-id', local: true) }.first
+  end
+
+  def trello_review_list
+    Trello::Board.find(GitReflow::Config.get('trello.board-id', local: true)).lists.select {|l| l.name == GitReflow::Config.get('trello.stage-list-id', local: true) }.first
   end
 end

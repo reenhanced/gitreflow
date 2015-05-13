@@ -5,7 +5,7 @@ command :review do |c|
   c.arg_name '[destination_branch] - the branch you want to merge your feature branch into'
   c.flag [:t, :title], default_value: 'last commit message'
   c.flag [:m, :message], default_value: 'title'
-  c.flag [:e, :edit], default_value: "edit the auto generated commit"
+  c.switch [:e, :edit]
   c.action do |global_options,options,args|
 
     commit_msg_file = '/tmp/git_reflow_pr_msg'
@@ -21,7 +21,7 @@ command :review do |c|
       edit = true
     end
 
-    if global_options[:edit]
+    if options[:edit]
       File.open(commit_msg_file, 'w') do |file|
         file.write(GitReflow.get_first_commit_message)
       end
@@ -29,13 +29,13 @@ command :review do |c|
 
     if edit
       system('nano', commit_msg_file)
-      pr_msg = File.open(commit_msg_file).lines.map(&:strip).to_a
-      title = pr_msg.take(1)
-      File.delete('/tmp/reflow_pr_msg')
+      pr_msg = File.open(commit_msg_file).each_line.map(&:strip).to_a
+      title = pr_msg.shift
+      File.delete(commit_msg_file)
       review_options = {
         'base' => args[0],
         'title' => title,
-        'body' =>  pr_msg
+        'body' =>  pr_msg.join("\n")
       }
     end
 

@@ -38,6 +38,6 @@ command :review do |c|
     puts "Title:\n#{review_options['title']}\n\n"
     puts "Body:\n#{review_options['body']}\n"
     puts "--------\n"
-    GitReflow.review(review_options) unless ask("Submit pull request?(Y|n)") =~ /n/i
+    GitReflow.review(review_options) unless ask("Submit pull request? (Y)") =~ /n/i
   end
 end

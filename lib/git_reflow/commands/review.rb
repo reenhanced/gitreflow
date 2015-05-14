@@ -8,7 +8,7 @@ command :review do |c|
   c.switch [:e, :edit]
   c.action do |global_options,options,args|
 
-    commit_msg_file = '/tmp/git_reflow_pr_msg'
+    pull_request_msg_file = '.git/GIT_REFLOW_PR_MSG'
 
     if global_options[:title] || global_options[:message]
       review_options = {
@@ -22,7 +22,7 @@ command :review do |c|
     end
 
     if options[:edit] # if edit we inject title & body into file before opening
-      File.open(commit_msg_file, 'w') do |file|
+      File.open(pull_request_msg_file, 'w') do |file|
         file.write(GitReflow.current_branch)
         file.write("\n")
         file.write(GitReflow.get_first_commit_message)
@@ -30,10 +30,11 @@ command :review do |c|
     end
 
     if editor
-      system('nano', commit_msg_file)
-      pr_msg = File.open(commit_msg_file).each_line.map(&:strip).to_a
+      GitReflow.run("$EDITOR #{pull_request_msg_file}")
+      system('nano', pull_request_msg_file)
+      pr_msg = File.open(pull_request_msg_file).each_line.map(&:strip).to_a
       title = pr_msg.shift
-      File.delete(commit_msg_file)
+      File.delete(pull_request_msg_file)
       review_options = {'base' => args[0],'title' => title,'body' =>  pr_msg.join("\n")}
     end
 
@@ -42,8 +43,6 @@ command :review do |c|
     puts "Title:\n#{review_options['title']}\n\n"
     puts "Body:\n#{review_options['body']}\n"
     puts "--------\n"
-    puts "Submit PR? (Y/n):"
-    exit 0 if STDIN.gets.chop.downcase =~ /n/
-    GitReflow.review review_options
+    GitReflow.review(review_options) unless ask("Submit pull request? [Y/n]") =~ /n/i
   end
 end

@@ -15,7 +15,9 @@ module GitReflow
       if options[:with_system] == true
         system(command)
       elsif options[:loud] == true
-        puts `#{command}`
+        output = `#{command}`
+        puts output
+        output
       else
         `#{command}`
       end

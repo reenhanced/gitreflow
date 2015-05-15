@@ -1,8 +1,9 @@
 module CommandLineHelpers
   def stub_command_line
-    $commands_ran = []
-    $output       = []
-    $says         = []
+    $commands_ran     = []
+    $stubbed_commands = {}
+    $output           = []
+    $says             = []
 
     stub_run_for GitReflow
     stub_run_for GitReflow::Sandbox
@@ -17,7 +18,9 @@ module CommandLineHelpers
     module_to_stub.stub(:run) do |command, options|
       options ||= {}
       $commands_ran << Hashie::Mash.new(command: command, options: options)
+      ret_value = $stubbed_commands[command] || ""
       command = "" # we need this due to a bug in rspec that will keep this assignment on subsequent runs of the stub
+      ret_value
     end
     module_to_stub.stub(:say) do |output, type|
       $says << {message: output, type: type}
@@ -26,9 +29,11 @@ module CommandLineHelpers
 
   def reset_stubbed_command_line
     $commands_ran = []
+    $stubbed_commands = {}
   end
 
   def stub_command(command, return_value)
+    $stubbed_commands[command] = return_value
     GitReflow::Sandbox.stub(:run).with(command).and_return(return_value)
   end
 end

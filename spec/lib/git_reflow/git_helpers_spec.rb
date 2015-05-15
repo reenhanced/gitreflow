@@ -145,11 +145,14 @@ describe GitReflow::GitHelpers do
 
   describe ".append_to_squashed_commit_message(message)" do
     let(:message) { "do do the voodoo that you do" }
+    let(:root_dir) { `pwd`.strip }
     subject { Gitacular.append_to_squashed_commit_message(message) }
     it "appends the message to git's SQUASH_MSG temp file" do
-      expect{ subject }.to have_run_commands_in_order [
-        "echo \"#{message}\" | cat - .git/SQUASH_MSG > ./tmp_squash_msg",
-        'mv ./tmp_squash_msg .git/SQUASH_MSG'
+      stub_command("git rev-parse --show-toplevel", "#{root_dir}\n")
+      expect { subject }.to have_run_commands_in_order [
+        "git rev-parse --show-toplevel",
+        "echo \"#{message}\" | cat - #{root_dir}/.git/SQUASH_MSG > #{root_dir}/tmp_squash_msg",
+        "mv #{root_dir}/tmp_squash_msg #{root_dir}/.git/SQUASH_MSG"
       ]
     end
   end

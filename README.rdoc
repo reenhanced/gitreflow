@@ -108,26 +108,35 @@ We assume you know what you're doing, so if you need something different, do it 
 
 After making commits to your branch, run +review+. Didn't push it up? We don't care, we'll do it for you.
 
-  $ git reflow review
+If you do not pass the title or message options to the review command, you will be given an editor to write your PR request in, similar to `git commit`. The first line is the title, the rest is the body. 
 
-  From github.com:reenhanced/gitreflow
+  $ git reflow review         
+
+  Review your PR:
+  --------
+  Title:
+  rj_209_test
+
+  Body:
+  [lib] updates review command to address issues
+  --------
+  Submit pull request? (Y): <enter>
+  git fetch origin master
+  From github.com:meesterdude/gitreflow
    * branch            master     -> FETCH_HEAD
-  Counting objects: 5, done.
-  Delta compression using up to 16 threads.
-  Compressing objects: 100% (3/3), done.
-  Writing objects: 100% (3/3), 1.68 KiB, done.
-  Total 3 (delta 1), reused 0 (delta 0)
-  To git@github.com:reenhanced/gitreflow.git
-     c2ec1b1..1103006  nh-readme-update -> nh-readme-update
 
-  Successfully created pull request #35: Bootstrapping the readme. This is so I can show how review works
-  Pull Request URL: https://github.com/reenhanced/gitreflow/pull/35
+  git push origin rj_test
+  Everything up-to-date
+
+  Successfully created pull request #6: rj_test
+  Pull Request URL: https://github.com/meesterdude/gitreflow/pull/6
   Would you like to open it in your browser? y
+
 
 [OSX/Ubuntu only]  You can automatically open your default web browser to the pull request.
                    This lets you edit the pull request with all of the detailed information you'll need before submitting it to your team.
 
-We output the pull request URL so you can distribute it to your team without leaving the terminal. But don't be a jerk, update the title and description before you send your work around.
+We output the pull request URL so you can distribute it to your team without leaving the terminal. 
 
 ==== How it works
 Behind the scenes, this is how +review+ works:

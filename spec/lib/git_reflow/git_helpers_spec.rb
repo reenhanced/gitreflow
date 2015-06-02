@@ -14,6 +14,11 @@ describe GitReflow::GitHelpers do
     stub_run_for Gitacular
   end
 
+  describe ".git_root_dir" do
+    subject { Gitacular.git_root_dir }
+    it      { expect{ subject }.to have_run_command_silently "git rev-parse --show-toplevel" }
+  end
+
   describe ".remote_user" do
     subject { Gitacular.remote_user }
 
@@ -144,13 +149,13 @@ describe GitReflow::GitHelpers do
   end
 
   describe ".append_to_squashed_commit_message(message)" do
-    let(:message) { "do do the voodoo that you do" }
-    let(:root_dir) { `pwd`.strip }
-    subject { Gitacular.append_to_squashed_commit_message(message) }
+    let(:message)  { "do do the voodoo that you do" }
+    let(:root_dir) { '/home/gitreflow' }
+    before         { allow(Gitacular).to receive(:git_root_dir).and_return(root_dir) }
+    subject        { Gitacular.append_to_squashed_commit_message(message) }
+
     it "appends the message to git's SQUASH_MSG temp file" do
-      stub_command("git rev-parse --show-toplevel", "#{root_dir}\n")
       expect { subject }.to have_run_commands_in_order [
-        "git rev-parse --show-toplevel",
         "echo \"#{message}\" | cat - #{root_dir}/.git/SQUASH_MSG > #{root_dir}/tmp_squash_msg",
         "mv #{root_dir}/tmp_squash_msg #{root_dir}/.git/SQUASH_MSG"
       ]

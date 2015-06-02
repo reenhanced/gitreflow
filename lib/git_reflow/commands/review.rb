@@ -16,16 +16,29 @@ command :review do |c|
         'body' =>  global_options[:message]
       }
     else
-      File.open(pull_request_msg_file, 'w') do |file|
-        file.write(GitReflow.current_branch)
+      begin
+        trello_card = Trello::Card.find(GitReflow::Config.get("branch.#{GitReflow.current_branch}.trello-card-id"))
+      rescue Trello::Error => e
+        trello_card = nil
       end
+
+      File.open(pull_request_msg_file, 'w') do |file|
+        if trello_card
+          file.write("[#{trello_card.short_id}](#{trello_card.short_url}) #{trello_card.name}")
+        else
+          file.write(GitReflow.current_branch)
+        end
+      end
+
       GitReflow.run("$EDITOR #{pull_request_msg_file}", with_system: true)
       pr_msg = File.open(pull_request_msg_file).each_line.map(&:strip).to_a
+      title  = pr_msg.shift
       File.delete(pull_request_msg_file)
-      title = pr_msg.shift
+
       unless pr_msg.empty? 
         pr_msg.shift if pr_msg.first.empty?
       end
+
       review_options = {'base' => args[0],'title' => title,'body' =>  pr_msg.join("\n")}
     end
 

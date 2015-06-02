@@ -84,6 +84,9 @@ Then for your Enterprise projects, you have to setup GitReflow for each one:
   cd replace_with_your_enterprise_project_path
   git reflow setup --enterprise --local
 
+=== Usage with Trello
+  git reflow setup --trello
+
 === Starting a feature branch
 http://reenhanced.com/reflow/git-reflow-start.gif
 

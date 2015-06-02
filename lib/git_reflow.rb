@@ -56,16 +56,8 @@ module GitReflow
 
         puts "Successfully created pull request ##{pull_request.number}: #{pull_request.title}\nPull Request URL: #{pull_request.html_url}\n"
 
-        if using_trello?
-          current_card = Trello::Card.find(current_trello_card_id)
-          current_card.move_to_list(trello_review_list)
-          say "Moved current trello card to 'Code Review' list", :success
-        end
-
         ask_to_open_in_browser(pull_request.html_url)
       end
-    rescue Trello::Error => e
-      ask_to_open_in_browser(pull_request.html_url)
     rescue Github::Error::UnprocessableEntity => e
       puts "Github Error: #{e.to_s}"
     rescue StandardError => e
@@ -76,6 +68,7 @@ module GitReflow
   def deliver(options = {})
     feature_branch    = current_branch
     options['base'] ||= 'master'
+    trello_card       = current_trello_card
     fetch_destination options['base']
 
     update_destination(current_branch)
@@ -109,6 +102,15 @@ module GitReflow
 
           if committed
             say "Merge complete!", :success
+
+            if using_trello? and trello_card
+              if trello_staged_list
+                trello_card.move_to_list( trello_staged_list )
+              elsif trello_approved_list
+                trello_card.move_to_list( trello_approved_list )
+              end
+            end
+
             deploy_and_cleanup = ask "Would you like to push this branch to your remote repo and cleanup your feature branch? "
             if deploy_and_cleanup =~ /^y/i
               run_command_with_label "git push origin #{options['base']}"
@@ -199,18 +201,42 @@ module GitReflow
   end
 
   def current_trello_card_id
-    current_branch.split('-').last
+    GitReflow::Config.get("branch.#{current_branch}.trello-card-id")
+  end
+
+  def current_trello_card
+    begin
+      Trello::Card.find(current_trello_card_id)
+    rescue Trello::Error
+      nil
+    end
+  end
+
+  def trello_lists
+    begin
+      Trello::Board.find(GitReflow::Config.get('trello.board-id', local: true)).lists
+    rescue Trello::Error
+      []
+    end
+  end
+
+  def trello_list(key)
+    trello_lists.select {|l| l.name == GitReflow::Config.get("trello.#{key}-list-id", local: true) }.first
   end
 
   def trello_next_list
-    Trello::Board.find(GitReflow::Config.get('trello.board-id', local: true)).lists.select {|l| l.name == GitReflow::Config.get('trello.next-list-id', local: true) }.first
+    trello_list('next')
   end
 
-  def trello_review_list
-    Trello::Board.find(GitReflow::Config.get('trello.board-id', local: true)).lists.select {|l| l.name == GitReflow::Config.get('trello.review-list-id', local: true) }.first
+  def trello_in_progress_list
+    trello_list('current')
   end
 
-  def trello_review_list
-    Trello::Board.find(GitReflow::Config.get('trello.board-id', local: true)).lists.select {|l| l.name == GitReflow::Config.get('trello.stage-list-id', local: true) }.first
+  def trello_staged_list
+    trello_list('stage')
+  end
+
+  def trello_approved_list
+    trello_list('approved')
   end
 end

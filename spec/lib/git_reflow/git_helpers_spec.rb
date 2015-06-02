@@ -14,6 +14,11 @@ describe GitReflow::GitHelpers do
     stub_run_for Gitacular
   end
 
+  describe ".git_root_dir" do
+    subject { Gitacular.git_root_dir }
+    it      { expect{ subject }.to have_run_command_silently "git rev-parse --show-toplevel" }
+  end
+
   describe ".remote_user" do
     subject { Gitacular.remote_user }
 

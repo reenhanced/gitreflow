@@ -89,7 +89,7 @@ RSpec::Matchers.define :have_run_commands_in_order do |commands|
   supports_block_expectations
 
   failure_message do |block|
-    "expected to have run these commands in order:\n\t\t#{commands.inspect}\n\tgot:\n\t\t#{$commands_ran.inspect}"
+    "expected to have run these commands in order:\n\t\t#{commands.inspect}\n\tgot:\n\t\t#{$commands_ran.map(&:command).inspect}"
   end
 end
 

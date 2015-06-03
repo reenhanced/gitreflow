@@ -5,6 +5,10 @@ module GitReflow
   module GitHelpers
     include Sandbox
 
+    def git_root_dir
+      @git_root_dir ||= run('git rev-parse --show-toplevel', loud: false).strip
+    end
+
     def remote_user
       return "" unless "#{GitReflow::Config.get('remote.origin.url')}".length > 0
       extract_remote_user_and_repo_from_remote_url(GitReflow::Config.get('remote.origin.url'))[:user]
@@ -58,7 +62,6 @@ module GitReflow
     end
 
     def append_to_squashed_commit_message(message = '')
-      git_root_dir = run('git rev-parse --show-toplevel').strip
       run "echo \"#{message}\" | cat - #{git_root_dir}/.git/SQUASH_MSG > #{git_root_dir}/tmp_squash_msg"
       run "mv #{git_root_dir}/tmp_squash_msg #{git_root_dir}/.git/SQUASH_MSG"
     end

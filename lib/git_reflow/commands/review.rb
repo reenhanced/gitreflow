@@ -6,8 +6,7 @@ command :review do |c|
   c.flag [:t, :title], default_value: 'last commit message'
   c.flag [:m, :message], default_value: 'title'
   c.action do |global_options,options,args|
-    git_root_dir = run('git rev-parse --show-toplevel').strip
-    pull_request_msg_file = "#{git_root_dir}/.git/GIT_REFLOW_PR_MSG"
+    pull_request_msg_file = "#{GitReflow.git_root_dir}/.git/GIT_REFLOW_PR_MSG"
 
     if global_options[:title] || global_options[:message]
       review_options = {
@@ -31,8 +30,10 @@ command :review do |c|
       end
 
       GitReflow.run("$EDITOR #{pull_request_msg_file}", with_system: true)
+
       pr_msg = File.open(pull_request_msg_file).each_line.map(&:strip).to_a
       title  = pr_msg.shift
+
       File.delete(pull_request_msg_file)
 
       unless pr_msg.empty? 

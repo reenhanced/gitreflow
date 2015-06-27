@@ -7,7 +7,7 @@ module GitReflow
     @@connection = nil
 
     class PullRequest
-      attr_accessor :description, :html_url, :feature_branch_name, :base_branch_name, :build_status, :source_object
+      attr_accessor :description, :html_url, :feature_branch_name, :base_branch_name, :build_status, :source_object, :number
 
       def initialize(attributes)
         raise "PullRequest#initialize must be implemented"

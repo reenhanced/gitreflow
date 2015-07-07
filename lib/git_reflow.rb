@@ -56,6 +56,11 @@ module GitReflow
 
         puts "Successfully created pull request ##{pull_request.number}: #{pull_request.title}\nPull Request URL: #{pull_request.html_url}\n"
 
+        if current_trello_card
+          current_trello_card.add_attachment(pull_request.html_url, "Pull Request ##{pull_request.number}")
+          say "Added pull request link to the current Trello card", :notice
+        end
+
         ask_to_open_in_browser(pull_request.html_url)
       end
     rescue Github::Error::UnprocessableEntity => e
@@ -89,7 +94,21 @@ module GitReflow
                                  "#{get_first_commit_message}"
                                end
 
-        if  options['skip_lgtm'] or ((status.nil? or status.state == "success") and (has_comments and open_comment_authors.empty?))
+        # check to see if current Trello card is in the Approved list
+        feature_trello_card = current_trello_card
+        if using_trello? and trello_uses_list?('approved') and trello_approved_list
+          if current_trello_card.list_id == trello_approved_list.id
+            trello_approved = true
+          else
+            trello_approved = false
+          end
+        else
+          # setting to 'true' here allows us to skip checks if not using Trello
+          # or Approval process isn't setup correctly
+          trello_approved = true
+        end
+
+        if trello_approved and (options['skip_lgtm'] or ((status.nil? or status.state == "success") and (has_comments and open_comment_authors.empty?)))
           puts "Merging pull request ##{existing_pull_request.number}: '#{existing_pull_request.title}', from '#{existing_pull_request.feature_branch_name}' into '#{existing_pull_request.base_branch_name}'"
 
           update_destination(options['base'])
@@ -103,14 +122,6 @@ module GitReflow
           if committed
             say "Merge complete!", :success
 
-            if using_trello? and trello_card
-              if trello_staged_list
-                trello_card.move_to_list( trello_staged_list )
-              elsif trello_approved_list
-                trello_card.move_to_list( trello_approved_list )
-              end
-            end
-
             deploy_and_cleanup = ask "Would you like to push this branch to your remote repo and cleanup your feature branch? "
             if deploy_and_cleanup =~ /^y/i
               run_command_with_label "git push origin #{options['base']}"
@@ -121,6 +132,12 @@ module GitReflow
               puts "Cleanup halted.  Local changes were not pushed to remote repo.".colorize(:red)
               puts "To reset and go back to your branch run \`git reset --hard origin/master && git checkout new-feature\`"
             end
+
+            if using_trello? and ask("Move the current trello card?") =~ /^y/i
+              if feature_trello_card and trello_completed_list
+                feature_trello_card.move_to_list(trello_completed_list)
+              end
+            end
           else
             say "There were problems commiting your feature... please check the errors above and try again.", :error
           end
@@ -128,8 +145,10 @@ module GitReflow
           say "#{status.description}: #{status.target_url}", :deliver_halted
         elsif open_comment_authors.count > 0
           say "You still need a LGTM from: #{open_comment_authors.join(', ')}", :deliver_halted
-        else
+        elsif trello_approved == true
           say "Your code has not been reviewed yet.", :deliver_halted
+        else
+          say "Your feature has not been Approved yet.  The current trello card ##{current_trello_card.short_id} needs to be in the 'Approved' list.", :deliver_halted
         end
       end
 
@@ -189,15 +208,33 @@ module GitReflow
     puts "\n#{notices}" unless notices.empty?
   end
 
+  def setup_trello
+    @trello_member_token ||= Trello.configure do |config|
+      config.developer_public_key = GitReflow::Config.get('trello.api-key')
+      config.member_token         = GitReflow::Config.get('trello.member-token')
+    end
+
+    begin
+      @trello_member_id ||= Trello::Token.find(@trello_member_token).member_id
+      GitReflow::Config.set('trello.member-id', @trello_member_id, local: true)
+    rescue Trello::Error => e
+    end
+
+    @trello_member_token
+  end
+
   def using_trello?
     trello_presence = (GitReflow::Config.get('trello.board-id').length > 0 and GitReflow::Config.get('trello.next-list-id').length > 0)
-    if trello_presence
-      Trello.configure do |config|
-        config.developer_public_key = GitReflow::Config.get('trello.api-key')
-        config.member_token         = GitReflow::Config.get('trello.member-token')
-      end
-    end
+    setup_trello if trello_presence
     trello_presence
+  end
+
+  def current_trello_member
+    begin
+      @trello_member ||= Trello::Member.find GitReflow::Config.get('trello.member-id')
+    rescue Trello::Error => e
+      nil
+    end
   end
 
   def current_trello_card_id
@@ -205,6 +242,7 @@ module GitReflow
   end
 
   def current_trello_card
+    return nil unless using_trello?
     begin
       Trello::Card.find(current_trello_card_id)
     rescue Trello::Error
@@ -214,10 +252,24 @@ module GitReflow
 
   def trello_lists
     begin
-      Trello::Board.find(GitReflow::Config.get('trello.board-id', local: true)).lists
+      @trello_lists ||= Trello::Board.find(GitReflow::Config.get('trello.board-id', local: true)).lists
     rescue Trello::Error
-      []
+      begin
+        matching_board = Trello::Board.all.select {|b| b.name.downcase == GitReflow::Config.get('trello.board-id', local: true)}.first
+        if matching_board.present?
+          GitReflow::Config.set('trello.board-id', matching_board.id, local: true)
+          @trello_lists = matching_board.lists
+        else
+          []
+        end
+      rescue Trello::Error
+        []
+      end
     end
+  end
+
+  def trello_uses_list?(list_name)
+    !GitReflow::Config.get("trello.#{list_name}-list-id", local: true).empty?
   end
 
   def trello_list(key)
@@ -225,18 +277,23 @@ module GitReflow
   end
 
   def trello_next_list
-    trello_list('next')
+    @trello_next_list ||= trello_list('next')
   end
 
   def trello_in_progress_list
-    trello_list('current')
+    @trello_current_list ||= trello_list('current')
   end
 
   def trello_staged_list
-    trello_list('stage')
+    @trello_staged_list ||= trello_list('staged')
   end
 
   def trello_approved_list
-    trello_list('approved')
+    @trello_approved_list ||= trello_list('approved')
   end
+
+  def trello_completed_list
+    @trello_completed_list ||= trello_list('completed')
+  end
+
 end

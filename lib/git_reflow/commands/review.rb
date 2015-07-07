@@ -16,14 +16,14 @@ command :review do |c|
       }
     else
       begin
-        trello_card = Trello::Card.find(GitReflow::Config.get("branch.#{GitReflow.current_branch}.trello-card-id"))
+        trello_card = GitReflow.current_trello_card
       rescue Trello::Error => e
         trello_card = nil
       end
 
       File.open(pull_request_msg_file, 'w') do |file|
         if trello_card
-          file.write("[#{trello_card.short_id}](#{trello_card.short_url}) #{trello_card.name}")
+          file.write("[#{trello_card.short_id}] #{trello_card.name}\n[#{trello_card.short_id}](#{trello_card.short_url}) #{trello_card.name}")
         else
           file.write(GitReflow.current_branch)
         end

@@ -15,21 +15,18 @@ command :start do |c|
   c.flag :f
   c.action do |global_options, options, args|
     if options[:trello]
-      Trello.configure do |config|
-        config.developer_public_key = GitReflow::Config.get('trello.api-key')
-        config.member_token         = GitReflow::Config.get('trello.member-token')
-      end
+      GitReflow.setup_trello
       # Gather Next cards
-      available_trello_lists = Trello::Board.find(GitReflow::Config.get('trello.board-id', local: true)).lists
-      next_list = available_trello_lists.select {|l| l.name == GitReflow::Config.get('trello.next-list-id', local: true) }.first
-      in_progress_list = available_trello_lists.select {|l| l.name == GitReflow::Config.get('trello.current-list-id', local: true) }.first
+      available_trello_lists = GitReflow.trello_lists
+      next_list = GitReflow.trello_next_list
+      in_progress_list = GitReflow.trello_in_progress_list
       next_up_cards = next_list.cards.first(5)
       unless next_list.nil?
         selected = choose do |menu|
           menu.prompt = "Choose a task to start: "
 
           next_up_cards.each do |card|
-            menu.choice("[#{card.short_id}] #{card.name}")
+            menu.choice("#{card.name} [#{card.short_id}]")
           end
         end
         selected_card_id = selected[/\[\d+\]/][1..-2]
@@ -50,7 +47,9 @@ command :start do |c|
         GitReflow::Config.set "branch.#{branch_name}.trello-card-short-id", selected_card.short_id.to_s, local: true
         GitReflow::Config.set "branch.#{branch_name}.trello-task-name", selected_card.name.to_s, local: true
 
-        GitReflow.say "Moving card ##{selected_card.short_id} to 'In Progress' list"
+        GitReflow.say "Adding you as a member of card ##{selected_card.short_id}", :notice
+        selected_card.add_member(GitReflow.current_trello_member)
+        GitReflow.say "Moving card ##{selected_card.short_id} to 'In Progress' list", :notice
         selected_card.move_to_list( in_progress_list )
       end
     elsif args.empty?

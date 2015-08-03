@@ -15,6 +15,11 @@ command :review do |c|
         'body' =>  global_options[:message]
       }
     else
+      default_editor = GitReflow.run("echo $EDITOR")
+      if default_editor.empty?
+        default_editor = 'vi'
+      end
+
       File.open(pull_request_msg_file, 'w') do |file|
         file.write(GitReflow.current_branch)
       end

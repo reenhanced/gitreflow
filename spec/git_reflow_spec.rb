@@ -18,19 +18,14 @@ describe GitReflow do
   let(:existing_pull_request)  { GitReflow::GitServer::GitHub::PullRequest.new existing_pull_requests.first }
 
   before do
-    HighLine.any_instance.stub(:ask) do |terminal, question|
-      values = {
-        "Please enter your GitHub username: "                                                      => user,
-        "Please enter your GitHub password (we do NOT store this): "                               => password,
-        "Please enter your Enterprise site URL (e.g. https://github.company.com):"                 => enterprise_site,
-        "Please enter your Enterprise API endpoint (e.g. https://github.company.com/api/v3):"      => enterprise_api,
-        "Would you like to push this branch to your remote repo and cleanup your feature branch? " => 'yes',
-        "Would you like to open it in your browser?"                                               => 'n'
-      }
-     return_value = values[question] || values[terminal]
-     question = ""
-     return_value
-    end
+    stub_input_with({
+      "Please enter your GitHub username: "                                                      => user,
+      "Please enter your GitHub password (we do NOT store this): "                               => password,
+      "Please enter your Enterprise site URL (e.g. https://github.company.com):"                 => enterprise_site,
+      "Please enter your Enterprise API endpoint (e.g. https://github.company.com/api/v3):"      => enterprise_api,
+      "Would you like to push this branch to your remote repo and cleanup your feature branch? " => 'yes',
+      "Would you like to open it in your browser?"                                               => 'n'
+    })
   end
 
   context :status do
@@ -266,19 +261,14 @@ describe GitReflow do
 
             context "and cleaning up feature branch" do
               before do
-                HighLine.any_instance.stub(:ask) do |terminal, question|
-                  values = {
-                    "Please enter your GitHub username: "                                                      => user,
-                    "Please enter your GitHub password (we do NOT store this): "                               => password,
-                    "Please enter your Enterprise site URL (e.g. https://github.company.com):"                 => enterprise_site,
-                    "Please enter your Enterprise API endpoint (e.g. https://github.company.com/api/v3):"      => enterprise_api,
-                    "Would you like to push this branch to your remote repo and cleanup your feature branch? " => 'yes',
-                    "Would you like to open it in your browser?"                                               => 'no'
-                  }
-                 return_value = values[question] || values[terminal]
-                 question = ""
-                 return_value
-                end
+                stub_input_with({
+                  "Please enter your GitHub username: "                                                      => user,
+                  "Please enter your GitHub password (we do NOT store this): "                               => password,
+                  "Please enter your Enterprise site URL (e.g. https://github.company.com):"                 => enterprise_site,
+                  "Please enter your Enterprise API endpoint (e.g. https://github.company.com/api/v3):"      => enterprise_api,
+                  "Would you like to push this branch to your remote repo and cleanup your feature branch? " => 'yes',
+                  "Would you like to open it in your browser?"                                               => 'no'
+                })
               end
 
               it "pushes local squash merged base branch to remote repo" do
@@ -296,19 +286,14 @@ describe GitReflow do
 
             context "and not cleaning up feature branch" do
               before do
-                HighLine.any_instance.stub(:ask) do |terminal, question|
-                  values = {
-                    "Please enter your GitHub username: "                                                      => user,
-                    "Please enter your GitHub password (we do NOT store this): "                               => password,
-                    "Please enter your Enterprise site URL (e.g. https://github.company.com):"                 => enterprise_site,
-                    "Please enter your Enterprise API endpoint (e.g. https://github.company.com/api/v3):"      => enterprise_api,
-                    "Would you like to push this branch to your remote repo and cleanup your feature branch? " => 'no',
-                    "Would you like to open it in your browser?"                                               => 'no'
-                  }
-                 return_value = values[question] || values[terminal]
-                 question = ""
-                 return_value
-                end
+                stub_input_with({
+                  "Please enter your GitHub username: "                                                      => user,
+                  "Please enter your GitHub password (we do NOT store this): "                               => password,
+                  "Please enter your Enterprise site URL (e.g. https://github.company.com):"                 => enterprise_site,
+                  "Please enter your Enterprise API endpoint (e.g. https://github.company.com/api/v3):"      => enterprise_api,
+                  "Would you like to push this branch to your remote repo and cleanup your feature branch? " => 'no',
+                  "Would you like to open it in your browser?"                                               => 'no'
+                })
               end
 
               it "doesn't update the remote repo with the new squash merge" do
@@ -380,6 +365,31 @@ describe GitReflow do
       it "notifies the user of a missing pull request" do
         expect { subject }.to have_said "No pull request exists for #{user}:#{branch}\nPlease submit your branch for review first with \`git reflow review\`", :deliver_halted
       end
+    end
+  end
+
+  context ".deploy(destination)" do
+    subject { GitReflow.deploy(destination) }
+
+    before do
+      stub_input_with({
+        "Enter the command you use to deploy to #{destination} (leaving blank will skip deployment)" => "bundle exec cap #{destination} deploy"
+      })
+    end
+
+    context "staging" do
+      let(:destination) { "staging" }
+      let(:deploy_command) { "bundle exec cap staging deploy" }
+      it "sets the local git-config for reflow.deploy-to-staging" do
+        expect(GitReflow::Config).to receive(:set).with('reflow.deploy-to-staging', 'bundle exec cap staging deploy', local: true)
+        subject
+      end
+      it "runs the staging deploy command" do
+        expect { subject }.to have_run_command(deploy_command)
+      end
+    end
+
+    context "production" do
     end
   end
 end

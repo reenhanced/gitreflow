@@ -136,6 +136,7 @@ module GitReflow
             if using_trello? and ask("Move the current trello card?") =~ /^y/i
               if feature_trello_card and trello_completed_list
                 feature_trello_card.move_to_list(trello_completed_list)
+                say "Card moved to #{trello_completed_list.name}", :notice
               end
             end
           else
@@ -156,6 +157,24 @@ module GitReflow
       errors = JSON.parse(e.response_message[:body])
       error_messages = errors["errors"].collect {|error| "GitHub Error: #{error["message"].gsub(/^base\s/, '')}" unless error["message"].nil?}.compact.join("\n")
       puts "Github Error: #{error_messages}"
+    end
+  end
+
+  def deploy(destination_server)
+    deploy_command = GitReflow::Config.get("reflow.deploy-to-#{destination_server}-command", local: true)
+
+    # first check is to allow for automated setup
+    if deploy_command.empty?
+      deploy_command = ask("Enter the command you use to deploy to #{destination_server} (leaving blank will skip deployment)")
+    end
+
+    # second check is to see if the user wants to skip
+    if deploy_command.empty?
+      say "Skipping deployment..."
+      false
+    else
+      GitReflow::Config.set("reflow.deploy-to-#{destination_server}-command", deploy_command, local: true)
+      run_command_with_label(deploy_command, with_system: true)
     end
   end
 

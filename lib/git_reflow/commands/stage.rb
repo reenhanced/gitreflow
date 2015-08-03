@@ -15,19 +15,10 @@ command :stage do |c|
     GitReflow.run_command_with_label 'git pull origin staging'
     if GitReflow.run_command_with_label "git merge #{feature_branch_name}", with_system: true
       GitReflow.run_command_with_label 'git push origin staging'
-      deploy_to_staging_command = GitReflow::Config.get('reflow.deploy-to-staging-command', local: true)
 
-      if deploy_to_staging_command.empty?
-        deploy_to_staging_command = ask("Enter the command you use to deploy to staging (leave blank to skip deployment): ")
-        GitReflow::Config.set('reflow.deploy-to-staging-command', deploy_to_staging_command, local: true) unless deploy_to_staging_command.empty?
-      end
-
-      raise "You must specify a command to deploy to staging" if deploy_to_staging_command.empty?
-
-      staged = GitReflow.run_command_with_label(deploy_to_staging_command, with_system: true)
+      staged = GitReflow.deploy(:staging)
 
       if current_card and staged
-        GitReflow.say "Trying to move to: #{GitReflow.trello_staged_list}"
         current_card.move_to_list(GitReflow.trello_staged_list)
         GitReflow.say "Moved current trello card to 'Staged' list", :notice
       elsif staged

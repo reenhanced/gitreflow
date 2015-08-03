@@ -9,6 +9,7 @@ module GitReflow
 
       class PullRequest < Base::PullRequest
         def initialize(attributes)
+          self.number              = attributes.number
           self.description         = attributes.body
           self.html_url            = attributes.html_url
           self.feature_branch_name = attributes.head.label

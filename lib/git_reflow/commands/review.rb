@@ -15,11 +15,16 @@ command :review do |c|
         'body' =>  global_options[:message]
       }
     else
+      default_editor = ENV['EDITOR']
+      if default_editor.empty?
+        default_editor = 'vi'
+      end
+
       File.open(pull_request_msg_file, 'w') do |file|
         file.write(GitReflow.current_branch)
       end
 
-      GitReflow.run("$EDITOR #{pull_request_msg_file}", with_system: true)
+      GitReflow.run("#{default_editor} #{pull_request_msg_file}", with_system: true)
 
       pr_msg = File.open(pull_request_msg_file).each_line.map(&:strip).to_a
       title  = pr_msg.shift

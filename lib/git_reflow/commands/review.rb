@@ -15,7 +15,7 @@ command :review do |c|
         'body' =>  global_options[:message]
       }
     else
-      default_editor = ENV['EDITOR']
+      default_editor = "#{ENV['EDITOR']}"
       if default_editor.empty?
         default_editor = 'vi'
       end

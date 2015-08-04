@@ -200,7 +200,7 @@ module GitReflow
         end
 
         # remove the current user from the list to check
-        comment_authors -= [self.class.user]
+        comment_authors -= [self.class.remote_user]
         comment_authors.uniq
       end
 

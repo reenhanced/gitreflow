@@ -132,13 +132,6 @@ module GitReflow
               puts "Cleanup halted.  Local changes were not pushed to remote repo.".colorize(:red)
               puts "To reset and go back to your branch run \`git reset --hard origin/master && git checkout new-feature\`"
             end
-
-            if using_trello? and ask("Move the current trello card?") =~ /^y/i
-              if feature_trello_card and trello_completed_list
-                feature_trello_card.move_to_list(trello_completed_list)
-                say "Card moved to #{trello_completed_list.name}", :notice
-              end
-            end
           else
             say "There were problems commiting your feature... please check the errors above and try again.", :error
           end

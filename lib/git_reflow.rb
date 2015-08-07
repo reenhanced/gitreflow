@@ -96,7 +96,7 @@ module GitReflow
 
         # check to see if current Trello card is in the Approved list
         feature_trello_card = current_trello_card
-        if using_trello? and trello_uses_list?('approved') and trello_approved_list
+        if using_trello? and trello_uses_list?('approved') and trello_approved_list and current_trello_card
           if current_trello_card.list_id == trello_approved_list.id
             trello_approved = true
           else

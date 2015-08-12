@@ -52,6 +52,8 @@ If your code is 'LGTM'd, squash merge to +master+ and delete the feature branch:
 or
   $ gem install git_reflow
 
+(`git_reflow` is the official gem, and `reflow` just declares `git_reflow` as a dependency.)
+
 === Setup
 On your first install, you'll need to setup your Github credentials. These are used only to get an oauth token that's stored in your global git config.
 We use the Github credentials so we can create pull requests from the command line.

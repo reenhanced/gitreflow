@@ -7,7 +7,7 @@ module GitReflow
 
       class PullRequest < Base::PullRequest
         def initialize(attributes)
-          self.description = attributes.description
+          self.description         = attributes.description
           self.source_object       = attributes
           self.number              = attributes.id
           self.html_url            = "#{attributes.source.repository.links.html.href}/pull-request/#{self.number}"

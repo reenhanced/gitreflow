@@ -17,8 +17,13 @@ command :review do |c|
     else
       begin
         trello_card = GitReflow.current_trello_card
-      rescue Trello::Error => e
+      rescue Trello::Error
         trello_card = nil
+      end
+
+      default_editor = "#{ENV['EDITOR']}"
+      if default_editor.empty?
+        default_editor = 'vi'
       end
 
       File.open(pull_request_msg_file, 'w') do |file|
@@ -29,7 +34,7 @@ command :review do |c|
         end
       end
 
-      GitReflow.run("$EDITOR #{pull_request_msg_file}", with_system: true)
+      GitReflow.run("#{default_editor} #{pull_request_msg_file}", with_system: true)
 
       pr_msg = File.open(pull_request_msg_file).each_line.map(&:strip).to_a
       title  = pr_msg.shift

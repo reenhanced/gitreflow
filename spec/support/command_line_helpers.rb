@@ -36,6 +36,14 @@ module CommandLineHelpers
     $stubbed_commands[command] = return_value
     GitReflow::Sandbox.stub(:run).with(command).and_return(return_value)
   end
+
+  def stub_command_line_inputs(inputs)
+    HighLine.any_instance.stub(:ask) do |terminal, question|
+     return_value = inputs[question]
+     question = ""
+     return_value
+    end
+  end
 end
 
 RSpec::Matchers.define :have_run_command do |command|

@@ -12,8 +12,8 @@ describe GitReflow::GitServer::GitHub do
   let(:enterprise_api)         { 'https://github.gittyup.com/api/v3' }
   let(:github)                 { stub_github_with(pull: existing_pull_request) }
   let!(:github_api)            { github.connection }
-  let(:existing_pull_request)  { Hashie::Mash.new JSON.parse(fixture('pull_requests/pull_request.json').read) }
-  let(:existing_pull_requests) { JSON.parse(fixture('pull_requests/pull_requests.json').read).collect {|pull| Hashie::Mash.new pull } }
+  let(:existing_pull_request)  { Fixture.new('pull_requests/pull_request.json').to_json_hashie }
+  let(:existing_pull_requests) { Fixture.new('pull_requests/pull_requests.json').to_json_hashie }
 
   before do
     HighLine.any_instance.stub(:ask) do |terminal, question|
@@ -189,23 +189,6 @@ describe GitReflow::GitServer::GitHub do
         github_api.pull_requests.should_receive(:all).and_return([])
       end
       it     { should == nil }
-    end
-  end
-
-  describe '#pull_request_comments(pull_request)' do
-    let(:pull_request_comments) { JSON.parse(fixture('pull_requests/comments.json').read).collect {|c| Hashie::Mash.new(c) } }
-
-    subject { github.pull_request_comments(existing_pull_request) }
-
-    before do
-      github_api.stub_chain(:issues, :comments)
-      github_api.stub_chain(:pull_requests, :comments)
-    end
-
-    it 'includes both issue comments and pull request comments' do
-      github_api.issues.comments.should_receive(:all).with(user, repo, number: existing_pull_request.number).and_return([pull_request_comments.first])
-      github_api.pull_requests.comments.should_receive(:all).with(user, repo, number: existing_pull_request.number).and_return([pull_request_comments.first])
-      subject.count.should == 2
     end
   end
 

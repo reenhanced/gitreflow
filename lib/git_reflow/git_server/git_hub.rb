@@ -8,6 +8,8 @@ module GitReflow
       include Sandbox
 
       class PullRequest < Base::PullRequest
+        attr_accessor :server
+
         def initialize(attributes)
           self.number              = attributes.number
           self.description         = attributes.body
@@ -16,6 +18,52 @@ module GitReflow
           self.base_branch_name    = attributes.base.label
           self.build_status        = attributes.head.sha
           self.source_object       = attributes
+        end
+
+        def author
+          begin
+            username, branch = base.label.split(':')
+            first_commit = GitReflow.git_server.connection.pull_requests.commits(username, GitReflow.git_server.class.remote_repo_name, number.to_s).first
+            "#{first_commit.commit.author.name} <#{first_commit.commit.author.email}>".strip
+          rescue Github::Error::NotFound
+            nil
+          end
+        end
+
+        def reviewers(pull_request)
+          comment_authors_for_pull_request(pull_request)
+        end
+
+        def approvals(pull_request)
+          pull_last_committed_at = get_commited_time(pull_request.head.sha)
+          lgtm_authors           = comment_authors_for_pull_request(pull_request, :with => LGTM, :after => pull_last_committed_at)
+        end
+
+        def pull_request_comments(pull_request)
+          comments        = connection.issues.comments.all        self.class.remote_user, self.class.remote_repo_name, number: pull_request.number
+          review_comments = connection.pull_requests.comments.all self.class.remote_user, self.class.remote_repo_name, number: pull_request.number
+
+          review_comments.to_a + comments.to_a
+        end
+
+        def last_comment_for_pull_request(pull_request)
+          "#{pull_request_comments(pull_request).last.body.inspect}"
+        end
+
+        def comment_authors_for_pull_request(pull_request, options = {})
+          all_comments    = pull_request_comments(pull_request)
+          comment_authors = []
+
+          all_comments.each do |comment|
+            next if options[:after] and Time.parse(comment.created_at) < options[:after]
+            if (options[:with].nil? or comment[:body] =~ options[:with])
+              comment_authors |= [comment.user.login]
+            end
+          end
+
+          # remove the current user from the list to check
+          comment_authors -= [self.class.remote_user]
+          comment_authors.uniq
         end
       end
 
@@ -159,26 +207,6 @@ module GitReflow
         end
       end
 
-      def reviewers(pull_request)
-        comment_authors_for_pull_request(pull_request)
-      end
-
-      def approvals(pull_request)
-        pull_last_committed_at = get_commited_time(pull_request.head.sha)
-        lgtm_authors           = comment_authors_for_pull_request(pull_request, :with => LGTM, :after => pull_last_committed_at)
-      end
-
-      def pull_request_comments(pull_request)
-        comments        = connection.issues.comments.all        self.class.remote_user, self.class.remote_repo_name, number: pull_request.number
-        review_comments = connection.pull_requests.comments.all self.class.remote_user, self.class.remote_repo_name, number: pull_request.number
-
-        review_comments.to_a + comments.to_a
-      end
-
-      def last_comment_for_pull_request(pull_request)
-        "#{pull_request_comments(pull_request).last.body.inspect}"
-      end
-
       def get_build_status sha
         connection.repos.statuses.all(self.class.remote_user, self.class.remote_repo_name, sha).first
       end
@@ -186,22 +214,6 @@ module GitReflow
       def colorized_build_description status
         colorized_statuses = { pending: :yellow, success: :green, error: :red, failure: :red }
         status.description.colorize( colorized_statuses[status.state.to_sym] )
-      end
-
-      def comment_authors_for_pull_request(pull_request, options = {})
-        all_comments    = pull_request_comments(pull_request)
-        comment_authors = []
-
-        all_comments.each do |comment|
-          next if options[:after] and Time.parse(comment.created_at) < options[:after]
-          if (options[:with].nil? or comment[:body] =~ options[:with])
-            comment_authors |= [comment.user.login]
-          end
-        end
-
-        # remove the current user from the list to check
-        comment_authors -= [self.class.remote_user]
-        comment_authors.uniq
       end
 
       def get_commited_time(commit_sha)

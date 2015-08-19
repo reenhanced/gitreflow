@@ -1,7 +1,8 @@
 module GitReflow
   module GitServer
-    autoload :Base,   'git_reflow/git_server/base'
-    autoload :GitHub, 'git_reflow/git_server/git_hub'
+    autoload :Base,        'git_reflow/git_server/base'
+    autoload :GitHub,      'git_reflow/git_server/git_hub'
+    autoload :PullRequest, 'git_reflow/git_server/pull_request'
 
     extend self
 

@@ -62,9 +62,9 @@ module GithubHelpers
 
     # Stubbing statuses for a given commit
     stub_request(:get, %r{#{GitReflow.git_server.class.api_endpoint}/repos/#{user}/commits/\w+}).
-      to_return(:body => fixture('repositories/commit.json'), :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
+      to_return(:body => Fixture.new('repositories/commit.json.erb', repo_owner: user, repo_name: repo, commit_author: user).to_json.to_s, :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
     stub_request(:get, %r{#{GitReflow.git_server.class.api_endpoint}/repos/#{user}/commits/\w+/statuses?}).
-      to_return(:body => fixture('pull_requests/pull_requests.json'), :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
+      to_return(:body => Fixture.new('pull_requests/pull_requests.json').to_json.to_s, :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
 
     if pull
       # Stubbing review
@@ -72,16 +72,21 @@ module GithubHelpers
         to_return(:body => pull.to_s, :status => 201, :headers => {:content_type => "application/json\; charset=utf-8"})
 
       # Stubbing pull request finder
+      stub_get("/repos/#{user}/#{repo}/pulls/#{pull.number}").with(:query => {'access_token' => 'a1b2c3d4e5f6g7h8i9j0'}).
+        to_return(:body => Fixture.new('pull_requests/pull_request.json').to_s, :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
       stub_get("/repos/#{user}/pulls").with(:query => {'access_token' => 'a1b2c3d4e5f6g7h8i9j0', 'base' => 'master', 'head' => "#{user}:#{branch}", 'state' => 'open'}).
-        to_return(:body => fixture('pull_requests/pull_requests.json'), :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
+        to_return(:body => Fixture.new('pull_requests/pull_requests.json').to_s, :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
       stub_get("/repos/#{user}/#{repo}/pulls").with(:query => {'access_token' => 'a1b2c3d4e5f6g7h8i9j0', 'base' => 'master', 'head' => "#{user}:#{branch}", 'state' => 'open'}).
-        to_return(:body => fixture('pull_requests/pull_requests.json'), :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
+        to_return(:body => Fixture.new('pull_requests/pull_requests.json').to_s, :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
       # Stubbing pull request comments
       stub_get("/repos/#{user}/pulls/#{pull.number}/comments?").with(:query => {'access_token' => 'a1b2c3d4e5f6g7h8i9j0'}).
-        to_return(:body => fixture('pull_requests/comments.json'), :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
+        to_return(:body => Fixture.new('pull_requests/comments.json').to_s, :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
       # Stubbing issue comments
       stub_get("/repos/#{user}/issues/#{pull.number}/comments?").with(:query => {'access_token' => 'a1b2c3d4e5f6g7h8i9j0'}).
-        to_return(:body => fixture('issues/comments.json'), :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
+        to_return(:body => Fixture.new('issues/comments.json').to_s, :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
+      # Stubbing pull request commits
+      stub_get("/repos/#{user}/#{repo}/pulls/#{pull.number}/commits").with(query: {"access_token" => "a1b2c3d4e5f6g7h8i9j0"}).
+        to_return(:body => Fixture.new("pull_requests/commits.json").to_s, status: 201, headers: {content_type: "application/json; charset=utf-8"})
     end
 
     github_server

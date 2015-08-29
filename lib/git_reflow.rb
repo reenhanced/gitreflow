@@ -99,8 +99,12 @@ module GitReflow
 
           if committed
             say "Merge complete!", :success
-            deploy_and_cleanup = ask "Would you like to push this branch to your remote repo and cleanup your feature branch? "
-            if deploy_and_cleanup =~ /^y/i
+
+            # check if user always wants to push and cleanup, otherwise ask
+            always_deploy_and_cleanup = GitReflow::Config.get('reflow.always-deploy-and-cleanup') == "true"
+            deploy_and_cleanup = always_deploy_and_cleanup || (ask "Would you like to push this branch to your remote repo and cleanup your feature branch? ") =~ /^y/i
+
+            if deploy_and_cleanup
               run_command_with_label "git push origin #{options['base']}"
               run_command_with_label "git push origin :#{feature_branch}"
               run_command_with_label "git branch -D #{feature_branch}"

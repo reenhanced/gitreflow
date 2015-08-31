@@ -1,0 +1,47 @@
+[
+  {
+    "url": "https://api.github.com/repos/<%= repo_owner %>/<%= repo_name %>/pulls/comments/<%= pull_request_number %>",
+    "id": <%= pull_request_number %>,
+    "diff_hunk": "@@ -16,33 +16,40 @@ public class Connection : IConnection...",
+    "path": "file1.txt",
+    "position": 1,
+    "original_position": 4,
+    "commit_id": "6dcb09b5b57875f334f61aebed695e2e4193db5e",
+    "original_commit_id": "9c48853fa3dc5c1c3d6f1f1cd1f2743e72652840",
+    "user": {
+    "login": "<%= comment_author %>",
+      "id": 1,
+      "avatar_url": "https://github.com/images/error/octocat_happy.gif",
+      "gravatar_id": "somehexcode",
+      "url": "https://api.github.com/users/<%= comment_author %>",
+      "html_url": "https://github.com/<%= comment_author %>",
+      "followers_url": "https://api.github.com/users/<%= comment_author %>/followers",
+      "following_url": "https://api.github.com/users/<%= comment_author %>/following{/other_user}",
+      "gists_url": "https://api.github.com/users/<%= comment_author %>/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/<%= comment_author %>/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/<%= comment_author %>/subscriptions",
+      "organizations_url": "https://api.github.com/users/<%= comment_author %>/orgs",
+      "repos_url": "https://api.github.com/users/<%= comment_author %>/repos",
+      "events_url": "https://api.github.com/users/<%= comment_author %>/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/<%= comment_author %>/received_events",
+      "type": "User",
+      "site_admin": false
+    },
+    "body": "Great stuff",
+    "created_at": "2011-04-14T16:00:49Z",
+    "updated_at": "2011-04-14T16:00:49Z",
+    "html_url": "https://github.com/<%= repo_owner %>/<%= repo_name %>/pull/<%= pull_request_number %>#discussion-diff-1",
+    "pull_request_url": "https://api.github.com/repos/<%= repo_owner %>/<%= repo_name %>/pulls/<%= pull_request_number %>",
+    "_links": {
+      "self": {
+        "href": "https://api.github.com/repos/<%= repo_owner %>/<%= repo_name %>/pulls/comments/<%= pull_request_number %>"
+      },
+      "html": {
+        "href": "https://github.com/<%= repo_owner %>/<%= repo_name %>/pull/<%= pull_request_number %>#discussion-diff-1"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/<%= repo_owner %>/<%= repo_name %>/pulls/<%= pull_request_number %>"
+      }
+    }
+  }
+]

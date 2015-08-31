@@ -20,7 +20,7 @@ module GitReflow
           self.source_object       = attributes
         end
 
-        def author
+        def commit_author
           begin
             username, branch = base.label.split(':')
             first_commit = GitReflow.git_server.connection.pull_requests.commits(username, GitReflow.git_server.class.remote_repo_name, number.to_s).first
@@ -30,19 +30,20 @@ module GitReflow
           end
         end
 
-        def reviewers(pull_request)
+        def reviewers
           comment_authors_for_pull_request(pull_request)
         end
 
-        def approvals(pull_request)
+        def approvals
           pull_last_committed_at = get_commited_time(pull_request.head.sha)
           lgtm_authors           = comment_authors_for_pull_request(pull_request, :with => LGTM, :after => pull_last_committed_at)
         end
 
-        def pull_request_comments(pull_request)
-          comments        = connection.issues.comments.all        self.class.remote_user, self.class.remote_repo_name, number: pull_request.number
-          review_comments = connection.pull_requests.comments.all self.class.remote_user, self.class.remote_repo_name, number: pull_request.number
+        def comments
+          comments        = GitReflow.git_server.connection.issues.comments.all        GitReflow.git_server.class.remote_user, GitReflow.git_server.class.remote_repo_name, number: self.number
+          review_comments = GitReflow.git_server.connection.pull_requests.comments.all GitReflow.git_server.class.remote_user, GitReflow.git_server.class.remote_repo_name, number: self.number
 
+          binding.pry
           review_comments.to_a + comments.to_a
         end
 
@@ -65,6 +66,24 @@ module GitReflow
           comment_authors -= [self.class.remote_user]
           comment_authors.uniq
         end
+
+        def create(options = {})
+          pull_request = GitReflow.git_server.connection.pull_requests.create(
+            self.class.remote_user,
+            self.class.remote_repo_name,
+            title: options[:title],
+            body:  options[:body],
+            head:  "#{self.class.remote_user}:#{self.class.current_branch}",
+            base:  options[:base])
+        end
+
+        def find_open_pull_request(options = {})
+          matching_pull = GitReflow.git_server.connection.pull_requests.all(self.class.remote_user, self.class.remote_repo_name, base: options[:to], head: "#{self.class.remote_user}:#{options[:from]}", :state => 'open').first
+          if matching_pull
+            PullRequest.new matching_pull
+          end
+        end
+
       end
 
       attr_accessor :connection
@@ -190,21 +209,6 @@ module GitReflow
         end
 
         @connection
-      end
-
-      def create_pull_request(options = {})
-        pull_request = connection.pull_requests.create(self.class.remote_user, self.class.remote_repo_name,
-                                                       title: options[:title],
-                                                       body:  options[:body],
-                                                       head:  "#{self.class.remote_user}:#{self.class.current_branch}",
-                                                       base:  options[:base])
-      end
-
-      def find_open_pull_request(options = {})
-        matching_pull = connection.pull_requests.all(self.class.remote_user, self.class.remote_repo_name, base: options[:to], head: "#{self.class.remote_user}:#{options[:from]}", :state => 'open').first
-        if matching_pull
-          PullRequest.new matching_pull
-        end
       end
 
       def get_build_status sha

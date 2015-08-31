@@ -1,3 +1,6 @@
+# ERB parsing credit:
+# http://stackoverflow.com/questions/8954706/render-an-erb-template-with-values-from-a-hash/9734736#9734736
+
 require 'erb'
 require 'ostruct'
 
@@ -14,7 +17,7 @@ class Fixture
   end
 
   def fixture(file)
-    File.new(File.join(fixture_path, "/", file)).read
+    File.new(File.join(fixture_path, "/", file))
   end
 
   def to_s
@@ -23,10 +26,10 @@ class Fixture
 
   def to_json
     if File.extname(file) == ".erb"
-      rendered_file = ERB.new(fixture).result(OpenStruct.new(locals).instance_eval { binding })
+      rendered_file = ERB.new(file.read).result(OpenStruct.new(locals).instance_eval { binding })
       JSON.parse(rendered_file)
     else
-      JSON.parse(file)
+      JSON.parse(file.read)
     end
   end
 

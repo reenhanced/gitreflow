@@ -13,6 +13,10 @@ module GitReflow
         raise "PullRequest#initialize must be implemented"
       end
 
+      def commit_author
+        raise "#{self.class.to_s}#commit_author method must be implemented"
+      end
+
       def comments
         raise "#{self.class.to_s}#comments method must be implemented"
       end

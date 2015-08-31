@@ -10,13 +10,13 @@ describe GitReflow::GitServer::GitHub do
   let(:github_api_endpoint)     { 'https://api.github.com' }
   let(:enterprise_site)         { 'https://github.gittyup.com' }
   let(:enterprise_api)          { 'https://github.gittyup.com/api/v3' }
-  let(:github)                  { stub_github_with(pull: existing_pull_request) }
+  let(:github)                  { stub_github_with }
   let!(:github_api)             { github.connection }
   let(:existing_pull_request)   { Fixture.new('pull_requests/external_pull_request.json').to_json_hashie }
   let(:existing_pull_requests)  { Fixture.new('pull_requests/pull_requests.json').to_json_hashie }
   let(:existing_pull_commits)   { Fixture.new('pull_requests/commits.json').to_json_hashie }
-  let(:existing_pull_comments)  { Fixture.new('pull_requests/comments.json').to_json_hashie }
-  let(:existing_issue_comments) { Fixture.new('issues/comments.json').to_json_hashie }
+  let(:existing_pull_comments)  { Fixture.new('pull_requests/comments.json.erb', repo_owner: user, repo_name: repo, comment_author: 'octocat', pull_request_number: existing_pull_request.number).to_json_hashie }
+  let(:existing_issue_comments) { Fixture.new('issues/comments.json.erb', repo_owner: user, repo_name: repo, comment_author: 'octocat').to_json_hashie }
 
   subject { GitReflow::GitServer::GitHub::PullRequest.new(existing_pull_request) }
 
@@ -43,29 +43,27 @@ describe GitReflow::GitServer::GitHub do
     specify { expect(subject.source_object).to eql(existing_pull_request) }
   end
 
-  describe '#author' do
-    specify { expect(subject.author).to eql("#{existing_pull_commits.first.commit.author.name} <#{existing_pull_commits.first.commit.author.email}>") }
+  describe '#commit_author' do
+    specify { expect(subject.commit_author).to eql("#{existing_pull_commits.first.commit.author.name} <#{existing_pull_commits.first.commit.author.email}>") }
+  end
+
+  describe '#comments' do
+    before do
+      # Stubbing issue comments
+      stub_get("/repos/#{user}/#{repo}/issues/#{existing_pull_request.number}/comments?").with(:query => {'access_token' => 'a1b2c3d4e5f6g7h8i9j0'}).
+        to_return(:body => Fixture.new('issues/comments.json.erb', repo_owner: user, repo_name: repo, comment_author: user, pull_request_number: existing_pull_request.number).to_json.to_s, :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
+      # Stubbing pull request commits
+      stub_get("/repos/#{user}/#{repo}/pulls/#{existing_pull_request.number}/commits").with(query: {"access_token" => "a1b2c3d4e5f6g7h8i9j0"}).
+        to_return(:body => Fixture.new("pull_requests/commits.json").to_s, status: 201, headers: {content_type: "application/json; charset=utf-8"})
+    end
+
+    specify { binding.pry;expect(subject.comments).to eql(existing_issue_comments.to_a + existing_pull_comments.to_a) }
   end
 
   describe '#reviewers' do
   end
 
   describe '#approvals' do
-  end
-
-  describe '#comments' do
-    let(:pull_request_comments) { Fixture.new('pull_requests/comments.json').to_json_hashie }
-
-    before do
-      github_api.stub_chain(:issues, :comments)
-      github_api.stub_chain(:pull_requests, :comments)
-    end
-
-    it 'includes both issue comments and pull request comments' do
-      github_api.issues.comments.should_receive(:all).with(user, repo, number: existing_pull_request.number).and_return([pull_request_comments.first])
-      github_api.pull_requests.comments.should_receive(:all).with(user, repo, number: existing_pull_request.number).and_return([pull_request_comments.first])
-      expect(subject.comments.count).to eq(2)
-    end
   end
 
   describe '#last_comment_for_pull_request' do

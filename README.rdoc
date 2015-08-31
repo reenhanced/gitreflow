@@ -310,6 +310,14 @@ http://reenhanced.com/images/reflow.png
   Squash commits to master mean every commit represents the whole feature, not a "typo fix".
 
 
+== Configuration
+
+  In order to streamline delivery you can set the following git config to
+  always push the branch after merge and clean up the feature branch.
+
+  git config --global --add "reflow.always-deploy-and-cleanup" "true"
+
+
 ---
 
 == Contributing

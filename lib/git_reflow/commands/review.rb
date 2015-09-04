@@ -26,7 +26,7 @@ command :review do |c|
 
       GitReflow.run("#{default_editor} #{pull_request_msg_file}", with_system: true)
 
-      pr_msg = File.open(pull_request_msg_file).each_line.map(&:strip).to_a
+      pr_msg = File.read(pull_request_msg_file).split(/[\r\n]|\r\n/).map(&:strip)
       title  = pr_msg.shift
 
       File.delete(pull_request_msg_file)

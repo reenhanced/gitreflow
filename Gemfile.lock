@@ -21,6 +21,7 @@ GEM
     byebug (4.0.1)
       columnize (= 0.9.0)
       rb-readline (= 0.5.2)
+    chronic (0.10.2)
     coderay (1.1.0)
     colorize (0.6.0)
     columnize (0.9.0)
@@ -106,6 +107,7 @@ PLATFORMS
 DEPENDENCIES
   appraisal (= 1.0.3)
   bundler
+  chronic
   git_reflow!
   pry-byebug
   rake
@@ -115,4 +117,4 @@ DEPENDENCIES
   wwtd (= 0.7.0)
 
 BUNDLED WITH
-   1.10.5
+   1.10.6

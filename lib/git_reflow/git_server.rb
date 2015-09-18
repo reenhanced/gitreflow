@@ -43,6 +43,14 @@ module GitReflow
       GitReflow::GitServer.const_defined?(provider)
     end
 
+    def create_pull_request(options = {})
+      raise "#{self.class.to_s}#create_pull_request method must be implemented"
+    end
+
+    def find_open_pull_request(options = {})
+      raise "#{self.class.to_s}#find_open_pull_request method must be implemented"
+    end
+
     private
 
     def provider_class_for(provider)

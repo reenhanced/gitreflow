@@ -167,12 +167,21 @@ describe GitReflow::GitServer::GitHub do
     let(:body)           { 'Funky body' }
     let(:current_branch) { 'new-feature' }
 
-    before { github.class.stub(:current_branch).and_return(current_branch) }
+    subject { github.create_pull_request({ title: title, body: body, base: 'master' }) }
+
+    before do
+      github.class.stub(:current_branch).and_return(current_branch)
+      allow(GitReflow).to receive(:git_server).and_return(github)
+      stub_request(:post, %r{/repos/#{user}/#{repo}/pulls}).
+        to_return(body: Fixture.new('pull_requests/pull_request.json').to_s, status: 201, headers: {content_type: "application/json; charset=utf-8"})
+    end
+
+    specify { expect(subject.class.to_s).to eq('GitReflow::GitServer::GitHub::PullRequest') }
 
     it 'creates a pull request using the remote user and repo' do
       github_api.stub(:pull_requests)
-      github_api.pull_requests.should_receive(:create).with(user, repo, title: title, body: body, head: "#{user}:#{current_branch}", base: 'master')
-      github.create_pull_request({ title: title, body: body, base: 'master' })
+      expect(github_api.pull_requests).to receive(:create).with(user, repo, title: title, body: body, head: "#{user}:#{current_branch}", base: 'master').and_return(existing_pull_request)
+      subject
     end
   end
 

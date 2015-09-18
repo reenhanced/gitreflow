@@ -21,15 +21,19 @@ class Fixture
   end
 
   def to_s
-    file.to_s
+    if File.extname(file) == ".erb"
+      ERB.new(template_file_content).result(OpenStruct.new(locals).instance_eval { binding }).to_s
+    else
+      template_file_content.to_s
+    end
   end
 
   def to_json
     if File.extname(file) == ".erb"
-      rendered_file = ERB.new(file.read).result(OpenStruct.new(locals).instance_eval { binding })
+      rendered_file = ERB.new(template_file_content).result(OpenStruct.new(locals).instance_eval { binding })
       JSON.parse(rendered_file)
     else
-      JSON.parse(file.read)
+      JSON.parse(template_file_content)
     end
   end
 
@@ -40,5 +44,11 @@ class Fixture
     else
       Hashie::Mash.new json
     end
+  end
+
+  private
+
+  def template_file_content
+    @file_content ||= file.read
   end
 end

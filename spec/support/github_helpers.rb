@@ -1,8 +1,7 @@
 $LOAD_PATH << 'lib'
 require 'git_reflow'
 require 'github_api'
-require File.expand_path('../web_mocks', __FILE__)
-require File.expand_path('../fixtures', __FILE__)
+require 'spec_helper'
 
 module GithubHelpers
   def stub_github_with(options = {})
@@ -62,7 +61,7 @@ module GithubHelpers
 
     # Stubbing statuses for a given commit
     stub_request(:get, %r{#{GitReflow.git_server.class.api_endpoint}/repos/#{user}/commits/\w+}).
-      to_return(:body => Fixture.new('repositories/commit.json.erb', repo_owner: user, repo_name: repo, commit_author: user).to_json.to_s, :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
+      to_return(:body => Fixture.new('repositories/commit.json.erb', repo_owner: user, repo_name: repo, author: user).to_json.to_s, :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
     stub_request(:get, %r{#{GitReflow.git_server.class.api_endpoint}/repos/#{user}/commits/\w+/statuses?}).
       to_return(:body => Fixture.new('pull_requests/pull_requests.json').to_json.to_s, :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
 
@@ -80,10 +79,10 @@ module GithubHelpers
         to_return(:body => Fixture.new('pull_requests/pull_requests.json').to_s, :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
       # Stubbing pull request comments
       stub_get("/repos/#{user}/#{repo}/pulls/#{pull.number}/comments?").with(:query => {'access_token' => 'a1b2c3d4e5f6g7h8i9j0'}).
-        to_return(:body => Fixture.new('pull_requests/comments.json.erb', repo_owner: user, repo_name: repo, comment_author: user, pull_request_number: pull.number).to_json.to_s, :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
+        to_return(:body => Fixture.new('pull_requests/comments.json.erb', repo_owner: user, repo_name: repo, comments: [{author: user}], pull_request_number: pull.number).to_json.to_s, :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
       # Stubbing issue comments
       stub_get("/repos/#{user}/#{repo}/issues/#{pull.number}/comments?").with(:query => {'access_token' => 'a1b2c3d4e5f6g7h8i9j0'}).
-        to_return(:body => Fixture.new('issues/comments.json.erb', repo_owner: user, repo_name: repo, comment_author: user, pull_request_number: pull.number).to_json.to_s, :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
+        to_return(:body => Fixture.new('issues/comments.json.erb', repo_owner: user, repo_name: repo, comments: [{author: user}], pull_request_number: pull.number).to_json.to_s, :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
       # Stubbing pull request commits
       stub_get("/repos/#{user}/#{repo}/pulls/#{pull.number}/commits").with(query: {"access_token" => "a1b2c3d4e5f6g7h8i9j0"}).
         to_return(:body => Fixture.new("pull_requests/commits.json").to_s, status: 201, headers: {content_type: "application/json; charset=utf-8"})
@@ -92,7 +91,7 @@ module GithubHelpers
     github_server
   end
 end
-
+#
 # the github_api gem does some overrides to Hash so we have to make sure
 # this still works here...
 class Hash

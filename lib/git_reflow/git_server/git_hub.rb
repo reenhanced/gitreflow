@@ -4,87 +4,10 @@ require 'git_reflow/git_helpers'
 module GitReflow
   module GitServer
     class GitHub < Base
+      require_relative 'git_hub/pull_request'
+
       extend GitHelpers
       include Sandbox
-
-      class PullRequest < Base::PullRequest
-        attr_accessor :server
-
-        def initialize(attributes)
-          self.number              = attributes.number
-          self.description         = attributes.body
-          self.html_url            = attributes.html_url
-          self.feature_branch_name = attributes.head.label
-          self.base_branch_name    = attributes.base.label
-          self.build_status        = attributes.head.sha
-          self.source_object       = attributes
-        end
-
-        def commit_author
-          begin
-            username, branch = base.label.split(':')
-            first_commit = GitReflow.git_server.connection.pull_requests.commits(username, GitReflow.git_server.class.remote_repo_name, number.to_s).first
-            "#{first_commit.commit.author.name} <#{first_commit.commit.author.email}>".strip
-          rescue Github::Error::NotFound
-            nil
-          end
-        end
-
-        def reviewers
-          comment_authors_for_pull_request(pull_request)
-        end
-
-        def approvals
-          pull_last_committed_at = get_commited_time(pull_request.head.sha)
-          lgtm_authors           = comment_authors_for_pull_request(pull_request, :with => LGTM, :after => pull_last_committed_at)
-        end
-
-        def comments
-          comments        = GitReflow.git_server.connection.issues.comments.all        GitReflow.git_server.class.remote_user, GitReflow.git_server.class.remote_repo_name, number: self.number
-          review_comments = GitReflow.git_server.connection.pull_requests.comments.all GitReflow.git_server.class.remote_user, GitReflow.git_server.class.remote_repo_name, number: self.number
-
-          binding.pry
-          review_comments.to_a + comments.to_a
-        end
-
-        def last_comment_for_pull_request(pull_request)
-          "#{pull_request_comments(pull_request).last.body.inspect}"
-        end
-
-        def comment_authors_for_pull_request(pull_request, options = {})
-          all_comments    = pull_request_comments(pull_request)
-          comment_authors = []
-
-          all_comments.each do |comment|
-            next if options[:after] and Time.parse(comment.created_at) < options[:after]
-            if (options[:with].nil? or comment[:body] =~ options[:with])
-              comment_authors |= [comment.user.login]
-            end
-          end
-
-          # remove the current user from the list to check
-          comment_authors -= [self.class.remote_user]
-          comment_authors.uniq
-        end
-
-        def create(options = {})
-          pull_request = GitReflow.git_server.connection.pull_requests.create(
-            self.class.remote_user,
-            self.class.remote_repo_name,
-            title: options[:title],
-            body:  options[:body],
-            head:  "#{self.class.remote_user}:#{self.class.current_branch}",
-            base:  options[:base])
-        end
-
-        def find_open_pull_request(options = {})
-          matching_pull = GitReflow.git_server.connection.pull_requests.all(self.class.remote_user, self.class.remote_repo_name, base: options[:to], head: "#{self.class.remote_user}:#{options[:from]}", :state => 'open').first
-          if matching_pull
-            PullRequest.new matching_pull
-          end
-        end
-
-      end
 
       attr_accessor :connection
 
@@ -220,9 +143,12 @@ module GitReflow
         status.description.colorize( colorized_statuses[status.state.to_sym] )
       end
 
-      def get_commited_time(commit_sha)
-        last_commit = connection.repos.commits.find self.class.remote_user, self.class.remote_repo_name, commit_sha
-        Time.parse last_commit.commit.author[:date]
+      def create_pull_request(options = {})
+        PullRequest.create(options)
+      end
+
+      def find_open_pull_request(options = {})
+        PullRequest.find_open(options)
       end
 
     end

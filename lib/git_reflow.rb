@@ -77,16 +77,16 @@ module GitReflow
         say "No pull request exists for #{remote_user}:#{current_branch}\nPlease submit your branch for review first with \`git reflow review\`", :deliver_halted
       else
 
-        has_comments         = (git_server.has_pull_request_comments?(existing_pull_request) or git_server.approvals(existing_pull_request).any?)
-        open_comment_authors = git_server.reviewers_pending_response(existing_pull_request)
-        status               = git_server.get_build_status existing_pull_request.build_status
-        commit_message       = if "#{existing_pull_request.description}".length > 0
+        has_comments_or_approvals = (existing_pull_request.has_comments? or existing_pull_request.approvals.any?)
+        open_comment_authors      = existing_pull_request.reviewers_pending_response
+        status                    = git_server.get_build_status existing_pull_request.build_status
+        commit_message            = if "#{existing_pull_request.description}".length > 0
                                  existing_pull_request.description
                                else
                                  "#{get_first_commit_message}"
                                end
 
-        if  options['skip_lgtm'] or ((status.nil? or status.state == "success") and (has_comments and open_comment_authors.empty?))
+        if  options['skip_lgtm'] or ((status.nil? or status.state == "success") and (has_comments_or_approvals and open_comment_authors.empty?))
           puts "Merging pull request ##{existing_pull_request.number}: '#{existing_pull_request.title}', from '#{existing_pull_request.feature_branch_name}' into '#{existing_pull_request.base_branch_name}'"
 
           update_destination(options['base'])

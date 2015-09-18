@@ -14,7 +14,7 @@ describe GitReflow do
   let(:hostname)         { 'hostname.local' }
 
   let(:github_authorizations)  { Github::Client::Authorizations.new }
-  let(:existing_pull_requests) { JSON.parse(fixture('pull_requests/pull_requests.json').read).collect { |pull| Hashie::Mash.new(pull)} }
+  let(:existing_pull_requests) { Fixture.new('pull_requests/pull_requests.json').to_json_hashie }
   let(:existing_pull_request)  { GitReflow::GitServer::GitHub::PullRequest.new existing_pull_requests.first }
 
   before do
@@ -115,7 +115,7 @@ describe GitReflow do
     context "pull request exists" do
       before do
         GitReflow.stub(:push_current_branch)
-        github_error = Github::Error::UnprocessableEntity.new( eval(fixture('pull_requests/pull_request_exists_error.json').read) )
+        github_error = Github::Error::UnprocessableEntity.new( eval(Fixture.new('pull_requests/pull_request_exists_error.json').to_s) )
         github.stub(:create_pull_request).with(inputs.except('state')).and_raise(github_error)
         GitReflow.stub(:display_pull_request_summary)
       end

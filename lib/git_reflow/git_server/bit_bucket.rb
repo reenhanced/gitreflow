@@ -4,18 +4,7 @@ require 'git_reflow/git_helpers'
 module GitReflow
   module GitServer
     class BitBucket < Base
-
-      class PullRequest < Base::PullRequest
-        def initialize(attributes)
-          self.description         = attributes.description
-          self.source_object       = attributes
-          self.number              = attributes.id
-          self.html_url            = "#{attributes.source.repository.links.html.href}/pull-request/#{self.number}"
-          self.feature_branch_name = attributes.source.branch.name
-          self.base_branch_name    = attributes.destination.branch.name
-          self.build_status        = nil
-        end
-      end
+      require_relative 'bit_bucket/pull_request'
 
       attr_accessor :connection
 
@@ -92,47 +81,6 @@ module GitReflow
         @connection ||= self.class.connection
       end
 
-      def create_pull_request(options = {})
-        PullRequest.new connection.repos.pull_requests.create(self.class.remote_user, self.class.remote_repo_name,
-                                                              title: options[:title],
-                                                              body: options[:body],
-                                                              source: {
-                                                                branch: { name: self.class.current_branch },
-                                                                repository: { full_name: "#{self.class.remote_user}/#{self.class.remote_repo_name}" }
-                                                              },
-                                                              destination: {
-                                                                branch: { name: options[:base] }
-                                                              },
-                                                              reviewers: [username: self.class.user])
-      end
-
-      def find_open_pull_request(options = {})
-        begin
-          matching_pull = connection.repos.pull_requests.all(self.class.remote_user, self.class.remote_repo_name, limit: 1).select do |pr|
-            pr.source.branch.name == options[:from] and
-            pr.destination.branch.name == options[:to]
-          end.first
-
-          if matching_pull
-            PullRequest.new matching_pull
-          end
-        rescue ::BitBucket::Error::NotFound => e
-          self.class.say "No BitBucket repo found for #{self.class.remote_user}/#{self.class.remote_repo_name}", :error
-        rescue ::BitBucket::Error::Forbidden => e
-          self.class.say "You don't have API access to this repo", :error
-        end
-      end
-
-      def pull_request_comments(pull_request)
-        connection.repos.pull_requests.comments.all(self.class.remote_user, self.class.remote_repo_name, pull_request.id)
-      end
-
-      def last_comment_for_pull_request(pull_request)
-        last_comment = pull_request_comments(pull_request).first
-        return "" unless last_comment
-        "#{pull_request_comments(pull_request).first.content.raw}"
-      end
-
       def get_build_status sha
         # BitBucket does not currently support build status via API
         # for updates: https://bitbucket.org/site/master/issue/8548/better-ci-integration-add-a-build-status
@@ -143,22 +91,12 @@ module GitReflow
         ""
       end
 
-      def reviewers(pull_request)
-        comments = pull_request_comments(pull_request)
-
-        return [] unless comments.size > 0
-        comments.map {|c| c.user.username } - [self.class.user]
+      def create_pull_request(options = {})
+        PullRequest.create(options)
       end
 
-      def approvals(pull_request)
-        approved  = []
-
-        connection.repos.pull_requests.activity(self.class.remote_user, self.class.remote_repo_name, pull_request.id).each do |activity|
-          break unless activity.respond_to?(:approval) and activity.approval.user.username != self.class.user
-          approved |= [activity.approval.user.username]
-        end
-
-        approved
+      def find_open_pull_request(options = {})
+        PullRequest.find_open(options)
       end
 
     end

@@ -6,50 +6,6 @@ module GitReflow
 
     @@connection = nil
 
-    class PullRequest
-      attr_accessor :description, :html_url, :feature_branch_name, :base_branch_name, :build_status, :source_object, :number
-
-      def initialize(attributes)
-        raise "PullRequest#initialize must be implemented"
-      end
-
-      def commit_author
-        raise "#{self.class.to_s}#commit_author method must be implemented"
-      end
-
-      def comments
-        raise "#{self.class.to_s}#comments method must be implemented"
-      end
-
-      def has_comments?
-        comments.count > 0
-      end
-
-      def last_comment
-        raise "#{self.class.to_s}#last_comment_for method must be implemented"
-      end
-
-      def reviewers
-        raise "#{self.class.to_s}#reviewers method must be implemented"
-      end
-
-      def approvals
-        raise "#{self.class.to_s}#approvals method must be implemented"
-      end
-
-      def reviewers_pending_response
-        reviewers - approvals
-      end
-
-      def method_missing(method_sym, *arguments, &block)
-        if source_object and source_object.respond_to? method_sym
-          source_object.send method_sym
-        else
-          super
-        end
-      end
-    end
-
     def initialize(options)
       site_url     = self.class.site_url
       api_endpoint = self.class.api_endpoint

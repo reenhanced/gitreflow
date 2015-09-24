@@ -77,16 +77,13 @@ module GitReflow
         say "No pull request exists for #{remote_user}:#{current_branch}\nPlease submit your branch for review first with \`git reflow review\`", :deliver_halted
       else
 
-        has_comments_or_approvals = (existing_pull_request.has_comments? or existing_pull_request.approvals.any?)
-        open_comment_authors      = existing_pull_request.reviewers_pending_response
-        status                    = git_server.get_build_status existing_pull_request.build_status
-        commit_message            = if "#{existing_pull_request.description}".length > 0
-                                 existing_pull_request.description
-                               else
-                                 "#{get_first_commit_message}"
-                               end
+        commit_message = if "#{existing_pull_request.description}".length > 0
+                           existing_pull_request.description
+                         else
+                           "#{get_first_commit_message}"
+                         end
 
-        if  options['skip_lgtm'] or ((status.nil? or status.state == "success") and (has_comments_or_approvals and open_comment_authors.empty?))
+        if existing_pull_request.good_to_merge?(options['skip_lgtm'])
           puts "Merging pull request ##{existing_pull_request.number}: '#{existing_pull_request.title}', from '#{existing_pull_request.feature_branch_name}' into '#{existing_pull_request.base_branch_name}'"
 
           update_destination(options['base'])
@@ -112,10 +109,10 @@ module GitReflow
           else
             say "There were problems commiting your feature... please check the errors above and try again.", :error
           end
-        elsif !status.nil? and status.state != "success"
-          say "#{status.description}: #{status.target_url}", :deliver_halted
-        elsif open_comment_authors.count > 0
-          say "You still need a LGTM from: #{open_comment_authors.join(', ')}", :deliver_halted
+        elsif !existing_pull_request.build_status.nil? and existing_pull_request.build_status != "success"
+          say "#{existing_pull_request.build.description}: #{existing_pull_request.build.url}", :deliver_halted
+        elsif existing_pull_request.reviewers_pending_response.count > 0
+          say "You still need a LGTM from: #{existing_pull_request.reviewers_pending_response.join(', ')}", :deliver_halted
         else
           say "Your code has not been reviewed yet.", :deliver_halted
         end
@@ -143,10 +140,9 @@ module GitReflow
     reviewed_by = git_server.reviewers(pull_request).map {|author| author.colorize(:red) }
 
     # check for CI build status
-    status = git_server.get_build_status pull_request.build_status
-    if status
-      notices << "[notice] Your build status is not successful: #{status.target_url}.\n" unless status.state == "success"
-      summary_data.merge!( "Build status" => git_server.colorized_build_description(status) )
+    if pull_request.build_status
+      notices << "[notice] Your build status is not successful: #{pull_request.build.url}.\n" unless pull_request.build.state == "success"
+      summary_data.merge!( "Build status" => git_server.colorized_build_description(pull_request.build.state, pull_request.build.description) )
     end
 
     # check for needed lgtm's

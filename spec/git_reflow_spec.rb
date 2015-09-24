@@ -37,11 +37,13 @@ describe GitReflow do
     subject { GitReflow.status(base_branch) }
 
     before do
-      GitReflow.stub(:current_branch).and_return(feature_branch)
-      GitReflow.stub(:destination_branch).and_return(base_branch)
+      allow(GitReflow).to receive(:current_branch).and_return(feature_branch)
+      allow(GitReflow).to receive(:destination_branch).and_return(base_branch)
 
-      Github.stub(:new).and_return(github)
-      GitReflow.stub(:git_server).and_return(git_server)
+      allow(Github).to receive(:new).and_return(github)
+      allow(GitReflow).to receive(:git_server).and_return(git_server)
+      allow(git_server).to receive(:connection).and_return(github)
+      allow(git_server).to receive(:get_build_status).and_return(Struct.new(:state, :description, :target_url).new())
     end
 
     context 'with no existing pull request' do
@@ -51,7 +53,9 @@ describe GitReflow do
     end
 
     context 'with an existing pull request' do
-      before { git_server.stub(:find_open_pull_request).with({from: feature_branch, to: base_branch}).and_return(existing_pull_request) }
+      before do
+        git_server.stub(:find_open_pull_request).with({from: feature_branch, to: base_branch}).and_return(existing_pull_request)
+      end
 
       it 'displays a summary of the pull request and asks to open it in the browser' do
         GitReflow.should_receive(:display_pull_request_summary).with(existing_pull_request)

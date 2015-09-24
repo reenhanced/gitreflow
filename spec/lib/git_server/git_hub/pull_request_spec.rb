@@ -50,7 +50,7 @@ describe GitReflow::GitServer::GitHub::PullRequest do
     specify { expect(subject.html_url).to eql(existing_pull_request.html_url) }
     specify { expect(subject.feature_branch_name).to eql(existing_pull_request.head.label) }
     specify { expect(subject.base_branch_name).to eql(existing_pull_request.base.label) }
-    specify { expect(subject.build_status).to eql(existing_pull_request.head.sha) }
+    specify { expect(subject.build_status).to eql('success') }
     specify { expect(subject.source_object).to eql(existing_pull_request) }
   end
 
@@ -238,6 +238,24 @@ describe GitReflow::GitServer::GitHub::PullRequest do
 
       specify { expect(subject.last_comment).to eq('"Cha cha cha"') }
   end
+
+  describe '#build' do
+    let(:build) { Fixture.new('repositories/statuses.json').to_json_hashie.first }
+
+    context "with an existing build" do
+      specify { expect(subject.build.state).to eq(build.state) }
+      specify { expect(subject.build.description).to eq(build.description) }
+      specify { expect(subject.build.url).to eq(build.target_url) }
+    end
+
+    context "no build found" do
+      before  { allow(GitReflow.git_server).to receive(:get_build_status).and_return(nil) }
+      specify { expect(subject.build.state).to eq(nil) }
+      specify { expect(subject.build.description).to eq(nil) }
+      specify { expect(subject.build.url).to eq(nil) }
+    end
+  end
+
 
   describe '.create(options)' do
     let(:title) { 'Bone Saw is ready!' }

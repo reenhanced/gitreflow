@@ -81,13 +81,13 @@ module GitReflow
         @connection ||= self.class.connection
       end
 
-      def get_build_status sha
+      def get_build_status(sha)
         # BitBucket does not currently support build status via API
         # for updates: https://bitbucket.org/site/master/issue/8548/better-ci-integration-add-a-build-status
         return nil
       end
 
-      def colorized_build_description status
+      def colorized_build_description(state, description)
         ""
       end
 

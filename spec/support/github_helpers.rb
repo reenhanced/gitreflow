@@ -60,10 +60,10 @@ module GithubHelpers
     GitReflow.stub(:git_server).and_return(github_server)
 
     # Stubbing statuses for a given commit
-    stub_request(:get, %r{#{GitReflow.git_server.class.api_endpoint}/repos/#{user}/commits/\w+}).
-      to_return(:body => Fixture.new('repositories/commit.json.erb', repo_owner: user, repo_name: repo, author: user).to_json.to_s, :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
-    stub_request(:get, %r{#{GitReflow.git_server.class.api_endpoint}/repos/#{user}/commits/\w+/statuses?}).
-      to_return(:body => Fixture.new('pull_requests/pull_requests.json').to_json.to_s, :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
+    #stub_request(:get, %r{#{GitReflow.git_server.class.api_endpoint}/repos/#{user}/commits/\w+}).
+    #  to_return(:body => Fixture.new('repositories/commit.json.erb', repo_owner: user, repo_name: repo, author: user).to_json.to_s, :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
+    stub_request(:get, %r{/repos/#{user}/(#{repo}/)?commits/\w+/statuses}).
+      to_return(:body => Fixture.new('repositories/statuses.json').to_s, :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
 
     if pull
       # Stubbing review

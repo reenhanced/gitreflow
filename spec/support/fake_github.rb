@@ -36,10 +36,8 @@ class FakeGitHub
 
     if pull_request and commits.none?
       stub_github_request(:commits, [{
-        repo_owner: self.repo_owner,
-        repo_name:  self.repo_name,
-        author:     pull_request[:owner] || DEFAULT_COMMIT_AUTHOR,
-        created_at: Chronic.parse(DEFAULT_COMMIT_TIME)
+        author:              pull_request[:owner] || DEFAULT_COMMIT_AUTHOR,
+        created_at:          Chronic.parse(DEFAULT_COMMIT_TIME)
       }])
     end
 
@@ -50,26 +48,25 @@ class FakeGitHub
     case object_to_stub
     when :commits
       commits_response = Fixture.new('repositories/commits.json.erb',
-                            repo_owner:    repo_owner,
-                            repo_name:     repo_name,
-                            commits:       object_data)
-      stub_request(:get, %r{#{GitReflow::GitServer::GitHub.api_endpoint}/repos/#{self.repo_owner}/commits}).
-        to_return(
-          body: commits_response.to_s,
-          status: 201,
-          headers: {content_type: "application/json; charset=utf-8"})
-
-      commits_response.to_json_hashie.each do |commit|
-        stub_request(:get, %r{#{GitReflow::GitServer::GitHub.api_endpoint}/repos/#{self.repo_owner}/#{self.repo_name}/commits/#{commit.sha}}).
+                            repo_owner:          repo_owner,
+                            repo_name:           repo_name,
+                            commits:             object_data)
+      commits_response.to_json_hashie.each_with_index do |commit, index|
+        stub_request(:get, %r{/repos/#{self.repo_owner}/(#{self.repo_name}/)?commits/#{commit.sha}\?}).
           to_return(
             body: commit.to_json.to_s,
             status: 201,
             headers: {content_type: "application/json; charset=utf-8"})
+      stub_request(:get, %r{/repos/#{self.repo_owner}/commits\Z}).
+        to_return(
+          body: commits_response.to_s,
+          status: 201,
+          headers: {content_type: "application/json; charset=utf-8"})
       end
     when :issue
       # Stubbing issue comments
       if object_data[:comments]
-        stub_request(:get, "#{GitReflow::GitServer::GitHub.api_endpoint}/repos/#{self.repo_owner}/#{self.repo_name}/issues/#{object_data[:number] || 1}/comments").
+        stub_request(:get, %r{/repos/#{self.repo_owner}/(#{self.repo_name}/)?issues/#{object_data[:number] || 1}/comments}).
           with(query: {'access_token' => 'a1b2c3d4e5f6g7h8i9j0'}).
           to_return(body: Fixture.new('issues/comments.json.erb',
                                          repo_owner:          self.repo_owner,
@@ -81,7 +78,7 @@ class FakeGitHub
                     status: 201,
                     headers: {content_type: "application/json; charset=utf-8"})
       else
-        stub_request(:get, "#{GitReflow::GitServer::GitHub.api_endpoint}/repos/#{self.repo_owner}/#{self.repo_name}/issues/#{object_data[:number] || 1}/comments").
+        stub_request(:get, %r{/repos/#{self.repo_owner}/(#{self.repo_name}/)?issues/#{object_data[:number] || 1}/comments}).
           with(query: {'access_token' => 'a1b2c3d4e5f6g7h8i9j0'}).
           to_return(body: '[]', status: 201, headers: {content_type: "application/json; charset=utf-8"})
       end
@@ -108,7 +105,7 @@ class FakeGitHub
 
       # Stubbing pull request comments
       if object_data[:comments]
-        stub_request(:get, "#{GitReflow::GitServer::GitHub.api_endpoint}/repos/#{self.repo_owner}/#{self.repo_name}/pulls/#{object_data[:number] || 1}/comments").
+        stub_request(:get, %r{/repos/#{self.repo_owner}/(#{self.repo_name}/)?pulls/#{object_data[:number] || 1}/comments}).
           with(query: {'access_token' => 'a1b2c3d4e5f6g7h8i9j0'}).
           to_return(body: Fixture.new('pull_requests/comments.json.erb',
                                       repo_owner:          self.repo_owner,

@@ -134,13 +134,17 @@ module GitReflow
         @connection
       end
 
-      def get_build_status sha
+      def get_build_status(sha)
         connection.repos.statuses.all(self.class.remote_user, self.class.remote_repo_name, sha).first
       end
 
-      def colorized_build_description status
-        colorized_statuses = { pending: :yellow, success: :green, error: :red, failure: :red }
-        status.description.colorize( colorized_statuses[status.state.to_sym] )
+      def colorized_build_description(state, description)
+        colorized_statuses = {
+          pending: :yellow,
+          success: :green,
+          error: :red,
+          failure: :red }
+        description.colorize( colorized_statuses[state.to_sym] )
       end
 
       def create_pull_request(options = {})

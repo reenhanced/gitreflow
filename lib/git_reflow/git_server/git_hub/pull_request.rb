@@ -10,8 +10,8 @@ module GitReflow
           self.html_url            = attributes.html_url
           self.feature_branch_name = attributes.head.label
           self.base_branch_name    = attributes.base.label
-          self.build_status        = attributes.head.sha
           self.source_object       = attributes
+          self.build_status        = build.state
         end
 
         def self.create(options = {})
@@ -59,6 +59,20 @@ module GitReflow
 
         def last_comment
           "#{comments.last.body.inspect}"
+        end
+
+        def build
+          github_build_status = GitReflow.git_server.get_build_status(self.head.sha)
+          build_status_object = Struct.new(:state, :description, :url)
+          if github_build_status
+            build_status_object.new(
+              github_build_status.state,
+              github_build_status.description,
+              github_build_status.target_url
+            )
+          else
+            build_status_object.new
+          end
         end
 
         private

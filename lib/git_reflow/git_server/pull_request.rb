@@ -38,11 +38,51 @@ module GitReflow
       def good_to_merge?(force: false)
         return true if force
         has_comments_or_approvals = (has_comments? or approvals.any?)
-        build_status              = GitReflow.git_server.get_build_status self.build_status
 
         force == true or (
-          (build_status.nil? or build_status.state == "success") and
+          (build_status.nil? or build_status == "success") and
           (has_comments_or_approvals and reviewers_pending_response.empty?))
+      end
+
+      def display_pull_request_summary
+        summary_data = {
+          "branches"    => "#{self.feature_branch_name} -> #{self.base_branch_name}",
+          "number"      => self.number,
+          "url"         => self.html_url
+        }
+
+        notices = ""
+        reviewed_by = []
+
+        # check for CI build status
+        if self.build_status
+          notices << "[notice] Your build status is not successful: #{self.build.url}.\n" unless self.build.state == "success"
+          summary_data.merge!( "Build status" => GitReflow.git_server.colorized_build_description(self.build.state, self.build.description) )
+        end
+
+        # check for needed lgtm's
+        if self.reviewers.any?
+          reviewed_by = self.reviewers.map {|author| author.colorize(:red) }
+          summary_data.merge!("Last comment"  => self.last_comment)
+
+          if self.approvals.any?
+            reviewed_by.map! { |author| approvals.include?(author.uncolorize) ? author.colorize(:green) : author }
+          end
+
+          notices << "[notice] You still need a LGTM from: #{reviewers_pending_response.join(', ')}\n" if reviewers_pending_response.any?
+        else
+          notices << "[notice] No one has reviewed your pull request.\n"
+        end
+
+        summary_data['reviewed by'] = reviewed_by.join(', ')
+
+        padding_size = summary_data.keys.max_by(&:size).size + 2
+        summary_data.keys.sort.each do |name|
+          string_format = "    %-#{padding_size}s %s\n"
+          printf string_format, "#{name}:", summary_data[name]
+        end
+
+        puts "\n#{notices}" unless notices.empty?
       end
 
       def method_missing(method_sym, *arguments, &block)

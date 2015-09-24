@@ -12,6 +12,12 @@ module CommandLineHelpers
       $output << output
       output = ''
     end
+
+    STDOUT.stub(:printf) do |output|
+      puts "ping"
+      $output << output
+      output = ''
+    end
   end
 
   def stub_run_for(module_to_stub)

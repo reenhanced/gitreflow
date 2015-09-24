@@ -8,8 +8,8 @@ module GitReflow
 
     class ConnectionError < StandardError; end
 
-    def connect(options = nil)
-      options ||= { provider: 'GitHub' }
+    def connect(options = {})
+      options[:provider] = 'GitHub' if "#{options[:provider]}".length <= 0
       begin
         provider_name = options[:provider]
         provider = provider_class_for(options.delete(:provider)).new(options)

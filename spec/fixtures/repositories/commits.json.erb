@@ -4,7 +4,6 @@
     <% commits_json << Fixture.new('repositories/commit.json.erb',
                          id:                  index,
                          author:              commit[:author],
-                         pull_request_number: pull_request_number,
                          repo_owner:          repo_owner,
                          repo_name:           repo_name,
                          created_at:          commit[:created_at] || Chronic.parse("1.minute.ago")

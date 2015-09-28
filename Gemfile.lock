@@ -1,8 +1,8 @@
 PATH
   remote: .
   specs:
-    git_reflow (0.6.5)
-      colorize (= 0.6.0)
+    git_reflow (0.6.6)
+      colorize (>= 0.7.0)
       github_api (= 0.12.3)
       gli (= 2.12.2)
       highline
@@ -22,7 +22,7 @@ GEM
       columnize (= 0.9.0)
       rb-readline (= 0.5.2)
     coderay (1.1.0)
-    colorize (0.6.0)
+    colorize (0.7.7)
     columnize (0.9.0)
     crack (0.4.2)
       safe_yaml (~> 1.0.0)
@@ -115,4 +115,4 @@ DEPENDENCIES
   wwtd (= 0.7.0)
 
 BUNDLED WITH
-   1.10.5
+   1.10.6

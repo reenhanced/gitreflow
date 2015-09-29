@@ -149,6 +149,8 @@ describe GitReflow do
 
 
     before do
+      GitReflow.stub(:append_to_squashed_commit_message).and_return(true)
+
       module Kernel
         def system(cmd)
           "call #{cmd}"

@@ -149,15 +149,24 @@ describe GitReflow::GitHelpers do
   end
 
   describe ".append_to_squashed_commit_message(message)" do
-    let(:message)  { "do do the voodoo that you do" }
-    let(:root_dir) { '/home/gitreflow' }
-    before         { allow(Gitacular).to receive(:git_root_dir).and_return(root_dir) }
-    subject        { Gitacular.append_to_squashed_commit_message(message) }
+    let(:original_squash_message) { "Oooooo, SQUASH IT" }
+    let(:message)                 { "do do the voodoo that you do" }
+    let(:root_dir)                { '/home/gitreflow' }
+    let(:squash_path)             { "#{root_dir}/.git/SQUASH_MSG" }
+    let(:tmp_squash_path)         { "#{root_dir}/.git/tmp_squash_msg" }
+    before                        { allow(Gitacular).to receive(:git_root_dir).and_return(root_dir) }
+    subject                       { Gitacular.append_to_squashed_commit_message(message) }
 
     it "appends the message to git's SQUASH_MSG temp file" do
+      tmp_file = double('file')
+      allow(File).to receive(:open).with(tmp_squash_path, "w").and_yield(tmp_file)
+      allow(File).to receive(:exists?).with(squash_path).and_return(true)
+      allow(File).to receive(:foreach).with(squash_path).and_yield(original_squash_message)
+      expect(tmp_file).to receive(:puts).with(message)
+      expect(tmp_file).to receive(:puts).with(original_squash_message)
+
       expect { subject }.to have_run_commands_in_order [
-        "echo \"#{message}\" | cat - #{root_dir}/.git/SQUASH_MSG > #{root_dir}/tmp_squash_msg",
-        "mv #{root_dir}/tmp_squash_msg #{root_dir}/.git/SQUASH_MSG"
+        "mv #{tmp_squash_path} #{squash_path}"
       ]
     end
   end

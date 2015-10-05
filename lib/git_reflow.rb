@@ -30,7 +30,7 @@ module GitReflow
       puts "[notice] Run 'git reflow review #{destination_branch}' to start the review process"
     else
       puts "Here's the status of your review:"
-      display_pull_request_summary(pull_request)
+      pull_request.display_pull_request_summary
       ask_to_open_in_browser(pull_request.html_url)
     end
   end
@@ -45,7 +45,7 @@ module GitReflow
       existing_pull_request = git_server.find_open_pull_request( from: current_branch, to: options['base'] )
       if existing_pull_request
         puts "A pull request already exists for these branches:"
-        display_pull_request_summary(existing_pull_request)
+        existing_pull_request.display_pull_request_summary
         ask_to_open_in_browser(existing_pull_request.html_url)
       else
         pull_request = git_server.create_pull_request(title: options['title'],
@@ -83,14 +83,14 @@ module GitReflow
                            "#{get_first_commit_message}"
                          end
 
-        if existing_pull_request.good_to_merge?(options['skip_lgtm'])
+        if existing_pull_request.good_to_merge?(force: options['skip_lgtm'])
           puts "Merging pull request ##{existing_pull_request.number}: '#{existing_pull_request.title}', from '#{existing_pull_request.feature_branch_name}' into '#{existing_pull_request.base_branch_name}'"
 
           update_destination(options['base'])
           merge_feature_branch(feature_branch,
                                :destination_branch  => options['base'],
                                :pull_request_number => existing_pull_request.number,
-                               :lgtm_authors        => git_server.approvals(existing_pull_request),
+                               :lgtm_authors        => existing_pull_request.approvals,
                                :message             => commit_message)
           committed = run_command_with_label 'git commit', with_system: true
 
@@ -129,47 +129,4 @@ module GitReflow
     @git_server ||= GitServer.connect provider: GitReflow::Config.get('reflow.git-server').strip, silent: true
   end
 
-  def display_pull_request_summary(pull_request)
-    summary_data = {
-      "branches"    => "#{pull_request.feature_branch_name} -> #{pull_request.base_branch_name}",
-      "number"      => pull_request.number,
-      "url"         => pull_request.html_url
-    }
-
-    notices = ""
-    reviewed_by = git_server.reviewers(pull_request).map {|author| author.colorize(:red) }
-
-    # check for CI build status
-    if pull_request.build_status
-      notices << "[notice] Your build status is not successful: #{pull_request.build.url}.\n" unless pull_request.build.state == "success"
-      summary_data.merge!( "Build status" => git_server.colorized_build_description(pull_request.build.state, pull_request.build.description) )
-    end
-
-    # check for needed lgtm's
-    if git_server.reviewers(pull_request).any?
-      approvals    = git_server.approvals(pull_request)
-      pending      = git_server.reviewers_pending_response(pull_request)
-      last_comment = git_server.last_comment_for_pull_request(pull_request)
-
-      summary_data.merge!("Last comment"  => last_comment)
-
-      if approvals.any?
-        reviewed_by.map! { |author| approvals.include?(author.uncolorize) ? author.colorize(:green) : author }
-      end
-
-      notices << "[notice] You still need a LGTM from: #{pending.join(', ')}\n" if pending.any?
-    else
-      notices << "[notice] No one has reviewed your pull request.\n"
-    end
-
-    summary_data['reviewed by'] = reviewed_by.join(', ')
-
-    padding_size = summary_data.keys.max_by(&:size).size + 2
-    summary_data.keys.sort.each do |name|
-      string_format = "    %-#{padding_size}s %s\n"
-      printf string_format, "#{name}:", summary_data[name]
-    end
-
-    puts "\n#{notices}" unless notices.empty?
-  end
 end

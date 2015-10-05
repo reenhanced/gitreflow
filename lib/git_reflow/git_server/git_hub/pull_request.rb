@@ -31,6 +31,11 @@ module GitReflow
           end
         end
 
+        # override attr_reader for auto-updates
+        def build_status
+          @build_status ||= build.state
+        end
+
         def commit_author
           begin
             username, branch = base.label.split(':')

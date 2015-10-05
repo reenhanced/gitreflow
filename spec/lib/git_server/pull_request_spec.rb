@@ -18,7 +18,7 @@ describe GitReflow::GitServer::GitHub::PullRequest do
           comments: [{author: 'tito', body: 'lgtm'}, {author: 'ringo', body: ':+1:'}]
         })
       # setup initial valid state
-      allow(subject).to receive(:build_status).and_return(nil)
+      allow_any_instance_of(GitReflow::GitServer::GitHub::PullRequest).to receive(:build).and_return(Struct.new(:state, :description, :url).new)
       GitReflow.git_server.stub(:find_open_pull_request).with({from: 'new-feature', to: 'master'}).and_return(pull_request)
     end
 
@@ -78,17 +78,16 @@ describe GitReflow::GitServer::GitHub::PullRequest do
           owner:    pull_request.head.user.login,
           comments: [{author: 'tito', body: 'lgtm'}, {author: 'ringo', body: ':+1:'}]
         })
-      allow(subject).to receive(:build_status).and_return(nil)
+      allow_any_instance_of(GitReflow::GitServer::GitHub::PullRequest).to receive(:build).and_return(Struct.new(:state, :description, :url).new)
       GitReflow.git_server.stub(:find_open_pull_request).with({from: 'new-external-feature', to: 'master'}).and_return(pull_request)
     end
 
     it "displays relavent information about the pull request" do
-      subject
-      $output.should include("branches: new-external-feature -> master")
-      $output.should include("number: #{pull_request.number}")
-      $output.should include("url: #{pull_request.html_url}")
-      $output.should include("reviewed by: tito, ringo")
-      $output.should include("Last comment: \":+1:\"")
+      expect{ subject }.to have_output("branches: new-external-feature -> reenhanced:master")
+      expect{ subject }.to have_output("number: #{pull_request.number}")
+      expect{ subject }.to have_output("url: #{pull_request.html_url}")
+      expect{ subject }.to have_output("reviewed by: #{"tito".colorize(:green)}, #{"ringo".colorize(:green)}")
+      expect{ subject }.to have_output("Last comment: \":+1:\"")
     end
   end
 end

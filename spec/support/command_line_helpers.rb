@@ -13,11 +13,10 @@ module CommandLineHelpers
       output = ''
     end
 
-    STDOUT.stub(:printf) do |output|
-      puts "ping"
-      $output << output
+    allow_any_instance_of(GitReflow::GitServer::PullRequest).to receive(:printf) do |format, *output|
+      $output << Array(output).join(" ")
       output = ''
-    end
+    end.and_return("")
   end
 
   def stub_run_for(module_to_stub)
@@ -123,7 +122,7 @@ end
 RSpec::Matchers.define :have_output do |expected_output|
   match do |block|
     block.call
-    $output.include? expected_output
+    $output.join("\n").include? expected_output
   end
 
   supports_block_expectations

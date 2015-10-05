@@ -58,7 +58,7 @@ describe GitReflow do
       end
 
       it 'displays a summary of the pull request and asks to open it in the browser' do
-        GitReflow.should_receive(:display_pull_request_summary).with(existing_pull_request)
+        existing_pull_request.should_receive(:display_pull_request_summary)
         GitReflow.should_receive(:ask_to_open_in_browser).with(existing_pull_request.html_url)
         subject
         $output.should include "Here's the status of your review:"
@@ -81,6 +81,7 @@ describe GitReflow do
     }
 
     let(:github) do
+      allow_any_instance_of(GitReflow::GitServer::GitHub::PullRequest).to receive(:build).and_return(Struct.new(:state, :description, :url).new)
       stub_github_with({
         :user         => user,
         :password     => password,
@@ -120,14 +121,14 @@ describe GitReflow do
       before do
         GitReflow.stub(:push_current_branch)
         github_error = Github::Error::UnprocessableEntity.new( eval(Fixture.new('pull_requests/pull_request_exists_error.json').to_s) )
-        github.stub(:create_pull_request).with(inputs.except('state')).and_raise(github_error)
-        GitReflow.stub(:display_pull_request_summary)
+        github.should_receive(:find_open_pull_request).and_return(existing_pull_request)
+        existing_pull_request.stub(:display_pull_request_summary)
       end
 
       subject { GitReflow.review inputs }
 
       it "displays a pull request summary for the existing pull request" do
-        GitReflow.should_receive(:display_pull_request_summary)
+        existing_pull_request.should_receive(:display_pull_request_summary)
         subject
       end
 
@@ -142,6 +143,7 @@ describe GitReflow do
     let(:branch)                { 'new-feature' }
     let(:inputs)                { {} }
     let!(:github) do
+      allow_any_instance_of(GitReflow::GitServer::GitHub::PullRequest).to receive(:build).and_return(Struct.new(:state, :description, :url).new)
       stub_github_with({
         :user         => user,
         :password     => password,
@@ -175,16 +177,17 @@ describe GitReflow do
     context "and pull request exists for the feature branch to the destination branch" do
       before do
         github.stub(:get_build_status).and_return(build_status)
-        github.stub(:has_pull_request_comments?).and_return(true)
-        github.stub(:comment_authors_for_pull_request).and_return(['codenamev'])
+        github.should_receive(:find_open_pull_request).and_return(existing_pull_request)
+        existing_pull_request.stub(:has_comments?).and_return(true)
+        github.stub(:reviewers).and_return(['codenamev'])
       end
 
       context 'and build status is not "success"' do
         let(:build_status) { Hashie::Mash.new({ state: 'failure', description: 'Build resulted in failed test(s)' }) }
 
         before do
-          # just stubbing these in a locked state as the test is specific to this scenario
-          GitReflow.stub(:has_pull_request_comments?).and_return(true)
+          existing_pull_request.stub(:build).and_return(build_status)
+          existing_pull_request.stub(:has_comments?).and_return(true)
         end
 
         it "halts delivery and notifies user of a failed build" do
@@ -198,8 +201,8 @@ describe GitReflow do
 
         before do
           # stubbing unrelated results so we can just test that it made it insdide the conditional block
-          GitReflow.stub(:has_pull_request_comments?).and_return(true)
-          GitReflow.stub(:comment_authors_for_pull_request).and_return([])
+          existing_pull_request.stub(:has_comments?).and_return(true)
+          existing_pull_request.stub(:reviewers).and_return([])
           GitReflow.stub(:update_destination).and_return(true)
           GitReflow.stub(:merge_feature_branch).and_return(true)
           GitReflow.stub(:append_to_squashed_commit_message).and_return(true)
@@ -215,14 +218,14 @@ describe GitReflow do
 
         context 'and has comments' do
           before do
-            GitReflow.stub(:has_pull_request_comments?).and_return(true)
+            existing_pull_request.stub(:has_comments?).and_return(true)
           end
 
           context 'but there is a LGTM' do
             let(:lgtm_comment_authors) { ['nhance'] }
             before do
-              github.stub(:approvals).and_return(lgtm_comment_authors)
-              github.stub(:reviewers_pending_response).and_return([])
+              existing_pull_request.stub(:approvals).and_return(lgtm_comment_authors)
+              existing_pull_request.stub(:reviewers_pending_response).and_return([])
             end
 
             it "includes the pull request body in the commit message" do
@@ -238,7 +241,7 @@ describe GitReflow do
                 existing_pull_request.description = ''
                 github.stub(:find_open_pull_request).and_return(existing_pull_request)
                 GitReflow.stub(:get_first_commit_message).and_return(first_commit_message)
-                github.stub(:comment_authors_for_pull_request).and_return(lgtm_comment_authors)
+                existing_pull_request.stub(:reviewers).and_return(lgtm_comment_authors)
               end
 
               it "includes the first commit message for the new branch in the commit message of the merge" do
@@ -343,7 +346,7 @@ describe GitReflow do
 
           context 'but there are still unaddressed comments' do
             let(:open_comment_authors) { ['nhance', 'codenamev'] }
-            before { github.stub(:reviewers_pending_response).and_return(open_comment_authors) }
+            before { existing_pull_request.stub(:reviewers_pending_response).and_return(open_comment_authors) }
             it "notifies the user to get their code reviewed" do
               expect { subject }.to have_said "You still need a LGTM from: #{open_comment_authors.join(', ')}", :deliver_halted
             end
@@ -352,9 +355,9 @@ describe GitReflow do
 
         context 'but has no comments' do
           before do
-            github.stub(:has_pull_request_comments?).and_return(false)
-            github.stub(:approvals).and_return([])
-            github.stub(:reviewers_pending_response).and_return([])
+            existing_pull_request.stub(:has_comments?).and_return(false)
+            existing_pull_request.stub(:approvals).and_return([])
+            existing_pull_request.stub(:reviewers_pending_response).and_return([])
           end
 
           it "notifies the user to get their code reviewed" do

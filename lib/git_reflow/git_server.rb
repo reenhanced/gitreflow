@@ -9,6 +9,7 @@ module GitReflow
     class ConnectionError < StandardError; end
 
     def connect(options = {})
+      options ||= {}
       options[:provider] = 'GitHub' if "#{options[:provider]}".length <= 0
       begin
         provider_name = options[:provider]

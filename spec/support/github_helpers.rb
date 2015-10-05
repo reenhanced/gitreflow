@@ -80,12 +80,18 @@ module GithubHelpers
       # Stubbing pull request comments
       stub_get("/repos/#{user}/#{repo}/pulls/#{pull.number}/comments?").with(:query => {'access_token' => 'a1b2c3d4e5f6g7h8i9j0'}).
         to_return(:body => Fixture.new('pull_requests/comments.json.erb', repo_owner: user, repo_name: repo, comments: [{author: user}], pull_request_number: pull.number).to_json.to_s, :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
+      stub_get("/repos/#{user}/pulls/#{pull.number}/comments?").with(:query => {'access_token' => 'a1b2c3d4e5f6g7h8i9j0'}).
+        to_return(:body => Fixture.new('pull_requests/comments.json.erb', repo_owner: user, repo_name: repo, comments: [{author: user}], pull_request_number: pull.number).to_s, :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
       # Stubbing issue comments
+      stub_get("/repos/#{user}/issues/#{pull.number}/comments?").with(:query => {'access_token' => 'a1b2c3d4e5f6g7h8i9j0'}).
+        to_return(:body => Fixture.new('issues/comments.json.erb', repo_owner: user, repo_name: repo, comments: [{author: user}], pull_request_number: pull.number).to_s, :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
       stub_get("/repos/#{user}/#{repo}/issues/#{pull.number}/comments?").with(:query => {'access_token' => 'a1b2c3d4e5f6g7h8i9j0'}).
         to_return(:body => Fixture.new('issues/comments.json.erb', repo_owner: user, repo_name: repo, comments: [{author: user}], pull_request_number: pull.number).to_json.to_s, :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
       # Stubbing pull request commits
       stub_get("/repos/#{user}/#{repo}/pulls/#{pull.number}/commits").with(query: {"access_token" => "a1b2c3d4e5f6g7h8i9j0"}).
         to_return(:body => Fixture.new("pull_requests/commits.json").to_s, status: 201, headers: {content_type: "application/json; charset=utf-8"})
+      stub_request(:get, %r{/repos/#{user}/commits/\w+}).with(query: {"access_token" => "a1b2c3d4e5f6g7h8i9j0"}).
+        to_return(:body => Fixture.new("repositories/commit.json").to_s, status: 201, headers: {content_type: "application/json; charset=utf-8"})
     end
 
     github_server

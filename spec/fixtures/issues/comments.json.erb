@@ -2,7 +2,7 @@
   <% comment_json = [] %>
   <% comments.each_with_index do |comment, index| %>
     <% comment_json << Fixture.new('issues/comment.json.erb',
-                    id: comment[:id] || index,
+                    id: comment[:id] || index + 1,
                     author: comment[:author],
                     pull_request_number: pull_request_number,
                     repo_owner: repo_owner,

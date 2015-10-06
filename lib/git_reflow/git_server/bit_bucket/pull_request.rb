@@ -32,7 +32,7 @@ module GitReflow
 
         def self.find_open(to: 'master', from: GitReflow.git_server.class.current_branch)
           begin
-            matching_pull = connection.repos.pull_requests.all(GitReflow.git_server.class.remote_user, GitReflow.git_server.remote_repo_name, limit: 1).select do |pr|
+            matching_pull = GitReflow.git_server.connection.repos.pull_requests.all(GitReflow.git_server.class.remote_user, GitReflow.git_server.class.remote_repo_name, limit: 1).select do |pr|
               pr.source.branch.name == options[:from] and
               pr.destination.branch.name == options[:to]
             end.first
@@ -43,7 +43,7 @@ module GitReflow
           rescue ::BitBucket::Error::NotFound => e
             GitReflow.git_server.say "No BitBucket repo found for #{GitReflow.git_server.class.remote_user}/#{GitReflow.git_server.class.remote_repo_name}", :error
           rescue ::BitBucket::Error::Forbidden => e
-            GitReflow.git_server.class.say "You don't have API access to this repo", :error
+            GitReflow.git_server.say "You don't have API access to this repo", :error
           end
         end
 

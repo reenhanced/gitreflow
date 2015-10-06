@@ -1,8 +1,8 @@
 PATH
   remote: .
   specs:
-    git_reflow (0.6.4)
-      colorize (= 0.6.0)
+    git_reflow (0.7.0)
+      colorize (>= 0.7.0)
       github_api (= 0.12.3)
       gli (= 2.12.2)
       highline
@@ -23,7 +23,7 @@ GEM
       rb-readline (= 0.5.2)
     chronic (0.10.2)
     coderay (1.1.0)
-    colorize (0.6.0)
+    colorize (0.7.7)
     columnize (0.9.0)
     crack (0.4.2)
       safe_yaml (~> 1.0.0)
@@ -44,7 +44,7 @@ GEM
       oauth2
     gli (2.12.2)
     hashie (3.4.2)
-    highline (1.7.3)
+    highline (1.7.7)
     httpclient (2.6.0.1)
     json_pure (1.8.2)
     jwt (1.5.1)

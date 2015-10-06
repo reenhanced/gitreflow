@@ -62,10 +62,20 @@ module GitReflow
     end
 
     def append_to_squashed_commit_message(message = '')
-      run "echo \"#{message}\" | cat - #{git_root_dir}/.git/SQUASH_MSG > #{git_root_dir}/tmp_squash_msg"
-      run "mv #{git_root_dir}/tmp_squash_msg #{git_root_dir}/.git/SQUASH_MSG"
+      tmp_squash_message_path = "#{git_root_dir}/.git/tmp_squash_msg"
+      squash_message_path     = "#{git_root_dir}/.git/SQUASH_MSG"
+      File.open(tmp_squash_message_path, "w") do |file_content|
+        file_content.puts message
+        if File.exists?(squash_message_path)
+          File.foreach(squash_message_path) do |line|
+            file_content.puts line
+          end
+        end
+      end
+
+      run "mv #{tmp_squash_message_path} #{squash_message_path}"
     end
-    
+
     private
 
     def extract_remote_user_and_repo_from_remote_url(remote_url)

@@ -11,6 +11,7 @@ require 'git_reflow/config'
 require 'git_reflow/git_server'
 require 'git_reflow/git_server/git_hub'
 require 'git_reflow/git_server/bit_bucket'
+require 'git_reflow/os_detector'
 require 'git_reflow/sandbox'
 require 'git_reflow/git_helpers'
 
@@ -65,13 +66,13 @@ module GitReflow
 
   def deliver(options = {})
     feature_branch    = current_branch
-    options['base'] ||= 'master'
-    fetch_destination options['base']
+    base_branch       = options['base'] || 'master'
 
-    update_destination(current_branch)
+    fetch_destination(base_branch)
+    update_destination(feature_branch)
 
     begin
-      existing_pull_request = git_server.find_open_pull_request( :from => current_branch, :to => options['base'] )
+      existing_pull_request = git_server.find_open_pull_request( :from => current_branch, :to => base_branch )
 
       if existing_pull_request.nil?
         say "No pull request exists for #{remote_user}:#{current_branch}\nPlease submit your branch for review first with \`git reflow review\`", :deliver_halted
@@ -86,9 +87,9 @@ module GitReflow
         if existing_pull_request.good_to_merge?(force: options['skip_lgtm'])
           puts "Merging pull request ##{existing_pull_request.number}: '#{existing_pull_request.title}', from '#{existing_pull_request.feature_branch_name}' into '#{existing_pull_request.base_branch_name}'"
 
-          update_destination(options['base'])
+          update_destination(base_branch)
           merge_feature_branch(feature_branch,
-                               :destination_branch  => options['base'],
+                               :destination_branch  => base_branch,
                                :pull_request_number => existing_pull_request.number,
                                :lgtm_authors        => existing_pull_request.approvals,
                                :message             => commit_message)
@@ -96,15 +97,19 @@ module GitReflow
 
           if committed
             say "Merge complete!", :success
-            deploy_and_cleanup = ask "Would you like to push this branch to your remote repo and cleanup your feature branch? "
-            if deploy_and_cleanup =~ /^y/i
-              run_command_with_label "git push origin #{options['base']}"
+
+            # check if user always wants to push and cleanup, otherwise ask
+            always_deploy_and_cleanup = GitReflow::Config.get('reflow.always-deploy-and-cleanup') == "true"
+            deploy_and_cleanup = always_deploy_and_cleanup || (ask "Would you like to push this branch to your remote repo and cleanup your feature branch? ") =~ /^y/i
+
+            if deploy_and_cleanup
+              run_command_with_label "git push origin #{base_branch}"
               run_command_with_label "git push origin :#{feature_branch}"
               run_command_with_label "git branch -D #{feature_branch}"
               puts "Nice job buddy."
             else
               puts "Cleanup halted.  Local changes were not pushed to remote repo.".colorize(:red)
-              puts "To reset and go back to your branch run \`git reset --hard origin/master && git checkout new-feature\`"
+              puts "To reset and go back to your branch run \`git reset --hard origin/#{base_branch} && git checkout #{feature_branch}\`"
             end
           else
             say "There were problems commiting your feature... please check the errors above and try again.", :error

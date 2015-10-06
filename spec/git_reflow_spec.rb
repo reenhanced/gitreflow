@@ -155,6 +155,8 @@ describe GitReflow do
 
 
     before do
+      GitReflow.stub(:append_to_squashed_commit_message).and_return(true)
+
       module Kernel
         def system(cmd)
           "call #{cmd}"
@@ -288,17 +290,42 @@ describe GitReflow do
                 end
               end
 
-              it "pushes local squash merged base branch to remote repo" do
-                expect { subject }.to have_run_command("git push origin master")
+              context "not always" do
+                before do
+                  GitReflow::Config.stub(:get) { "false" }
+                end
+
+                it "pushes local squash merged base branch to remote repo" do
+                  expect { subject }.to have_run_command("git push origin master")
+                end
+
+                it "deletes the remote feature branch" do
+                  expect { subject }.to have_run_command("git push origin :new-feature")
+                end
+
+                it "deletes the local feature branch" do
+                  expect { subject }.to have_run_command("git branch -D new-feature")
+                end
               end
 
-              it "deletes the remote feature branch" do
-                expect { subject }.to have_run_command("git push origin :new-feature")
+              context "always" do
+                before do
+                  GitReflow::Config.stub(:get) { "true" }
+                end
+
+                it "pushes local squash merged base branch to remote repo" do
+                  expect { subject }.to have_run_command("git push origin master")
+                end
+
+                it "deletes the remote feature branch" do
+                  expect { subject }.to have_run_command("git push origin :new-feature")
+                end
+
+                it "deletes the local feature branch" do
+                  expect { subject }.to have_run_command("git branch -D new-feature")
+                end
               end
 
-              it "deletes the local feature branch" do
-                expect { subject }.to have_run_command("git branch -D new-feature")
-              end
             end
 
             context "and not cleaning up feature branch" do

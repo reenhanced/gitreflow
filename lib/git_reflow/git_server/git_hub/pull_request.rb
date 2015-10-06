@@ -24,7 +24,7 @@ module GitReflow
             base:  options[:base]))
         end
 
-        def self.find_open(to:, from:)
+        def self.find_open(to: 'master', from: GitReflow.git_server.class.current_branch)
           matching_pull = GitReflow.git_server.connection.pull_requests.all(GitReflow.git_server.class.remote_user, GitReflow.git_server.class.remote_repo_name, base: to, head: "#{GitReflow.git_server.class.remote_user}:#{from}", state: 'open').first
           if matching_pull
             self.new matching_pull

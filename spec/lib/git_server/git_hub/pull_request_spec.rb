@@ -291,6 +291,7 @@ describe GitReflow::GitServer::GitHub::PullRequest do
     subject { GitReflow::GitServer::GitHub::PullRequest.find_open(from: feature_branch, to: base_branch) }
 
     before do
+      allow(GitReflow.git_server.class).to receive(:current_branch).and_return(feature_branch)
       FakeGitHub.new(
         repo_owner:   user,
         repo_name:    repo,
@@ -304,6 +305,15 @@ describe GitReflow::GitServer::GitHub::PullRequest do
 
     specify { expect(subject.class.to_s).to eql('GitReflow::GitServer::GitHub::PullRequest') }
     specify { expect(subject.number).to eql(existing_pull_request.number) }
+
+    context "without any options" do
+      let(:base_branch) { 'master' }
+      subject           { GitReflow::GitServer::GitHub::PullRequest.find_open() }
+      it "defaults to the current branch as the feature branch and 'master' as the base branch" do
+        expect(subject.class.to_s).to eql('GitReflow::GitServer::GitHub::PullRequest')
+        expect(subject.number).to eql(existing_pull_request.number)
+      end
+    end
   end
 
 end

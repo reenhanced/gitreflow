@@ -30,7 +30,7 @@ module GitReflow
             reviewers: [username: GitReflow.git_server.class.user])
         end
 
-        def self.find_open(to:, from:)
+        def self.find_open(to: 'master', from: GitReflow.git_server.class.current_branch)
           begin
             matching_pull = connection.repos.pull_requests.all(GitReflow.git_server.class.remote_user, GitReflow.git_server.remote_repo_name, limit: 1).select do |pr|
               pr.source.branch.name == options[:from] and

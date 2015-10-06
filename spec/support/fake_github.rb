@@ -21,7 +21,8 @@ class FakeGitHub
   #       comments: [{author: comment_author}]
   #     })
   #
-  def initialize(repo_owner:, repo_name:, pull_request: {}, issue: {}, commits: [])
+  def initialize(repo_owner: nil, repo_name: nil, pull_request: {}, issue: {}, commits: [])
+    raise "FakeGitHub#new: repo_owner AND repo_name keywords are required" unless repo_owner and repo_name
 
     self.repo_owner = repo_owner
     self.repo_name  = repo_name

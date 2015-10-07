@@ -11,13 +11,10 @@ module GitReflow
       def initialize(config_options = {})
         project_only = !!config_options.delete(:project_only)
 
-        if project_only
-          GitReflow::Config.add('reflow.local-projects', "#{self.class.remote_user}/#{self.class.remote_repo_name}")
-          GitReflow::Config.set('reflow.git-server', 'BitBucket', local: true)
-        else
-          GitReflow::Config.unset('reflow.local-projects', value: "#{self.class.remote_user}/#{self.class.remote_repo_name}")
-          GitReflow::Config.set('reflow.git-server', 'BitBucket')
-        end
+        # We remove any existing setup first, then setup our required config settings
+        GitReflow::Config.unset('reflow.local-projects', value: "#{self.class.remote_user}/#{self.class.remote_repo_name}")
+        GitReflow::Config.add('reflow.local-projects', "#{self.class.remote_user}/#{self.class.remote_repo_name}") if project_only
+        GitReflow::Config.set('reflow.git-server', 'BitBucket', local: project_only)
       end
 
       def self.connection

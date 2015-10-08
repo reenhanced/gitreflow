@@ -38,7 +38,7 @@ describe GitReflow::GitServer::GitHub do
     it 'sets the reflow git server provider to GitHub in the git config' do
       GitReflow::Config.should_receive(:set).once.with('github.site', github_site, local: false)
       GitReflow::Config.should_receive(:set).once.with('github.endpoint', github_api_endpoint, local: false)
-      GitReflow::Config.should_receive(:set).once.with('reflow.git-server', 'GitHub')
+      GitReflow::Config.should_receive(:set).once.with('reflow.git-server', 'GitHub', local: false)
       subject
     end
 
@@ -48,7 +48,7 @@ describe GitReflow::GitServer::GitHub do
       it 'sets the enterprise site and api as the site and api endpoints for the GitHub provider in the git config' do
         GitReflow::Config.should_receive(:set).once.with('github.site', enterprise_site, local: false)
         GitReflow::Config.should_receive(:set).once.with('github.endpoint', enterprise_api, local: false)
-        GitReflow::Config.should_receive(:set).once.with('reflow.git-server', 'GitHub')
+        GitReflow::Config.should_receive(:set).once.with('reflow.git-server', 'GitHub', local: false)
         subject
       end
 

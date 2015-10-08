@@ -35,6 +35,8 @@ module CommandLineHelpers
   def reset_stubbed_command_line
     $commands_ran = []
     $stubbed_commands = {}
+    $output = []
+    $says = []
   end
 
   def stub_command(command, return_value)

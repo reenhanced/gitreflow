@@ -51,7 +51,7 @@ module GitReflow
         end
 
         def approvals
-          pull_last_committed_at = get_commited_time(self.head.sha)
+          pull_last_committed_at = get_committed_time(self.head.sha)
           comment_authors(with: LGTM, after: pull_last_committed_at)
         end
 
@@ -97,7 +97,7 @@ module GitReflow
           comment_authors.uniq
         end
 
-        def get_commited_time(commit_sha)
+        def get_committed_time(commit_sha)
           last_commit = GitReflow.git_server.connection.repos.commits.find GitReflow.git_server.class.remote_user, GitReflow.git_server.class.remote_repo_name, commit_sha
           Time.parse last_commit.commit.author[:date]
         end

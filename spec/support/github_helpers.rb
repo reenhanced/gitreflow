@@ -55,7 +55,7 @@ module GithubHelpers
     github_server.class.stub(:remote_user).and_return(user)
     github_server.class.stub(:remote_repo).and_return(repo)
     github_server.class.stub(:oauth_token).and_return(oauth_token_hash.token)
-    github_server.class.stub(:get_commited_time).and_return(Time.now)
+    github_server.class.stub(:get_committed_time).and_return(Time.now)
 
     GitReflow.stub(:git_server).and_return(github_server)
 

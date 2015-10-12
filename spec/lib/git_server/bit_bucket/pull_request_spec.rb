@@ -32,7 +32,7 @@ describe GitReflow::GitServer::BitBucket::PullRequest do
     allow(bitbucket.class).to receive(:remote_user).and_return(user)
     allow(bitbucket.class).to receive(:remote_repo).and_return(repo)
     allow(bitbucket.class).to receive(:oauth_token).and_return(oauth_token_hash.token)
-    allow(bitbucket.class).to receive(:get_commited_time).and_return(Time.now)
+    allow(bitbucket.class).to receive(:get_committed_time).and_return(Time.now)
 
     allow(GitReflow).to receive(:git_server).and_return(bitbucket)
   end

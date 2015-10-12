@@ -215,7 +215,7 @@ describe GitReflow::GitServer::GitHub do
   describe '#comment_authors_for_pull_request(pull_request, options = {})' do
   end
 
-  describe '#get_commited_time(commit_sha)' do
+  describe '#get_committed_time(commit_sha)' do
   end
 
 end

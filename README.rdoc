@@ -301,7 +301,7 @@ http://reenhanced.com/images/reflow.png
 * If you make a new commit in your branch, you require another review.
 
 * All participants in a pull request must approve the pull request.
-  If 2 guys comment, you need 2 'LGTM's before the code is ready to merge.
+  If 2 people comment, you need 2 'LGTM's before the code is ready to merge.
 
 * Once approved, your feature branch is squash merged to master.
   This makes the history of the master branch extremely clean and easy to follow.

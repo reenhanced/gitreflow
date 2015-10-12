@@ -1,0 +1,27 @@
+{
+  "id": <%= id || 1 %>,
+  "url": "https://api.github.com/repos/<%= repo_owner %>/<%= repo_name %>/issues/comments/<%= pull_request_number %>",
+  "html_url": "https://github.com/<%= repo_owner %>/<%= repo_name %>/issues/<%= pull_request_number %>#issuecomment-1",
+  "body": "<%= body || "Hmmm..." %>",
+  "user": {
+    "login": "<%= author %>",
+    "id": 1,
+    "avatar_url": "https://github.com/images/error/octocat_happy.gif",
+    "gravatar_id": "somehexcode",
+    "url": "https://api.github.com/users/<%= author %>",
+    "html_url": "https://github.com/<%= author %>",
+    "followers_url": "https://api.github.com/users/<%= author %>/followers",
+    "following_url": "https://api.github.com/users/<%= author %>/following{/other_user}",
+    "gists_url": "https://api.github.com/users/<%= author %>/gists{/gist_id}",
+    "starred_url": "https://api.github.com/users/<%= author %>/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/<%= author %>/subscriptions",
+    "organizations_url": "https://api.github.com/users/<%= author %>/orgs",
+    "repos_url": "https://api.github.com/users/<%= author %>/repos",
+    "events_url": "https://api.github.com/users/<%= author %>/events{/privacy}",
+    "received_events_url": "https://api.github.com/users/<%= author %>/received_events",
+    "type": "User",
+    "site_admin": false
+  },
+  "created_at": "<%= created_at %>",
+  "updated_at": "2011-04-14T16:00:49Z"
+}

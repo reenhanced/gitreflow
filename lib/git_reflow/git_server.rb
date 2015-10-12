@@ -1,14 +1,16 @@
 module GitReflow
   module GitServer
-    autoload :Base,   'git_reflow/git_server/base'
-    autoload :GitHub, 'git_reflow/git_server/git_hub'
+    autoload :Base,        'git_reflow/git_server/base'
+    autoload :GitHub,      'git_reflow/git_server/git_hub'
+    autoload :PullRequest, 'git_reflow/git_server/pull_request'
 
     extend self
 
     class ConnectionError < StandardError; end
 
-    def connect(options = nil)
-      options ||= { provider: 'GitHub' }
+    def connect(options = {})
+      options ||= {}
+      options[:provider] = 'GitHub' if "#{options[:provider]}".length <= 0
       begin
         provider_name = options[:provider]
         provider = provider_class_for(options.delete(:provider)).new(options)
@@ -40,6 +42,14 @@ module GitReflow
 
     def can_connect_to?(provider)
       GitReflow::GitServer.const_defined?(provider)
+    end
+
+    def create_pull_request(options = {})
+      raise "#{self.class.to_s}#create_pull_request method must be implemented"
+    end
+
+    def find_open_pull_request(options = {})
+      raise "#{self.class.to_s}#find_open_pull_request method must be implemented"
     end
 
     private

@@ -12,8 +12,8 @@ describe GitReflow::GitServer::GitHub do
   let(:enterprise_api)         { 'https://github.gittyup.com/api/v3' }
   let(:github)                 { stub_github_with(pull: existing_pull_request) }
   let!(:github_api)            { github.connection }
-  let(:existing_pull_request)  { Hashie::Mash.new JSON.parse(fixture('pull_requests/pull_request.json').read) }
-  let(:existing_pull_requests) { JSON.parse(fixture('pull_requests/pull_requests.json').read).collect {|pull| Hashie::Mash.new pull } }
+  let(:existing_pull_request)  { Fixture.new('pull_requests/pull_request.json').to_json_hashie }
+  let(:existing_pull_requests) { Fixture.new('pull_requests/pull_requests.json').to_json_hashie }
 
   before do
     HighLine.any_instance.stub(:ask) do |terminal, question|
@@ -38,7 +38,7 @@ describe GitReflow::GitServer::GitHub do
     it 'sets the reflow git server provider to GitHub in the git config' do
       GitReflow::Config.should_receive(:set).once.with('github.site', github_site, local: false)
       GitReflow::Config.should_receive(:set).once.with('github.endpoint', github_api_endpoint, local: false)
-      GitReflow::Config.should_receive(:set).once.with('reflow.git-server', 'GitHub')
+      GitReflow::Config.should_receive(:set).once.with('reflow.git-server', 'GitHub', local: false)
       subject
     end
 
@@ -48,7 +48,7 @@ describe GitReflow::GitServer::GitHub do
       it 'sets the enterprise site and api as the site and api endpoints for the GitHub provider in the git config' do
         GitReflow::Config.should_receive(:set).once.with('github.site', enterprise_site, local: false)
         GitReflow::Config.should_receive(:set).once.with('github.endpoint', enterprise_api, local: false)
-        GitReflow::Config.should_receive(:set).once.with('reflow.git-server', 'GitHub')
+        GitReflow::Config.should_receive(:set).once.with('reflow.git-server', 'GitHub', local: false)
         subject
       end
 
@@ -167,12 +167,21 @@ describe GitReflow::GitServer::GitHub do
     let(:body)           { 'Funky body' }
     let(:current_branch) { 'new-feature' }
 
-    before { github.class.stub(:current_branch).and_return(current_branch) }
+    subject { github.create_pull_request({ title: title, body: body, base: 'master' }) }
+
+    before do
+      github.class.stub(:current_branch).and_return(current_branch)
+      allow(GitReflow).to receive(:git_server).and_return(github)
+      stub_request(:post, %r{/repos/#{user}/#{repo}/pulls}).
+        to_return(body: Fixture.new('pull_requests/pull_request.json').to_s, status: 201, headers: {content_type: "application/json; charset=utf-8"})
+    end
+
+    specify { expect(subject.class.to_s).to eq('GitReflow::GitServer::GitHub::PullRequest') }
 
     it 'creates a pull request using the remote user and repo' do
       github_api.stub(:pull_requests)
-      github_api.pull_requests.should_receive(:create).with(user, repo, title: title, body: body, head: "#{user}:#{current_branch}", base: 'master')
-      github.create_pull_request({ title: title, body: body, base: 'master' })
+      expect(github_api.pull_requests).to receive(:create).with(user, repo, title: title, body: body, head: "#{user}:#{current_branch}", base: 'master').and_return(existing_pull_request)
+      subject
     end
   end
 
@@ -192,23 +201,6 @@ describe GitReflow::GitServer::GitHub do
     end
   end
 
-  describe '#pull_request_comments(pull_request)' do
-    let(:pull_request_comments) { JSON.parse(fixture('pull_requests/comments.json').read).collect {|c| Hashie::Mash.new(c) } }
-
-    subject { github.pull_request_comments(existing_pull_request) }
-
-    before do
-      github_api.stub_chain(:issues, :comments)
-      github_api.stub_chain(:pull_requests, :comments)
-    end
-
-    it 'includes both issue comments and pull request comments' do
-      github_api.issues.comments.should_receive(:all).with(user, repo, number: existing_pull_request.number).and_return([pull_request_comments.first])
-      github_api.pull_requests.comments.should_receive(:all).with(user, repo, number: existing_pull_request.number).and_return([pull_request_comments.first])
-      subject.count.should == 2
-    end
-  end
-
   describe '#get_build_status(sha)' do
     let(:sha) { '6dcb09b5b57875f334f61aebed695e2e4193db5e' }
     subject   { github.get_build_status(sha) }
@@ -223,7 +215,7 @@ describe GitReflow::GitServer::GitHub do
   describe '#comment_authors_for_pull_request(pull_request, options = {})' do
   end
 
-  describe '#get_commited_time(commit_sha)' do
+  describe '#get_committed_time(commit_sha)' do
   end
 
 end

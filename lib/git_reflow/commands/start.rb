@@ -7,12 +7,6 @@ long_desc <<LONGTIME
 LONGTIME
 arg_name '[new-feature-branch-name] - name of the new feature branch'
 command :start do |c|
-  c.desc 'Describe a switch to list'
-  c.switch :s
-
-  c.desc 'Describe a flag to list'
-  c.default_value 'default'
-  c.flag :f
   c.action do |global_options, options, args|
     if args.empty?
       raise "usage: git-reflow start [new-branch-name]"

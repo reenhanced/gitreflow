@@ -1,0 +1,15 @@
+[
+  <% comments_json = [] %>
+  <% comments.each_with_index do |comment, index| %>
+    <% comments_json << Fixture.new('pull_requests/comment.json.erb',
+                    id: index,
+                    author: comment[:author],
+                    pull_request_number: pull_request_number,
+                    repo_owner: repo_owner,
+                    repo_name: repo_name,
+                    body: comment[:body] || 'Hammer time',
+                    created_at: comment[:created_at] || Chronic.parse('1 minute ago')
+                   ).to_s %>
+  <% end %>
+  <%= comments_json.join(", ") %>
+]

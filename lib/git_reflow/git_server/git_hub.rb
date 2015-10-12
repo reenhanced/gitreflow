@@ -4,20 +4,10 @@ require 'git_reflow/git_helpers'
 module GitReflow
   module GitServer
     class GitHub < Base
+      require_relative 'git_hub/pull_request'
+
       extend GitHelpers
       include Sandbox
-
-      class PullRequest < Base::PullRequest
-        def initialize(attributes)
-          self.number              = attributes.number
-          self.description         = attributes.body
-          self.html_url            = attributes.html_url
-          self.feature_branch_name = attributes.head.label
-          self.base_branch_name    = attributes.base.label
-          self.build_status        = attributes.head.sha
-          self.source_object       = attributes
-        end
-      end
 
       attr_accessor :connection
 
@@ -36,13 +26,10 @@ module GitReflow
         self.class.site_url     = gh_site_url
         self.class.api_endpoint = gh_api_endpoint
 
-        if project_only
-          GitReflow::Config.add('reflow.local-projects', "#{self.class.remote_user}/#{self.class.remote_repo_name}")
-          GitReflow::Config.set('reflow.git-server', 'GitHub', local: true)
-        else
-          GitReflow::Config.unset('reflow.local-projects', value: "#{self.class.remote_user}/#{self.class.remote_repo_name}")
-          GitReflow::Config.set('reflow.git-server', 'GitHub')
-        end
+        # We remove any existing setup first, then setup our required config settings
+        GitReflow::Config.unset('reflow.local-projects', value: "#{self.class.remote_user}/#{self.class.remote_repo_name}")
+        GitReflow::Config.add('reflow.local-projects', "#{self.class.remote_user}/#{self.class.remote_repo_name}") if project_only
+        GitReflow::Config.set('reflow.git-server', 'GitHub', local: project_only)
       end
 
       def self.connection
@@ -144,69 +131,25 @@ module GitReflow
         @connection
       end
 
-      def create_pull_request(options = {})
-        pull_request = connection.pull_requests.create(self.class.remote_user, self.class.remote_repo_name,
-                                                       title: options[:title],
-                                                       body:  options[:body],
-                                                       head:  "#{self.class.remote_user}:#{self.class.current_branch}",
-                                                       base:  options[:base])
-      end
-
-      def find_open_pull_request(options = {})
-        matching_pull = connection.pull_requests.all(self.class.remote_user, self.class.remote_repo_name, base: options[:to], head: "#{self.class.remote_user}:#{options[:from]}", :state => 'open').first
-        if matching_pull
-          PullRequest.new matching_pull
-        end
-      end
-
-      def reviewers(pull_request)
-        comment_authors_for_pull_request(pull_request)
-      end
-
-      def approvals(pull_request)
-        pull_last_committed_at = get_commited_time(pull_request.head.sha)
-        lgtm_authors           = comment_authors_for_pull_request(pull_request, :with => LGTM, :after => pull_last_committed_at)
-      end
-
-      def pull_request_comments(pull_request)
-        comments        = connection.issues.comments.all        self.class.remote_user, self.class.remote_repo_name, number: pull_request.number
-        review_comments = connection.pull_requests.comments.all self.class.remote_user, self.class.remote_repo_name, number: pull_request.number
-
-        review_comments.to_a + comments.to_a
-      end
-
-      def last_comment_for_pull_request(pull_request)
-        "#{pull_request_comments(pull_request).last.body.inspect}"
-      end
-
-      def get_build_status sha
+      def get_build_status(sha)
         connection.repos.statuses.all(self.class.remote_user, self.class.remote_repo_name, sha).first
       end
 
-      def colorized_build_description status
-        colorized_statuses = { pending: :yellow, success: :green, error: :red, failure: :red }
-        status.description.colorize( colorized_statuses[status.state.to_sym] )
+      def colorized_build_description(state, description)
+        colorized_statuses = {
+          pending: :yellow,
+          success: :green,
+          error: :red,
+          failure: :red }
+        description.colorize( colorized_statuses[state.to_sym] )
       end
 
-      def comment_authors_for_pull_request(pull_request, options = {})
-        all_comments    = pull_request_comments(pull_request)
-        comment_authors = []
-
-        all_comments.each do |comment|
-          next if options[:after] and Time.parse(comment.created_at) < options[:after]
-          if (options[:with].nil? or comment[:body] =~ options[:with])
-            comment_authors |= [comment.user.login]
-          end
-        end
-
-        # remove the current user from the list to check
-        comment_authors -= [self.class.remote_user]
-        comment_authors.uniq
+      def create_pull_request(options = {})
+        PullRequest.create(options)
       end
 
-      def get_commited_time(commit_sha)
-        last_commit = connection.repos.commits.find self.class.remote_user, self.class.remote_repo_name, commit_sha
-        Time.parse last_commit.commit.author[:date]
+      def find_open_pull_request(options = {})
+        PullRequest.find_open(options)
       end
 
     end

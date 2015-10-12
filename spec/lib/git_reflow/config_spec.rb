@@ -8,6 +8,22 @@ describe GitReflow::Config do
     context "and getting all values" do
       subject { GitReflow::Config.get('chucknorris.roundhouse-kick', all: true) }
       it      { expect{ subject }.to have_run_command_silently 'git config --get-all chucknorris.roundhouse-kick' }
+
+      context "and checking locally only" do
+        subject { GitReflow::Config.get('chucknorris.jump', local: true) }
+        it      { expect{ subject }.to have_run_command_silently 'git config --local --get chucknorris.jump' }
+      end
+    end
+
+    context "and checking for updates" do
+      before  { GitReflow::Config.get('checknorris.roundhouse') }
+      subject { GitReflow::Config.get('chucknorris.roundhouse') }
+      it      { expect{ subject }.to_not have_run_command_silently 'git config --get chucknorris.roundhouse-kick' }
+    end
+
+    context "and checking locally only" do
+      subject { GitReflow::Config.get('chucknorris.smash', local: true) }
+      it      { expect{ subject }.to have_run_command_silently 'git config --local --get chucknorris.smash' }
     end
   end
 

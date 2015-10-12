@@ -24,17 +24,17 @@ module GitReflow
       end
 
       def self.api_endpoint
-        endpoint         = GitReflow::Config.get("bitbucket.endpoint")
+        endpoint         = GitReflow::Config.get("bitbucket.endpoint", local: project_only?)
         (endpoint.length > 0) ? endpoint : ::BitBucket::Configuration::DEFAULT_ENDPOINT
       end
 
       def self.site_url
-        site_url     = GitReflow::Config.get("bitbucket.site")
+        site_url     = GitReflow::Config.get("bitbucket.site", local: project_only?)
         (site_url.length > 0) ? site_url : 'https://bitbucket.org'
       end
 
       def self.api_key
-        GitReflow::Config.get("bitbucket.api-key", reload: true)
+        GitReflow::Config.get("bitbucket.api-key", reload: true, local: project_only?)
       end
 
       def self.api_key=(key)
@@ -45,7 +45,7 @@ module GitReflow
       end
 
       def self.user
-        GitReflow::Config.get('bitbucket.user')
+        GitReflow::Config.get('bitbucket.user', local: project_only?)
       end
 
       def self.user=(bitbucket_user)

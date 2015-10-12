@@ -47,10 +47,11 @@ describe GitReflow::GitServer::BitBucket do
 
     context 'already authenticated' do
       it "notifies the user of successful setup" do
-        GitReflow::Config.should_receive(:set).with('reflow.git-server', 'BitBucket', local: false)
+        allow(GitReflow::Config).to receive(:set).with('reflow.git-server', 'BitBucket', local: false)
         allow(GitReflow::Config).to receive(:get).with('remote.origin.url').and_return(remote_url)
-        allow(GitReflow::Config).to receive(:get).with('bitbucket.user').and_return(user)
-        allow(GitReflow::Config).to receive(:get).with('bitbucket.api-key', reload: true).and_return(api_key)
+        allow(GitReflow::Config).to receive(:get).with('bitbucket.user', local: false).and_return(user)
+        allow(GitReflow::Config).to receive(:get).with('bitbucket.api-key', reload: true, local: false).and_return(api_key)
+        allow(GitReflow::Config).to receive(:get).with('reflow.local-projects', all: true).and_return('')
         expect { subject }.to have_output "\nYour BitBucket account was already setup with:"
         expect { subject }.to have_output "\tUser Name: #{user}"
       end

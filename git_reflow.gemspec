@@ -21,6 +21,7 @@ spec = Gem::Specification.new do |s|
 
   s.add_development_dependency('appraisal', '1.0.3')
   s.add_development_dependency('bundler')
+  s.add_development_dependency('chronic')
   s.add_development_dependency('pry-byebug')
   s.add_development_dependency('rake')
   s.add_development_dependency('rdoc')
@@ -29,11 +30,11 @@ spec = Gem::Specification.new do |s|
   s.add_development_dependency('wwtd', '0.7.0')
 
   s.add_dependency('colorize', '>= 0.7.0')
-  s.add_dependency('gli', '2.12.2')
+  s.add_dependency('gli', '2.13.2')
   s.add_dependency('highline')
   s.add_dependency('httpclient')
   s.add_dependency('json_pure')
-  s.add_dependency('github_api', '0.12.3')
+  s.add_dependency('github_api', '0.12.4')
   s.add_dependency('reenhanced_bitbucket_api', '0.3.2')
 
   s.post_install_message = "You need to setup your GitHub OAuth token\nPlease run 'git-reflow setup'"

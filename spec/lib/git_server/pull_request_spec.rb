@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe GitReflow::GitServer::GitHub::PullRequest do
+describe GitReflow::GitServer::PullRequest do
   let(:pull_request) { Fixture.new('pull_requests/external_pull_request.json').to_json_hashie }
   let(:github)      { stub_github_with({ user: 'reenhanced', repo: 'repo', pull: pull_request }) }
   let!(:github_api) { github.connection }

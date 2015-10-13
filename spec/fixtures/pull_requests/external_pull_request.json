@@ -40,6 +40,28 @@
   "additions": 100,
   "deletions": 3,
   "changed_files": 5,
+  "user": {
+    "login": "reenhanced",
+    "id": 1,
+    "avatar_url": "https://github.com/images/error/octocat_happy.gif",
+    "gravatar_id": "",
+    "url": "https://api.github.com/users/reenhanced",
+    "html_url": "https://github.com/reenhanced",
+    "followers_url": "https://api.github.com/users/reenhanced/followers",
+    "following_url":
+"https://api.github.com/users/reenhanced/following{/other_user}",
+    "gists_url": "https://api.github.com/users/reenhanced/gists{/gist_id}",
+    "starred_url":
+"https://api.github.com/users/reenhanced/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/reenhanced/subscriptions",
+    "organizations_url": "https://api.github.com/users/reenhanced/orgs",
+    "repos_url": "https://api.github.com/users/reenhanced/repos",
+    "events_url": "https://api.github.com/users/reenhanced/events{/privacy}",
+    "received_events_url":
+"https://api.github.com/users/reenhanced/received_events",
+    "type": "User",
+    "site_admin": false
+  },
   "head": {
     "label": "new-external-feature",
     "ref": "new-external-feature",

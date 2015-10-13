@@ -83,14 +83,14 @@ describe GitReflow::GitServer::GitHub::PullRequest do
 
   describe '#reviewers' do
     before do
-      allow(existing_pull_request.head.user).to receive(:login).and_return('ringo')
+      allow(existing_pull_request.user).to receive(:login).and_return('ringo')
 
       FakeGitHub.new(
         repo_owner: user,
         repo_name: repo,
         pull_request: {
           number: existing_pull_request.number,
-          owner: existing_pull_request.head.user.login,
+          owner: existing_pull_request.user.login,
           comments: [{author: 'tito'}, {author: 'bobby'}, {author: 'ringo'}]
         },
         issue: {

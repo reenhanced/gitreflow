@@ -1,5 +1,7 @@
 = git-reflow (2015 Fukuoka Ruby Award Winner)
 
+{<img src="https://circleci.com/gh/reenhanced/gitreflow/tree/master.svg?style=svg" alt="Circle CI" />}[https://circleci.com/gh/reenhanced/gitreflow/tree/master]
+
 http://reenhanced.com/reflow/git-reflow-deliver.gif
 
 If your workflow looks like this:

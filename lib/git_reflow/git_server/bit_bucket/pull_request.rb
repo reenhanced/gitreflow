@@ -33,8 +33,8 @@ module GitReflow
         def self.find_open(to: 'master', from: GitReflow.git_server.class.current_branch)
           begin
             matching_pull = GitReflow.git_server.connection.repos.pull_requests.all(GitReflow.git_server.class.remote_user, GitReflow.git_server.class.remote_repo_name, limit: 1).select do |pr|
-              pr.source.branch.name == options[:from] and
-              pr.destination.branch.name == options[:to]
+              pr.source.branch.name == from and
+              pr.destination.branch.name == to
             end.first
 
             if matching_pull
@@ -46,7 +46,6 @@ module GitReflow
             GitReflow.git_server.say "You don't have API access to this repo", :error
           end
         end
-
 
         def commit_author
           # use the author of the pull request
@@ -65,7 +64,7 @@ module GitReflow
 
         def reviewers
           return [] unless comments.size > 0
-          comments.map {|c| c.user.username } - [GitReflow.git_server.class.user]
+          comments.map {|c| c.user.username }.uniq - [GitReflow.git_server.class.user]
         end
 
         def approvals

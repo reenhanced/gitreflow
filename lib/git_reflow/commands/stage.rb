@@ -6,7 +6,8 @@ command :stage do |c|
     staging_branch_name = GitReflow::Config.get('reflow.staging-branch', local: true)
 
     if staging_branch_name.empty?
-      staging_branch_name = GitReflow.ask("What's the name of your staging branch? (default: 'staging') ") || 'staging'
+      staging_branch_name = GitReflow.ask("What's the name of your staging branch? (default: 'staging') ")
+      staging_branch_name = 'staging' if staging_branch_name.strip == ''
       GitReflow::Config.set('reflow.staging-branch', staging_branch_name, local: true)
     end
 

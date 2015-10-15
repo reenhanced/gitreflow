@@ -416,4 +416,41 @@ describe GitReflow do
       end
     end
   end
+
+  context ".deploy(destination)" do
+    let(:deploy_command) { "bundle exec cap #{destination} deploy" }
+    subject              { GitReflow.deploy(destination) }
+
+    before do
+      stub_command_line_inputs({
+        "Enter the command you use to deploy to #{destination} (leaving blank will skip deployment)" => "bundle exec cap #{destination} deploy"
+      })
+    end
+
+    context "staging" do
+      let(:destination) { "staging" }
+
+      it "sets the local git-config for reflow.deploy-to-staging-command" do
+        expect(GitReflow::Config).to receive(:set).with('reflow.deploy-to-staging-command', deploy_command, local: true)
+        subject
+      end
+
+      it "runs the staging deploy command" do
+        expect { subject }.to have_run_command(deploy_command)
+      end
+    end
+
+    context "production" do
+      let(:destination) { "production" }
+
+      it "sets the local git-config for reflow.deploy-to-staging-command" do
+        expect(GitReflow::Config).to receive(:set).with('reflow.deploy-to-production-command', deploy_command, local: true)
+        subject
+      end
+
+      it "runs the staging deploy command" do
+        expect { subject }.to have_run_command(deploy_command)
+      end
+    end
+  end
 end

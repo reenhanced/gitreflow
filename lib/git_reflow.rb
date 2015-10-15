@@ -130,6 +130,24 @@ module GitReflow
     end
   end
 
+  def deploy(destination_server)
+    deploy_command = GitReflow::Config.get("reflow.deploy-to-#{destination_server}-command", local: true)
+
+    # first check is to allow for automated setup
+    if deploy_command.empty?
+      deploy_command = ask("Enter the command you use to deploy to #{destination_server} (leaving blank will skip deployment)")
+    end
+
+    # second check is to see if the user wants to skip
+    if deploy_command.empty?
+      say "Skipping deployment..."
+      false
+    else
+      GitReflow::Config.set("reflow.deploy-to-#{destination_server}-command", deploy_command, local: true)
+      run_command_with_label(deploy_command, with_system: true)
+    end
+  end
+
   def git_server
     @git_server ||= GitServer.connect provider: GitReflow::Config.get('reflow.git-server').strip, silent: true
   end

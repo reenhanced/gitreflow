@@ -415,7 +415,7 @@ describe GitReflow do
       let(:destination) { "staging" }
       let(:deploy_command) { "bundle exec cap staging deploy" }
       it "sets the local git-config for reflow.deploy-to-staging" do
-        expect(GitReflow::Config).to receive(:set).with('reflow.deploy-to-staging', 'bundle exec cap staging deploy', local: true)
+        expect(GitReflow::Config).to receive(:set).with('reflow.deploy-to-staging-command', 'bundle exec cap staging deploy', local: true)
         subject
       end
       it "runs the staging deploy command" do

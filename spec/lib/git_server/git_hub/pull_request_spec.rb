@@ -33,7 +33,7 @@ describe GitReflow::GitServer::GitHub::PullRequest do
 
 
   before do
-    stub_command_line_inputs({
+    stub_input_with({
       "Please enter your GitHub username: "                                                 => user,
       "Please enter your GitHub password (we do NOT store this): "                          => password,
       "Please enter your Enterprise site URL (e.g. https://github.company.com):"            => enterprise_site,

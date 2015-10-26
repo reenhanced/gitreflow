@@ -10,14 +10,10 @@ command :start do |c|
   c.desc 'Use an existing trello card as a reference'
   c.switch :trello
 
-  c.desc 'Describe a flag to list'
-  c.default_value 'default'
-  c.flag :f
   c.action do |global_options, options, args|
     if options[:trello]
       GitReflow.setup_trello
       # Gather Next cards
-      available_trello_lists = GitReflow.trello_lists
       next_list = GitReflow.trello_next_list
       in_progress_list = GitReflow.trello_in_progress_list
       next_up_cards = next_list.cards.first(5)

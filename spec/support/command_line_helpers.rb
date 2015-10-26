@@ -12,6 +12,11 @@ module CommandLineHelpers
       $output << output
       output = ''
     end
+
+    allow_any_instance_of(GitReflow::GitServer::PullRequest).to receive(:printf) do |format, *output|
+      $output << Array(output).join(" ")
+      output = ''
+    end.and_return("")
   end
 
   def stub_run_for(module_to_stub)
@@ -30,6 +35,8 @@ module CommandLineHelpers
   def reset_stubbed_command_line
     $commands_ran = []
     $stubbed_commands = {}
+    $output = []
+    $says = []
   end
 
   def stub_command(command, return_value)
@@ -117,7 +124,7 @@ end
 RSpec::Matchers.define :have_output do |expected_output|
   match do |block|
     block.call
-    $output.include? expected_output
+    $output.join("\n").include? expected_output
   end
 
   supports_block_expectations

@@ -1,0 +1,142 @@
+{
+  "url": "https://api.github.com/<%= repo_owner %>/<%= repo_name %>/pulls/<%= number %>",
+  "html_url": "https://github.com/<%= repo_owner %>/<%= repo_name %>/pulls/<%= number %>",
+  "diff_url": "https://github.com/<%= repo_owner %>/<%= repo_name %>/pulls/<%= number %>.diff",
+  "patch_url": "https://github.com/<%= repo_owner %>/<%= repo_name %>/pulls/<%= number %>.patch",
+  "issue_url": "https://github.com/<%= repo_owner %>/<%= repo_name %>/issue/<%= number %>",
+  "number": <%= number %>,
+  "state": "<%= state %>",
+  "title": "<%= title %>",
+  "body": "<%= body %>",
+  "created_at": "2011-01-26T19:01:12Z",
+  "updated_at": "2011-01-26T19:01:12Z",
+  "closed_at": "2011-01-26T19:01:12Z",
+  "merged_at": "2011-01-26T19:01:12Z",
+  "_links": {
+    "self": {
+      "href": "https://api.github.com/<%= repo_owner %>/<%= repo_name %>/pulls/<%= number %>"
+    },
+    "html": {
+      "href": "https://github.com/<%= repo_owner %>/<%= repo_name %>/pull/<%= number %>"
+    },
+    "comments": {
+      "href": "https://api.github.com/<%= repo_owner %>/<%= repo_name %>/issues/<%= number %>/comments"
+    },
+    "review_comments": {
+      "href": "https://api.github.com/<%= repo_owner %>/<%= repo_name %>/pulls/<%= number %>/comments"
+    }
+  },
+  "merged": false,
+  "mergeable": true,
+  "merged_by": {
+    "login": "reenhanced",
+    "id": 1,
+    "avatar_url": "https://github.com/images/error/octocat_happy.gif",
+    "gravatar_id": "somehexcode",
+    "url": "https://api.github.com/users/reenhanced"
+  },
+  "comments": 10,
+  "commits": 3,
+  "additions": 100,
+  "deletions": 3,
+  "changed_files": 5,
+  "user": {
+    "login": "<%= owner %>",
+    "id": 1,
+    "avatar_url": "https://github.com/images/error/octocat_happy.gif",
+    "gravatar_id": "",
+    "url": "https://api.github.com/users/<%= owner %>",
+    "html_url": "https://github.com/<%= owner %>",
+    "followers_url": "https://api.github.com/users/<%= owner %>/followers",
+    "following_url": "https://api.github.com/users/<%= owner %>/following{/other_user}",
+    "gists_url": "https://api.github.com/users/<%= owner %>/gists{/gist_id}",
+    "starred_url": "https://api.github.com/users/<%= owner %>/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/<%= owner %>/subscriptions",
+    "organizations_url": "https://api.github.com/users/<%= owner %>/orgs",
+    "repos_url": "https://api.github.com/users/<%= owner %>/repos",
+    "events_url": "https://api.github.com/users/<%= owner %>/events{/privacy}",
+    "received_events_url": "https://api.github.com/users/<%= owner %>/received_events",
+    "type": "User",
+    "site_admin": false
+  },
+  "head": {
+    "label": "<%= feature_branch %>",
+    "ref": "<%= feature_branch %>",
+    "sha": "6dcb09b5b57875f334f61aebed695e2e4193db5e",
+    "user": {
+      "login": "<%= owner %>",
+      "id": 1,
+      "avatar_url": "https://github.com/images/error/octocat_happy.gif",
+      "gravatar_id": "somehexcode",
+      "url": "https://api.github.com/users/<%= owner %>"
+    },
+    "repo": {
+      "url": "https://api.github.com/repos/<%= feature_repo_owner %>/<%= repo_name %>",
+      "html_url": "https://github.com/<%= feature_repo_owner %>/<%= repo_name %>",
+      "clone_url": "https://github.com/<%= feature_repo_owner %>/<%= repo_name %>.git",
+      "git_url": "git://github.com/<%= feature_repo_owner %>/<%= repo_name %>.git",
+      "ssh_url": "git@github.com:<%= feature_repo_owner %>/<%= repo_name %>.git",
+      "svn_url": "https://svn.github.com/<%= feature_repo_owner %>/<%= repo_name %>",
+      "owner": {
+        "login": "<%= owner %>",
+        "id": 1,
+        "avatar_url": "https://github.com/images/error/octocat_happy.gif",
+        "gravatar_id": "somehexcode",
+        "url": "https://api.github.com/users/<%= owner %>"
+      },
+      "name": "<%= repo_name %>",
+      "description": "This your first repo!",
+      "homepage": "https://github.com",
+      "language": null,
+      "private": false,
+      "fork": false,
+      "forks": 9,
+      "watchers": 80,
+      "size": 108,
+      "master_branch": "master",
+      "open_issues": 1,
+      "pushed_at": "2011-01-26T19:06:43Z",
+      "created_at": "2011-01-26T19:01:12Z"
+    }
+  },
+  "base": {
+    "label": "<%= base_branch %>",
+    "ref": "<%= base_branch %>",
+    "sha": "6dcb09b5b57875f334f61aebed695e2e4193db5e",
+    "user": {
+      "login": "reenhanced",
+      "id": 1,
+      "avatar_url": "https://github.com/images/error/octocat_happy.gif",
+      "gravatar_id": "somehexcode",
+      "url": "https://api.github.com/users/reenhanced"
+    },
+    "repo": {
+      "url": "https://api.github.com/repos/<%= repo_owner %>/<%= repo_name %>",
+      "html_url": "https://github.com/<%= repo_owner %>/<%= repo_name %>",
+      "clone_url": "https://github.com/<%= repo_owner %>/<%= repo_name %>.git",
+      "git_url": "git://github.com/<%= repo_owner %>/<%= repo_name %>.git",
+      "ssh_url": "git@github.com:<%= repo_owner %>/<%= repo_name %>.git",
+      "svn_url": "https://svn.github.com/<%= repo_owner %>/<%= repo_name %>",
+      "owner": {
+        "login": "reenhanced",
+        "id": 1,
+        "avatar_url": "https://github.com/images/error/octocat_happy.gif",
+        "gravatar_id": "somehexcode",
+        "url": "https://api.github.com/users/reenhanced"
+      },
+      "name": "repo",
+      "description": "This your first repo!",
+      "homepage": "https://github.com",
+      "language": null,
+      "private": false,
+      "fork": false,
+      "forks": 9,
+      "watchers": 80,
+      "size": 108,
+      "master_branch": "master",
+      "open_issues": 1,
+      "pushed_at": "2011-01-26T19:06:43Z",
+      "created_at": "2011-01-26T19:01:12Z"
+    }
+  }
+}

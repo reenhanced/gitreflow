@@ -259,7 +259,7 @@ require_clean_working_tree() {
     die "fatal: Working tree contains unstaged changes. Aborting."
   fi
   if [ $result -eq 2 ]; then
-    die "fatal: Index contains uncommited changes. Aborting."
+    die "fatal: Index contains uncommitted changes. Aborting."
   fi
 }
 

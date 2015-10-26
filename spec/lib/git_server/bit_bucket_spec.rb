@@ -25,7 +25,7 @@ describe GitReflow::GitServer::BitBucket do
     subject { GitReflow::GitServer::BitBucket.new({}) }
 
     it 'sets the reflow git server provider to BitBucket in the git config' do
-      GitReflow::Config.should_receive(:set).once.with('reflow.git-server', 'BitBucket')
+      GitReflow::Config.should_receive(:set).once.with('reflow.git-server', 'BitBucket', local: false)
       subject
     end
 
@@ -47,10 +47,11 @@ describe GitReflow::GitServer::BitBucket do
 
     context 'already authenticated' do
       it "notifies the user of successful setup" do
-        GitReflow::Config.should_receive(:set).with('reflow.git-server', 'BitBucket')
+        allow(GitReflow::Config).to receive(:set).with('reflow.git-server', 'BitBucket', local: false)
         allow(GitReflow::Config).to receive(:get).with('remote.origin.url').and_return(remote_url)
-        allow(GitReflow::Config).to receive(:get).with('bitbucket.user').and_return(user)
-        allow(GitReflow::Config).to receive(:get).with('bitbucket.api-key', reload: true).and_return(api_key)
+        allow(GitReflow::Config).to receive(:get).with('bitbucket.user', local: false).and_return(user)
+        allow(GitReflow::Config).to receive(:get).with('bitbucket.api-key', reload: true, local: false).and_return(api_key)
+        allow(GitReflow::Config).to receive(:get).with('reflow.local-projects', all: true).and_return('')
         expect { subject }.to have_output "\nYour BitBucket account was already setup with:"
         expect { subject }.to have_output "\tUser Name: #{user}"
       end
@@ -75,36 +76,6 @@ describe GitReflow::GitServer::BitBucket do
         end
       end
     end
-  end
-
-  xdescribe '#create_pull_request(options)' do
-    let(:title)          { 'Fresh title' }
-    let(:body)           { 'Funky body' }
-    let(:current_branch) { 'new-feature' }
-
-    it 'creates a pull request using the remote user and repo' do
-    end
-  end
-
-  xdescribe '#find_pull_request(from, to)' do
-  end
-
-  xdescribe '#pull_request_comments(pull_request)' do
-  end
-
-  xdescribe '#has_pull_request_comments?(pull_request)' do
-  end
-
-  xdescribe '#get_build_status(sha)' do
-  end
-
-  xdescribe '#find_authors_of_open_pull_request_comments(pull_request)' do
-  end
-
-  xdescribe '#comment_authors_for_pull_request(pull_request, options = {})' do
-  end
-
-  xdescribe '#get_commited_time(commit_sha)' do
   end
 
 end

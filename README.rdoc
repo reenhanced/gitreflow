@@ -1,5 +1,7 @@
 = git-reflow (2015 Fukuoka Ruby Award Winner)
 
+{<img src="https://circleci.com/gh/reenhanced/gitreflow/tree/master.svg?style=svg" alt="Circle CI" />}[https://circleci.com/gh/reenhanced/gitreflow/tree/master]
+
 http://reenhanced.com/reflow/git-reflow-deliver.gif
 
 If your workflow looks like this:
@@ -304,13 +306,21 @@ http://reenhanced.com/images/reflow.png
 * If you make a new commit in your branch, you require another review.
 
 * All participants in a pull request must approve the pull request.
-  If 2 guys comment, you need 2 'LGTM's before the code is ready to merge.
+  If 2 people comment, you need 2 'LGTM's before the code is ready to merge.
 
 * Once approved, your feature branch is squash merged to master.
   This makes the history of the master branch extremely clean and easy to follow.
 
 * Git blame becomes your friend. You'll know who to blame and can see the full context of changes.
   Squash commits to master mean every commit represents the whole feature, not a "typo fix".
+
+
+== Configuration
+
+  In order to streamline delivery you can set the following git config to
+  always push the branch after merge and clean up the feature branch.
+
+  git config --global --add "reflow.always-deploy-and-cleanup" "true"
 
 
 ---

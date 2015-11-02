@@ -113,7 +113,7 @@ class FakeGitHub
                                       repo_name:           self.repo_name,
                                       comments:            object_data[:comments],
                                       pull_request_number: object_data[:number] || 1,
-                                      created_at:          object_data[:created_at] || Time.now).to_s,
+                                      created_at:          object_data[:created_at] || Time.parse('1pm')).to_s,
                     status: 201,
                     headers: {content_type: "application/json; charset=utf-8"})
       end

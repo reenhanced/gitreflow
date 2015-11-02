@@ -403,6 +403,7 @@ describe GitReflow do
   end
 
   context ".deploy(destination)" do
+    let(:deploy_command) { "bundle exec cap #{destination} deploy" }
     subject { GitReflow.deploy(destination) }
 
     before do
@@ -413,17 +414,28 @@ describe GitReflow do
 
     context "staging" do
       let(:destination) { "staging" }
-      let(:deploy_command) { "bundle exec cap staging deploy" }
-      it "sets the local git-config for reflow.deploy-to-staging" do
-        expect(GitReflow::Config).to receive(:set).with('reflow.deploy-to-staging-command', 'bundle exec cap staging deploy', local: true)
+
+      it "sets the local git-config for reflow.deploy-to-staging-command" do
+        expect(GitReflow::Config).to receive(:set).with('reflow.deploy-to-staging-command', deploy_command, local: true)
         subject
       end
+
       it "runs the staging deploy command" do
         expect { subject }.to have_run_command(deploy_command)
       end
     end
 
     context "production" do
+      let(:destination) { "production" }
+
+      it "sets the local git-config for reflow.deploy-to-staging-command" do
+        expect(GitReflow::Config).to receive(:set).with('reflow.deploy-to-production-command', deploy_command, local: true)
+        subject
+      end
+
+      it "runs the staging deploy command" do
+        expect { subject }.to have_run_command(deploy_command)
+      end
     end
   end
 end

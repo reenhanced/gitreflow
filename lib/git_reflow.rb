@@ -177,6 +177,15 @@ module GitReflow
   end
 
   def setup_trello
+    if GitReflow::Config.get('trello.api-key').length <= 0
+      GitReflow.say "Visit: https://trello.com/app-key"
+      trello_key = ask("Enter your Developer API Key found on the URL above: ")
+      GitReflow::Config.set('trello.api-key', trello_key)
+      GitReflow.say "Visit: https://trello.com/1/authorize?key=#{trello_key}&response_type=token&expiration=never&scope=read,write&name=GitReflow"
+      trello_member_key = ask("Enter your Member Token generated from the URL above: ")
+      GitReflow::Config.set('trello.member-token', trello_member_key)
+    end
+
     @trello_member_token ||= Trello.configure do |config|
       config.developer_public_key = GitReflow::Config.get('trello.api-key')
       config.member_token         = GitReflow::Config.get('trello.member-token')
@@ -185,6 +194,17 @@ module GitReflow
     begin
       @trello_member_id ||= Trello::Token.find(@trello_member_token).member_id
       GitReflow::Config.set('trello.member-id', @trello_member_id, local: true)
+      # Ensure defaults are setup
+      GitReflow::Config.set('trello.next-list-id', 'Next', local: true) unless GitReflow::Config.get('trello.next-list-id', local: true).length > 0
+      GitReflow::Config.set('trello.current-list-id', 'In Progress', local: true) unless GitReflow::Config.get('trello.current-list-id', local: true).length > 0
+      GitReflow::Config.set('trello.staged-list-id', 'Staged', local: true) unless GitReflow::Config.get('trello.staged-list-id', local: true).length > 0
+      GitReflow::Config.set('trello.approved-list-id', 'Approved', local: true) unless GitReflow::Config.get('trello.approved-list-id', local: true).length > 0
+      GitReflow::Config.set('trello.completed-list-id', 'Live', local: true) unless GitReflow::Config.get('trello.completed-list-id', local: true).length > 0
+
+      unless GitReflow::Config.get('trello.board-id', local: true).length > 0
+        board_for_this_project = ask("Enter the name of the Trello board for this project: ")
+        GitReflow::Config.set('trello.board-id', board_for_this_project.downcase, local: true)
+      end
     rescue Trello::Error => e
     end
 

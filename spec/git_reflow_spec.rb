@@ -438,4 +438,24 @@ describe GitReflow do
       end
     end
   end
+
+  context "using_trello?" do
+    subject { GitReflow.using_trello? }
+    context "board id is set" do
+      before { allow(GitReflow::Config).to receive(:get).with('trello.board-id').and_return('GitReflow') }
+      context "and next list is set" do
+        before { allow(GitReflow::Config).to receive(:get).with('trello.next-list-id').and_return('Next') }
+        it     { should be_truthy }
+      end
+      context "but next list is not set" do
+        before { allow(GitReflow::Config).to receive(:get).with('trello.next-list-id').and_return('') }
+        it     { should be_falsey }
+      end
+    end
+
+    context "board id is not set" do
+      before { allow(GitReflow::Config).to receive(:get).with('trello.board-id').and_return('') }
+      it     { should be_falsey }
+    end
+  end
 end

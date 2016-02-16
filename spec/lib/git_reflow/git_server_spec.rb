@@ -53,6 +53,8 @@ describe GitReflow::GitServer do
   describe '.current_provider' do
     subject { GitReflow::GitServer.current_provider }
 
+    before { GitReflow::Config.stub(:get).with('reflow.git-server', local: true).and_return(nil) }
+
     context 'Reflow setup to use GitHub' do
       before { GitReflow::Config.stub(:get).with('reflow.git-server').and_return('GitHub') }
       it     { should == GitReflow::GitServer::GitHub }
@@ -74,6 +76,11 @@ describe GitReflow::GitServer do
 
   describe '.connection' do
     subject { GitReflow::GitServer.connection }
+
+    before do
+      GitReflow::Config.stub(:get).with('reflow.git-server', local: true).and_return(nil)
+      GitReflow::Config.stub(:get).with('reflow.git-server').and_return(nil)
+    end
 
     it { should be_nil }
 

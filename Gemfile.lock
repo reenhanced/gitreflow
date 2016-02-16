@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    git_reflow (0.7.1)
+    git_reflow (0.7.2)
       colorize (>= 0.7.0)
       github_api (= 0.12.4)
       gli (= 2.13.2)
@@ -43,18 +43,18 @@ GEM
       nokogiri (~> 1.6.6)
       oauth2
     gli (2.13.2)
-    hashie (3.4.2)
-    highline (1.7.7)
+    hashie (3.4.3)
+    highline (1.7.8)
     httpclient (2.6.0.1)
-    json_pure (1.8.2)
-    jwt (1.5.1)
+    json_pure (1.8.3)
+    jwt (1.5.2)
     method_source (0.8.2)
-    mini_portile (0.6.2)
+    mini_portile2 (2.0.0)
     multi_json (1.11.2)
     multi_xml (0.5.5)
     multipart-post (2.0.0)
-    nokogiri (1.6.6.2)
-      mini_portile (~> 0.6.0)
+    nokogiri (1.6.7.2)
+      mini_portile2 (~> 2.0.0.rc2)
     oauth2 (1.0.0)
       faraday (>= 0.8, < 0.10)
       jwt (~> 1.0)
@@ -117,4 +117,4 @@ DEPENDENCIES
   wwtd (= 0.7.0)
 
 BUNDLED WITH
-   1.10.6
+   1.11.2

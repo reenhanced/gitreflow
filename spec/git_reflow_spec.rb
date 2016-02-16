@@ -108,7 +108,9 @@ describe GitReflow do
     end
 
     context "pull request doesn't exist" do
-      before { github.stub(:find_open_pull_request).and_return(nil) }
+      before do
+        github.stub(:find_open_pull_request).and_return(nil)
+      end
 
       it "successfully creates a pull request if I do not provide one" do
         existing_pull_request.stub(:title).and_return(inputs['title'])

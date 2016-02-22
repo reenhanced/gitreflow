@@ -27,7 +27,8 @@ module GitReflow
     end
 
     def current_provider
-      if (provider = GitReflow::Config.get('reflow.git-server')) and provider.length > 0
+      provider = "#{GitReflow::Config.get('reflow.git-server', local: true)  || GitReflow::Config.get('reflow.git-server')}"
+      if provider.length > 0
         begin
           provider_class_for(provider)
         rescue ConnectionError => e

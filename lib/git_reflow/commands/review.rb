@@ -6,43 +6,16 @@ command :review do |c|
   c.flag [:t, :title], default_value: 'last commit message'
   c.flag [:m, :message], default_value: 'title'
   c.action do |global_options,options,args|
-    pull_request_msg_file = "#{GitReflow.git_root_dir}/.git/GIT_REFLOW_PR_MSG"
-
     if global_options[:title] || global_options[:message]
       review_options = {
         'base' => args[0],
-        'title' => (global_options[:title]   || GitReflow.current_branch),
+        'title' => global_options[:title],
         'body' =>  global_options[:message]
       }
     else
-      default_editor = "#{ENV['EDITOR']}"
-      if default_editor.empty?
-        default_editor = 'vi'
-      end
-
-      File.open(pull_request_msg_file, 'w') do |file|
-        file.write(GitReflow.current_branch)
-      end
-
-      GitReflow.run("#{default_editor} #{pull_request_msg_file}", with_system: true)
-
-      pr_msg = File.read(pull_request_msg_file).split(/[\r\n]|\r\n/).map(&:strip)
-      title  = pr_msg.shift
-
-      File.delete(pull_request_msg_file)
-
-      unless pr_msg.empty? 
-        pr_msg.shift if pr_msg.first.empty?
-      end
-
-      review_options = {'base' => args[0],'title' => title,'body' =>  pr_msg.join("\n")}
+      review_options = { 'base' => args[0] }
     end
 
-    puts "\nReview your PR:\n"
-    puts "--------\n"
-    puts "Title:\n#{review_options['title']}\n\n"
-    puts "Body:\n#{review_options['body']}\n"
-    puts "--------\n"
-    GitReflow.review(review_options) unless ask("Submit pull request? (Y)") =~ /n/i
+    GitReflow.review(review_options)
   end
 end

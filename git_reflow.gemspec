@@ -33,7 +33,6 @@ spec = Gem::Specification.new do |s|
   s.add_dependency('gli', '2.13.2')
   s.add_dependency('highline')
   s.add_dependency('httpclient')
-  s.add_dependency('json_pure')
   s.add_dependency('github_api', '0.12.4')
   s.add_dependency('reenhanced_bitbucket_api', '0.3.2')
 

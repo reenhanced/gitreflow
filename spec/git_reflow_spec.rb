@@ -108,12 +108,40 @@ describe GitReflow do
     end
 
     context "pull request doesn't exist" do
-      before { github.stub(:find_open_pull_request).and_return(nil) }
+      before do
+        github.stub(:find_open_pull_request).and_return(nil)
+      end
 
       it "successfully creates a pull request if I do not provide one" do
-        existing_pull_request.stub(:title).and_return(inputs['title'])
+        allow(existing_pull_request).to receive(:title).and_return(inputs['title'])
         github.should_receive(:create_pull_request).with(inputs.except('state').symbolize_keys).and_return(existing_pull_request)
         expect { subject }.to have_output "Successfully created pull request #1: #{inputs['title']}\nPull Request URL: https://github.com/#{user}/#{repo}/pulls/1\n"
+      end
+
+      context "when providing only a title" do
+        before do
+          inputs['body'] = nil
+          allow(existing_pull_request).to receive(:title).and_return(inputs['title'])
+        end
+
+        it "successfully creates a pull request with only the provided title" do
+          github.should_receive(:create_pull_request).with(inputs.except('state').symbolize_keys).and_return(existing_pull_request)
+          expect { subject }.to have_output "Successfully created pull request #1: #{inputs['title']}\nPull Request URL: https://github.com/#{user}/#{repo}/pulls/1\n"
+        end
+      end
+
+      context "when providing only a message" do
+        before do
+          inputs['title'] = nil
+          allow(existing_pull_request).to receive(:title).and_return(inputs['body'])
+        end
+
+        it "successfully creates a pull request with only the provided title" do
+          expected_options = inputs.except('state')
+          expected_options['title'] = inputs['body']
+          github.should_receive(:create_pull_request).with(expected_options.symbolize_keys).and_return(existing_pull_request)
+          expect { subject }.to have_output "Successfully created pull request #1: #{expected_options['title']}\nPull Request URL: https://github.com/#{user}/#{repo}/pulls/1\n"
+        end
       end
     end
 

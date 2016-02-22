@@ -6,6 +6,7 @@ module GitReflow
       notice:         :yellow,
       error:          :red,
       deliver_halted: :red,
+      review_halted:  :red,
       success:        :green
     }
 

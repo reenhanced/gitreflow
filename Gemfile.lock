@@ -7,7 +7,6 @@ PATH
       gli (= 2.13.2)
       highline
       httpclient
-      json_pure
       reenhanced_bitbucket_api (= 0.3.2)
 
 GEM
@@ -46,7 +45,6 @@ GEM
     hashie (3.4.3)
     highline (1.7.8)
     httpclient (2.6.0.1)
-    json_pure (1.8.3)
     jwt (1.5.2)
     method_source (0.8.2)
     mini_portile2 (2.0.0)

@@ -3,7 +3,7 @@ require 'open-uri'
 require "highline/import"
 require 'httpclient'
 require 'github_api'
-require 'json/pure'
+require 'json'
 require 'colorize'
 
 require 'git_reflow/version.rb' unless defined?(GitReflow::VERSION)

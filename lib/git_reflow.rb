@@ -51,7 +51,7 @@ module GitReflow
         existing_pull_request.display_pull_request_summary
         ask_to_open_in_browser(existing_pull_request.html_url)
       else
-        unless options['title'] || options['message']
+        unless options['title'] || options['body']
           pull_request_msg_file = "#{GitReflow.git_root_dir}/.git/GIT_REFLOW_PR_MSG"
           default_editor        = "#{ENV['EDITOR']}"
 
@@ -60,7 +60,7 @@ module GitReflow
           end
 
           File.open(pull_request_msg_file, 'w') do |file|
-            file.write(GitReflow.current_branch)
+            file.write(options['title'] || GitReflow.current_branch)
           end
 
           GitReflow.run("#{default_editor} #{pull_request_msg_file}", with_system: true)
@@ -87,7 +87,7 @@ module GitReflow
         end
 
         if create_pull_request
-          pull_request = git_server.create_pull_request(title: options['title'],
+          pull_request = git_server.create_pull_request(title: options['title'] || options['body'],
                                                         body:  options['body'],
                                                         head:  "#{remote_user}:#{current_branch}",
                                                         base:  options['base'])

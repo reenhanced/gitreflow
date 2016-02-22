@@ -9,7 +9,7 @@ command :review do |c|
     if global_options[:title] || global_options[:message]
       review_options = {
         'base' => args[0],
-        'title' => (global_options[:title]   || GitReflow.current_branch),
+        'title' => global_options[:title],
         'body' =>  global_options[:message]
       }
     else

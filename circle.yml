@@ -1,16 +1,16 @@
 dependencies:
   pre:
     - rvm install 2.0.0
-    - rvm install 2.1.7
-    - rvm install 2.2.3
+    - rvm install 2.1.8
+    - rvm install 2.2.4
 
   override:
-    - 'rvm-exec 2.0.0-p647 bundle install'
-    - 'rvm-exec 2.1.7 bundle install'
-    - 'rvm-exec 2.2.3 bundle install'
+    - 'rvm-exec 2.0.0-p648 bundle install'
+    - 'rvm-exec 2.1.8 bundle install'
+    - 'rvm-exec 2.2.4 bundle install'
 
 test:
   override:
-    - 'rvm-exec 2.0.0-p647 bundle exec rake'
-    - 'rvm-exec 2.1.7 bundle exec rake'
-    - 'rvm-exec 2.2.3 bundle exec rake'
+    - 'rvm-exec 2.0.0-p648 bundle exec rake'
+    - 'rvm-exec 2.1.8 bundle exec rake'
+    - 'rvm-exec 2.2.4 bundle exec rake'

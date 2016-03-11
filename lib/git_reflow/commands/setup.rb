@@ -5,6 +5,14 @@ command :setup do |c|
   c.switch [:e, :enterprise], default_value: false, desc: 'setup GitReflow with a Github Enterprise account'
   c.action do |global_options, options, args|
     reflow_options = { project_only: options[:local], enterprise: options[:enterprise] }
+
+    unless File.exist?(GitReflow::Config::CONFIG_FILE_PATH)
+      GitReflow.run "touch #{GitReflow::Config::CONFIG_FILE_PATH}"
+      GitReflow.say "Created #{GitReflow::Config::CONFIG_FILE_PATH} for Reflow specific configurations", :notice
+      GitReflow::Config.add "include.path", GitReflow::Config::CONFIG_FILE_PATH
+      GitReflow.say "Added #{GitReflow::Config::CONFIG_FILE_PATH} to ~/.gitconfig include paths", :notice
+    end
+
     choose do |menu|
       menu.header = "Available remote Git Server services:"
       menu.prompt = "Which service would you like to use for this project?  "

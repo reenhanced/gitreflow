@@ -2,6 +2,8 @@ module GitReflow
   module Config
     extend self
 
+    CONFIG_FILE_PATH = "~/.gitconfig.reflow".freeze
+
     def get(key, reload: false, all: false, local: false)
       if reload == false and cached_key_value = instance_variable_get(:"@#{key.tr('.-', '_')}")
         cached_key_value
@@ -21,7 +23,7 @@ module GitReflow
       if local
         GitReflow::Sandbox.run "git config --replace-all #{key} \"#{value}\"", loud: false
       else
-        GitReflow::Sandbox.run "git config --global --replace-all #{key} \"#{value}\"", loud: false
+        GitReflow::Sandbox.run "git config -f #{CONFIG_FILE_PATH} --replace-all #{key} \"#{value}\"", loud: false
       end
     end
 
@@ -30,15 +32,17 @@ module GitReflow
       if local
         GitReflow::Sandbox.run "git config --unset-all #{key} #{value}", loud: false
       else
-        GitReflow::Sandbox.run "git config --global --unset-all #{key} #{value}", loud: false
+        GitReflow::Sandbox.run "git config -f #{CONFIG_FILE_PATH} --unset-all #{key} #{value}", loud: false
       end
     end
 
-    def add(key, value, local: false)
-      if local
+    def add(key, value, local: false, global: false)
+      if global
+        GitReflow::Sandbox.run "git config --global --add #{key} \"#{value}\"", loud: false
+      elsif local
         GitReflow::Sandbox.run "git config --add #{key} \"#{value}\"", loud: false
       else
-        GitReflow::Sandbox.run "git config --global --add #{key} \"#{value}\"", loud: false
+        GitReflow::Sandbox.run "git config -f #{CONFIG_FILE_PATH} --add #{key} \"#{value}\"", loud: false
       end
     end
   end

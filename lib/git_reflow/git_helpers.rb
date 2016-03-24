@@ -9,6 +9,11 @@ module GitReflow
       @git_root_dir ||= run('git rev-parse --show-toplevel', loud: false).strip
     end
 
+    # this file contains the commit message the user will see in the editor before commit
+    def squash_msg_file
+      "#{git_root_dir}/.git/SQUASH_MSG"
+    end
+
     def remote_user
       return "" unless "#{GitReflow::Config.get('remote.origin.url')}".length > 0
       extract_remote_user_and_repo_from_remote_url(GitReflow::Config.get('remote.origin.url'))[:user]
@@ -57,6 +62,18 @@ module GitReflow
 
       run_command_with_label "git checkout #{options[:destination_branch]}"
       run_command_with_label "git merge --squash #{feature_branch_name}"
+
+      # by default comment out the "Squashed commit of the following:"
+      # messages in the final commit message.
+
+      # user can decide to include them for more detail
+      if File.exists? squash_msg_file
+        lines = IO.readlines(squash_msg_file).map { |line| "# " + line }
+
+        File.open(squash_msg_file, 'w') do |file|
+          file.puts lines
+        end
+      end
 
       append_to_squashed_commit_message(message) if message.length > 0
     end

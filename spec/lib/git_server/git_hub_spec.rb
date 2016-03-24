@@ -103,10 +103,10 @@ describe GitReflow::GitServer::GitHub do
         end
 
         it "creates git config keys for github connections" do
-          expect{ subject }.to have_run_command_silently "git config --global --replace-all github.site \"#{GitReflow::GitServer::GitHub.site_url}\""
-          expect{ subject }.to have_run_command_silently "git config --global --replace-all github.endpoint \"#{GitReflow::GitServer::GitHub.api_endpoint}\""
-          expect{ subject }.to have_run_command_silently "git config --global --replace-all github.oauth-token \"#{oauth_token_hash[:token]}\""
-          expect{ subject }.to have_run_command_silently "git config --global --replace-all reflow.git-server \"GitHub\""
+          expect{ subject }.to have_run_command_silently "git config -f #{GitReflow::Config::CONFIG_FILE_PATH} --replace-all github.site \"#{GitReflow::GitServer::GitHub.site_url}\""
+          expect{ subject }.to have_run_command_silently "git config -f #{GitReflow::Config::CONFIG_FILE_PATH} --replace-all github.endpoint \"#{GitReflow::GitServer::GitHub.api_endpoint}\""
+          expect{ subject }.to have_run_command_silently "git config -f #{GitReflow::Config::CONFIG_FILE_PATH} --replace-all github.oauth-token \"#{oauth_token_hash[:token]}\""
+          expect{ subject }.to have_run_command_silently "git config -f #{GitReflow::Config::CONFIG_FILE_PATH} --replace-all reflow.git-server \"GitHub\""
         end
 
         context "exclusive to project" do
@@ -118,16 +118,16 @@ describe GitReflow::GitServer::GitHub do
           end
 
           it "creates _local_ git config keys for github connections" do
-            expect{ subject }.to_not have_run_command_silently "git config --global --replace-all github.site \"#{GitReflow::GitServer::GitHub.site_url}\""
-            expect{ subject }.to_not have_run_command_silently "git config --global --replace-all github.endpoint \"#{GitReflow::GitServer::GitHub.api_endpoint}\""
-            expect{ subject }.to_not have_run_command_silently "git config --global --replace-all github.oauth-token \"#{oauth_token_hash[:token]}\""
-            expect{ subject }.to_not have_run_command_silently "git config --global --replace-all reflow.git-server \"GitHub\""
+            expect{ subject }.to_not have_run_command_silently "git config -f #{GitReflow::Config::CONFIG_FILE_PATH} --replace-all github.site \"#{GitReflow::GitServer::GitHub.site_url}\""
+            expect{ subject }.to_not have_run_command_silently "git config -f #{GitReflow::Config::CONFIG_FILE_PATH} --replace-all github.endpoint \"#{GitReflow::GitServer::GitHub.api_endpoint}\""
+            expect{ subject }.to_not have_run_command_silently "git config -f #{GitReflow::Config::CONFIG_FILE_PATH} --replace-all github.oauth-token \"#{oauth_token_hash[:token]}\""
+            expect{ subject }.to_not have_run_command_silently "git config -f #{GitReflow::Config::CONFIG_FILE_PATH} --replace-all reflow.git-server \"GitHub\""
 
             expect{ subject }.to have_run_command_silently "git config --replace-all github.site \"#{GitReflow::GitServer::GitHub.site_url}\""
             expect{ subject }.to have_run_command_silently "git config --replace-all github.endpoint \"#{GitReflow::GitServer::GitHub.api_endpoint}\""
             expect{ subject }.to have_run_command_silently "git config --replace-all github.oauth-token \"#{oauth_token_hash[:token]}\""
             expect{ subject }.to have_run_command_silently "git config --replace-all reflow.git-server \"GitHub\""
-            expect{ subject }.to have_run_command_silently "git config --global --add reflow.local-projects \"#{user}/#{repo}\""
+            expect{ subject }.to have_run_command_silently "git config -f #{GitReflow::Config::CONFIG_FILE_PATH} --add reflow.local-projects \"#{user}/#{repo}\""
           end
         end
 
@@ -135,10 +135,10 @@ describe GitReflow::GitServer::GitHub do
           let(:github) { GitReflow::GitServer::GitHub.new(enterprise: true) }
           before { GitReflow::GitServer::GitHub.stub(:@using_enterprise).and_return(true) }
           it "creates git config keys for github connections" do
-            expect{ subject }.to have_run_command_silently "git config --global --replace-all github.site \"#{enterprise_site}\""
-            expect{ subject }.to have_run_command_silently "git config --global --replace-all github.endpoint \"#{enterprise_api}\""
-            expect{ subject }.to have_run_command_silently "git config --global --replace-all github.oauth-token \"#{oauth_token_hash[:token]}\""
-            expect{ subject }.to have_run_command_silently "git config --global --replace-all reflow.git-server \"GitHub\""
+            expect{ subject }.to have_run_command_silently "git config -f #{GitReflow::Config::CONFIG_FILE_PATH} --replace-all github.site \"#{enterprise_site}\""
+            expect{ subject }.to have_run_command_silently "git config -f #{GitReflow::Config::CONFIG_FILE_PATH} --replace-all github.endpoint \"#{enterprise_api}\""
+            expect{ subject }.to have_run_command_silently "git config -f #{GitReflow::Config::CONFIG_FILE_PATH} --replace-all github.oauth-token \"#{oauth_token_hash[:token]}\""
+            expect{ subject }.to have_run_command_silently "git config -f #{GitReflow::Config::CONFIG_FILE_PATH} --replace-all reflow.git-server \"GitHub\""
           end
         end
       end

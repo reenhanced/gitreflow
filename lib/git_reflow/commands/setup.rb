@@ -15,11 +15,25 @@ command :setup do |c|
     end
 
     choose do |menu|
-      menu.header = "Available remote Git Server services:"
+      menu.header = "Available remote Git Server services"
       menu.prompt = "Which service would you like to use for this project?  "
 
       menu.choice('GitHub')    { GitReflow::GitServer.connect reflow_options.merge({ provider: 'GitHub', silent: false }) }
       menu.choice('BitBucket (team-owned repos only)') { GitReflow::GitServer.connect reflow_options.merge({ provider: 'BitBucket', silent: false }) }
     end
+
+    choose do |lgtm_menu|
+      lgtm_menu.header = "LGTM Options"
+      lgtm_menu.prompt = "Would you rather?  "
+
+      lgtm_menu.choice('Set a minimum LGTM ') {  
+        print "How many LGTM would you like? " 
+        GitReflow::Config.add "constants.numlgtm", gets.to_i  
+      }
+      lgtm_menu.choice('Have a approval from every reviewer ') {  GitReflow::Config.add "constants.numlgtm", ""  }
+    end
+
+    GitReflow::Config.add "constants.lgtmregex", /lgtm|looks good to me|[:\+1:]|:thumbsup:|:shipit:/i 
+    
   end
 end

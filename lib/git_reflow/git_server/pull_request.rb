@@ -3,6 +3,16 @@ module GitReflow
     class PullRequest
       attr_accessor :description, :html_url, :feature_branch_name, :base_branch_name, :build_status, :source_object, :number
 
+      LGTM_REGEX = /(?i-mx:lgtm|looks good to me|[:\\+1:]|:thumbsup:|:shipit:)/
+
+      def self.num_lgtm
+        "#{GitReflow::Config.get('constants.numlgtm')}".length > 0 ? "#{GitReflow::Config.get('constants.numlgtm')}" : ""
+      end
+
+      def self.lgtm_regex
+        "#{GitReflow::Config.get('constants.lgtmregex')}".length > 0 ? Regexp.new("#{GitReflow::Config.get('constants.lgtmregex')}") : LGTM_REGEX
+      end
+
       def initialize(attributes)
         raise "PullRequest#initialize must be implemented"
       end
@@ -35,13 +45,33 @@ module GitReflow
         reviewers - approvals
       end
 
-      def good_to_merge?(force: false)
-        return true if force
+      def enough_approvals?
+        # Approvals from every commentor
+        if self.class.num_lgtm == ''
+          reviewers_pending_response.empty?
+        else
+          approvals.size >= self.class.num_lgtm.to_i and !last_comment.match(self.class.lgtm_regex).nil?
+
+        end
+      end
+
+      def check_approvals
         has_comments_or_approvals = (has_comments? or approvals.any?)
 
-        force == true or (
-          (build_status.nil? or build_status == "success") and
-          (has_comments_or_approvals and reviewers_pending_response.empty?))
+        case PullRequest.num_lgtm
+        when "0"
+          true
+        when "", nil
+          has_comments_or_approvals && reviewers_pending_response.empty?
+        else
+          enough_approvals? 
+        end
+      end
+
+      def good_to_merge?(force: false)
+        return true if force
+
+        (build_status.nil? or build_status == "success") and check_approvals
       end
 
       def display_pull_request_summary

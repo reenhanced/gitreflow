@@ -18,6 +18,11 @@ describe GitReflow do
   let(:existing_pull_request)  { GitReflow::GitServer::GitHub::PullRequest.new existing_pull_requests.first }
 
   before do
+
+    # Stubbing out numlgtm value to test all reviewers in gitconfig file
+    GitReflow::Config.stub(:get).with("constants.numlgtm").and_return('')
+    GitReflow::Config.stub(:get).and_call_original
+
     HighLine.any_instance.stub(:ask) do |terminal, question|
       values = {
         "Please enter your GitHub username: "                                                      => user,
@@ -211,7 +216,7 @@ describe GitReflow do
 
     context "and pull request exists for the feature branch to the destination branch" do
       before do
-        github.stub(:get_build_status).and_return(build_status)
+        github.stub(:build_status).and_return(build_status)
         github.should_receive(:find_open_pull_request).and_return(existing_pull_request)
         existing_pull_request.stub(:has_comments?).and_return(true)
         github.stub(:reviewers).and_return(['codenamev'])
@@ -267,6 +272,34 @@ describe GitReflow do
               squash_message = "#{existing_pull_request.body}\nCloses ##{existing_pull_request.number}\n\nLGTM given by: @nhance\n"
               GitReflow.should_receive(:append_to_squashed_commit_message).with(squash_message)
               subject
+            end
+
+            context "build status failure, testing description and target_url" do
+              let(:build_status) { Hashie::Mash.new({ state: 'failure', description: 'Build resulted in failed test(s)', target_url: "www.error.com" }) }
+
+              before do
+                existing_pull_request.stub(:build).and_return(build_status)
+                existing_pull_request.stub(:reviewers).and_return(lgtm_comment_authors)
+                existing_pull_request.stub(:has_comments?).and_return(true)
+              end
+
+              it "halts delivery and notifies user of a failed build" do
+                expect { subject }.to have_said "#{build_status.description}: #{build_status.target_url}", :deliver_halted
+              end
+            end
+
+            context "build status nil" do
+              let(:build_status) { nil }
+
+              before do
+                github.stub(:build).and_return(build_status)
+                existing_pull_request.stub(:reviewers_pending_response).and_return([])
+                existing_pull_request.stub(:has_comments_or_approvals).and_return(true)
+              end
+
+              it "commits the changes if the build status is nil but has comments/approvals and no pending response" do
+                expect{ subject }.to have_said 'Merge complete!', :success
+              end
             end
 
             context "and the pull request has no body" do
@@ -325,7 +358,8 @@ describe GitReflow do
 
               context "not always" do
                 before do
-                  GitReflow::Config.stub(:get) { "false" }
+                  GitReflow::Config.stub(:get).with("reflow.always-deploy-and-cleanup").and_return("false")
+                  GitReflow::Config.stub(:get).and_call_original
                 end
 
                 it "pushes local squash merged base branch to remote repo" do
@@ -343,7 +377,8 @@ describe GitReflow do
 
               context "always" do
                 before do
-                  GitReflow::Config.stub(:get) { "true" }
+                  GitReflow::Config.stub(:get).with("reflow.always-deploy-and-cleanup").and_return("true")
+                  GitReflow::Config.stub(:get).and_call_original
                 end
 
                 it "pushes local squash merged base branch to remote repo" do

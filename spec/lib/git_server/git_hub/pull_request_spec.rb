@@ -42,6 +42,7 @@ describe GitReflow::GitServer::GitHub::PullRequest do
 
     github.class.stub(:remote_user).and_return(user)
     github.class.stub(:remote_repo_name).and_return(repo)
+    GitReflow::GitServer::PullRequest.stub(:lgtm_regex).and_return(/(?i-mx:lgtm|looks good to me|[:\\+1:]|:thumbsup:|:shipit:)/)
   end
 
   describe '#initialize(options)' do
@@ -195,9 +196,13 @@ describe GitReflow::GitServer::GitHub::PullRequest do
             owner:    existing_pull_request.head.user.login,
             comments: [{author: 'tito', body: 'lgtm'}, {author: 'ringo', body: ':+1:'}]
           })
+
+        GitReflow::GitServer::GitHub::PullRequest.stub(:lgtm_regex).and_return(/(?i-mx:lgtm|looks good to me|[:\\+1:]|:thumbsup:|:shipit:)/)
       end
 
-      specify { expect(subject.approvals).to eq(['tito', 'ringo']) }
+      context "2 approvals" do
+        specify { expect(subject.approvals).to eq(['tito', 'ringo']) }
+      end
 
       context "but a new commit has been introduced" do
         before do

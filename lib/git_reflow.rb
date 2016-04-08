@@ -109,6 +109,7 @@ module GitReflow
     feature_branch    = current_branch
     base_branch       = options['base'] || 'master'
 
+    update_current_branch
     fetch_destination(base_branch)
     update_destination(feature_branch)
 

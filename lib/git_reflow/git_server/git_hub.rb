@@ -100,7 +100,6 @@ module GitReflow
               config.endpoint   = GitServer::GitHub.api_endpoint
               config.site       = GitServer::GitHub.site_url
               config.adapter    = :net_http
-              config.ssl        = {:verify => false}
             end
 
             @connection.connection_options = {headers: {"X-GitHub-OTP" => options[:two_factor_auth_code]}} if options[:two_factor_auth_code]

@@ -31,6 +31,11 @@ module GitReflow
       run_command_with_label "git push origin #{current_branch}"
     end
 
+    def update_current_branch
+      run_command_with_label "git pull origin #{current_branch}"
+      push_current_branch
+    end
+
     def fetch_destination(destination_branch)
       run_command_with_label "git fetch origin #{destination_branch}"
     end

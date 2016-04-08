@@ -88,6 +88,18 @@ describe GitReflow::GitHelpers do
     end
   end
 
+  describe ".update_current_branch" do
+    subject { Gitacular.update_current_branch }
+    before  { Gitacular.stub(:current_branch).and_return('new-feature') }
+
+    it "updates the remote changes and pushes any local changes" do
+      expect { subject }.to have_run_commands_in_order [
+        "git pull origin new-feature",
+        "git push origin new-feature"
+      ]
+    end
+  end
+
   describe ".merge_feature_branch(options)" do
     let(:destination_branch) { 'monkey-business' }
     let(:feature_branch)     { 'bananas' }

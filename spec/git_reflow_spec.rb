@@ -194,6 +194,11 @@ describe GitReflow do
 
     subject { GitReflow.deliver inputs }
 
+    it "fetches the latest changes to the current branch" do
+      GitReflow.should_receive(:update_current_branch)
+      subject
+    end
+
     it "fetches the latest changes to the destination branch" do
       GitReflow.should_receive(:fetch_destination).with('master')
       subject

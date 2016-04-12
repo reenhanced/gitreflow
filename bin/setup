@@ -4,5 +4,3 @@ IFS=$'\n\t'
 set -vx
 
 bundle install
-
-# Do any other automated setup for gem development that you need to do here

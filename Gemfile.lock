@@ -104,13 +104,13 @@ PLATFORMS
 
 DEPENDENCIES
   appraisal (= 1.0.3)
-  bundler
+  bundler (~> 1.11)
   chronic
   git_reflow!
   pry-byebug
-  rake
+  rake (~> 10.0)
   rdoc
-  rspec (~> 3.0.0)
+  rspec (~> 3.0)
   webmock
   wwtd (= 0.7.0)
 

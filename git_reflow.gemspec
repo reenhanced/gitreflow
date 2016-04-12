@@ -10,22 +10,22 @@ spec = Gem::Specification.new do |s|
   s.summary          = "A better git process"
   s.description      = "Git Reflow manages your git workflow."
   s.platform         = Gem::Platform::RUBY
-  s.files            = `git ls-files`.split("\n")
+  s.files            = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
   s.test_files       = `git ls-files -- {test,spec,features}/*`.split("\n")
-  s.executables      = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
+  s.executables      = s.files.grep(%r{^exe/}) { |f| File.basename(f) }
   s.has_rdoc         = true
   s.extra_rdoc_files = ['README.rdoc']
-  s.bindir           = 'bin'
-  s.require_paths    << 'lib'
+  s.bindir           = "exe"
+  s.require_paths    = ["lib"]
   s.rdoc_options     << '--title' << 'git_reflow' << '--main' << 'README.rdoc' << '-ri'
 
   s.add_development_dependency('appraisal', '1.0.3')
-  s.add_development_dependency('bundler')
+  s.add_development_dependency('bundler', "~> 1.11")
   s.add_development_dependency('chronic')
   s.add_development_dependency('pry-byebug')
-  s.add_development_dependency('rake')
+  s.add_development_dependency('rake', "~> 10.0")
   s.add_development_dependency('rdoc')
-  s.add_development_dependency('rspec', '~> 3.0.0')
+  s.add_development_dependency('rspec', "~> 3.0")
   s.add_development_dependency('webmock')
   s.add_development_dependency('wwtd', '0.7.0')
 

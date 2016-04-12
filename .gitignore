@@ -2,3 +2,5 @@ pkg/*
 **/.DS_Store
 .rspec
 gemfiles
+.ruby-version
+*.gem

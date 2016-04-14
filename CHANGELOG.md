@@ -1,5 +1,53 @@
 # Change Log
 
+## [v0.7.5](https://github.com/reenhanced/gitreflow/tree/v0.7.5) (2016-04-14)
+[Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.7.4...v0.7.5)
+
+**Implemented enhancements:**
+
+- Modernize gem file structure [\#158](https://github.com/reenhanced/gitreflow/issues/158)
+
+**Closed issues:**
+
+- Remove unused gitreflow-common [\#154](https://github.com/reenhanced/gitreflow/issues/154)
+- Option to require LGTM from only one person? [\#141](https://github.com/reenhanced/gitreflow/issues/141)
+
+**Merged pull requests:**
+
+- \[Issue \#141\] Fixing Issues and Adding Configurable Nx LGTM and LGTM Regex Options, Adding Rspec Tests [\#161](https://github.com/reenhanced/gitreflow/pull/161) ([simonzhu24](https://github.com/simonzhu24))
+- modernize gem structure; Fixes \#158 [\#159](https://github.com/reenhanced/gitreflow/pull/159) ([pboling](https://github.com/pboling))
+- Remove unused gitreflow-common [\#155](https://github.com/reenhanced/gitreflow/pull/155) ([pboling](https://github.com/pboling))
+
+## [v0.7.4](https://github.com/reenhanced/gitreflow/tree/v0.7.4) (2016-04-08)
+[Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.7.3...v0.7.4)
+
+**Fixed bugs:**
+
+- Deliver command doesn't sync feature branch before merge [\#152](https://github.com/reenhanced/gitreflow/issues/152)
+- SSL Verification is turned off [\#151](https://github.com/reenhanced/gitreflow/issues/151)
+
+## [v0.7.3](https://github.com/reenhanced/gitreflow/tree/v0.7.3) (2016-03-24)
+[Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.7.2...v0.7.3)
+
+**Fixed bugs:**
+
+- Setting title is ignored from review [\#127](https://github.com/reenhanced/gitreflow/issues/127)
+- Don't open EDITOR if there is an existing PR for this branch [\#123](https://github.com/reenhanced/gitreflow/issues/123)
+
+**Closed issues:**
+
+- add "Created With Reflow" [\#101](https://github.com/reenhanced/gitreflow/issues/101)
+- Store OAuth token somewhere else? [\#54](https://github.com/reenhanced/gitreflow/issues/54)
+
+## [v0.7.2](https://github.com/reenhanced/gitreflow/tree/v0.7.2) (2016-02-22)
+[Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.7.1...v0.7.2)
+
+**Closed issues:**
+
+- git: 'reflow' is not a git command. See 'git --help' [\#146](https://github.com/reenhanced/gitreflow/issues/146)
+- option to use non-master branch by default everywhere [\#145](https://github.com/reenhanced/gitreflow/issues/145)
+- Deliver to custom branch? [\#144](https://github.com/reenhanced/gitreflow/issues/144)
+
 ## [v0.7.1](https://github.com/reenhanced/gitreflow/tree/v0.7.1) (2015-10-27)
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.7.0...v0.7.1)
 

@@ -6,7 +6,7 @@ describe GitReflow::GitServer do
   subject { GitReflow::GitServer.connect connection_options }
 
   before do
-    GitReflow::GitServer::GitHub.stub(:new)
+    allow(GitReflow::GitServer::GitHub).to receive(:new)
 
     module GitReflow::GitServer
       class DummyHub < Base
@@ -27,8 +27,8 @@ describe GitReflow::GitServer do
   describe '.connect(options)' do
     it 'initializes a new GitHub server provider by default' do
       stubbed_github = Class.new
-      stubbed_github.stub(:authenticate)
-      GitReflow::GitServer::GitHub.should_receive(:new).and_return(stubbed_github)
+      allow(stubbed_github).to receive(:authenticate)
+      expect(GitReflow::GitServer::GitHub).to receive(:new).and_return(stubbed_github)
       subject
     end
 
@@ -38,9 +38,9 @@ describe GitReflow::GitServer do
 
       it 'initializes any server provider that has been implemented' do
         dummy_hub = GitReflow::GitServer::DummyHub.new({})
-        GitReflow::GitServer::DummyHub.should_receive(:new).with(expected_server_options).and_return(dummy_hub)
-        subject.should == dummy_hub
-        $output.should_not include 'GitServer not setup for: DummyHub'
+        expect(GitReflow::GitServer::DummyHub).to receive(:new).with(expected_server_options).and_return(dummy_hub)
+        expect(subject).to eq(dummy_hub)
+        expect($output).not_to include 'GitServer not setup for: DummyHub'
       end
     end
 
@@ -53,23 +53,23 @@ describe GitReflow::GitServer do
   describe '.current_provider' do
     subject { GitReflow::GitServer.current_provider }
 
-    before { GitReflow::Config.stub(:get).with('reflow.git-server', local: true).and_return(nil) }
+    before { allow(GitReflow::Config).to receive(:get).with('reflow.git-server', local: true).and_return(nil) }
 
     context 'Reflow setup to use GitHub' do
-      before { GitReflow::Config.stub(:get).with('reflow.git-server').and_return('GitHub') }
-      it     { should == GitReflow::GitServer::GitHub }
+      before { allow(GitReflow::Config).to receive(:get).with('reflow.git-server').and_return('GitHub') }
+      it     { is_expected.to eq(GitReflow::GitServer::GitHub) }
     end
 
     context 'Reflow has not yet been setup' do
-      before { GitReflow::Config.stub(:get).with('reflow.git-server').and_return('') }
-      it     { should be_nil }
+      before { allow(GitReflow::Config).to receive(:get).with('reflow.git-server').and_return('') }
+      it     { is_expected.to be_nil }
       it     { expect{ subject }.to have_output "[notice] Reflow hasn't been setup yet.  Run 'git reflow setup' to continue" }
     end
 
     context 'an unknown server provider is stored in the git config' do
-      before { GitReflow::Config.stub(:get).with('reflow.git-server').and_return('GittyUp') }
+      before { allow(GitReflow::Config).to receive(:get).with('reflow.git-server').and_return('GittyUp') }
 
-      it { should be_nil }
+      it { is_expected.to be_nil }
       it { expect{ subject }.to have_output "GitServer not setup for \"GittyUp\"" }
     end
   end
@@ -78,23 +78,23 @@ describe GitReflow::GitServer do
     subject { GitReflow::GitServer.connection }
 
     before do
-      GitReflow::Config.stub(:get).with('reflow.git-server', local: true).and_return(nil)
-      GitReflow::Config.stub(:get).with('reflow.git-server').and_return(nil)
+      allow(GitReflow::Config).to receive(:get).with('reflow.git-server', local: true).and_return(nil)
+      allow(GitReflow::Config).to receive(:get).with('reflow.git-server').and_return(nil)
     end
 
-    it { should be_nil }
+    it { is_expected.to be_nil }
 
     context "with a valid provider" do
-      before { GitReflow::Config.stub(:get).with('reflow.git-server').and_return('GitHub') }
+      before { allow(GitReflow::Config).to receive(:get).with('reflow.git-server').and_return('GitHub') }
       it 'calls connection on the provider' do
-        GitReflow::GitServer::GitHub.should_receive(:connection)
+        expect(GitReflow::GitServer::GitHub).to receive(:connection)
         subject
       end
     end
 
     context "with an invalid provider" do
-      before { GitReflow::Config.stub(:get).with('reflow.git-server').and_return('GittyUp') }
-      it     { should be_nil }
+      before { allow(GitReflow::Config).to receive(:get).with('reflow.git-server').and_return('GittyUp') }
+      it     { is_expected.to be_nil }
       it     { expect{ subject }.to have_output "GitServer not setup for \"GittyUp\"" }
     end
   end

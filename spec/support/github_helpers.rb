@@ -16,7 +16,7 @@ module GithubHelpers
     branch           = options[:branch] || 'new-feature'
     pull             = options[:pull]
 
-    HighLine.any_instance.stub(:ask) do |terminal, question|
+    allow_any_instance_of(HighLine).to receive(:ask) do |terminal, question|
       values = {
         "Please enter your GitHub username: "                                                 => user,
         "Please enter your GitHub password (we do NOT store this): "                          => password,
@@ -37,27 +37,27 @@ module GithubHelpers
     end
 
     stub_request(:get, "#{api_endpoint}/authorizations?").to_return(:body => [oauth_token_hash].to_json, status: 200, headers: {})
-    Github.stub(:new).and_return(github)
-    GitReflow.stub(:push_current_branch).and_return(true)
-    GitReflow.stub(:github).and_return(github)
-    GitReflow.stub(:current_branch).and_return(branch)
-    GitReflow.stub(:remote_repo_name).and_return(repo)
-    GitReflow.stub(:remote_user).and_return(user)
-    GitReflow.stub(:fetch_destination).and_return(true)
-    GitReflow.stub(:update_destination).and_return(true)
+    allow(Github).to receive(:new).and_return(github)
+    allow(GitReflow).to receive(:push_current_branch).and_return(true)
+    allow(GitReflow).to receive(:github).and_return(github)
+    allow(GitReflow).to receive(:current_branch).and_return(branch)
+    allow(GitReflow).to receive(:remote_repo_name).and_return(repo)
+    allow(GitReflow).to receive(:remote_user).and_return(user)
+    allow(GitReflow).to receive(:fetch_destination).and_return(true)
+    allow(GitReflow).to receive(:update_destination).and_return(true)
 
-    GitReflow::GitServer::GitHub.any_instance.stub(:run).with('hostname', loud: false).and_return(hostname)
+    allow_any_instance_of(GitReflow::GitServer::GitHub).to receive(:run).with('hostname', loud: false).and_return(hostname)
     github_server = GitReflow::GitServer::GitHub.new
-    github_server.class.stub(:user).and_return(user)
-    github_server.class.stub(:oauth_token).and_return(oauth_token_hash.token)
-    github_server.class.stub(:site_url).and_return(site_url)
-    github_server.class.stub(:api_endpoint).and_return(api_endpoint)
-    github_server.class.stub(:remote_user).and_return(user)
-    github_server.class.stub(:remote_repo).and_return(repo)
-    github_server.class.stub(:oauth_token).and_return(oauth_token_hash.token)
-    github_server.class.stub(:get_committed_time).and_return(Time.now)
+    allow(github_server.class).to receive(:user).and_return(user)
+    allow(github_server.class).to receive(:oauth_token).and_return(oauth_token_hash.token)
+    allow(github_server.class).to receive(:site_url).and_return(site_url)
+    allow(github_server.class).to receive(:api_endpoint).and_return(api_endpoint)
+    allow(github_server.class).to receive(:remote_user).and_return(user)
+    allow(github_server.class).to receive(:remote_repo).and_return(repo)
+    allow(github_server.class).to receive(:oauth_token).and_return(oauth_token_hash.token)
+    allow(github_server.class).to receive(:get_committed_time).and_return(Time.now)
 
-    GitReflow.stub(:git_server).and_return(github_server)
+    allow(GitReflow).to receive(:git_server).and_return(github_server)
 
     # Stubbing statuses for a given commit
     #stub_request(:get, %r{#{GitReflow.git_server.class.api_endpoint}/repos/#{user}/commits/\w+}).

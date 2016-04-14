@@ -11,7 +11,7 @@ describe GitReflow::GitServer::BitBucket do
   let(:remote_url)   { "git@bitbucket.org:#{user}/#{repo}.git" }
 
   before do
-    HighLine.any_instance.stub(:ask) do |terminal, question|
+    allow_any_instance_of(HighLine).to receive(:ask) do |terminal, question|
       values = {
         "Please enter your BitBucket username: " => user
       }
@@ -25,7 +25,7 @@ describe GitReflow::GitServer::BitBucket do
     subject { GitReflow::GitServer::BitBucket.new({}) }
 
     it 'sets the reflow git server provider to BitBucket in the git config' do
-      GitReflow::Config.should_receive(:set).once.with('reflow.git-server', 'BitBucket', local: false)
+      expect(GitReflow::Config).to receive(:set).once.with('reflow.git-server', 'BitBucket', local: false)
       subject
     end
 
@@ -33,7 +33,7 @@ describe GitReflow::GitServer::BitBucket do
       subject { GitReflow::GitServer::BitBucket.new(project_only: true) }
 
       it 'sets the enterprise site and api as the site and api endpoints for the BitBucket provider in the git config' do
-        GitReflow::Config.should_receive(:set).once.with('reflow.git-server', 'BitBucket', local: true)
+        expect(GitReflow::Config).to receive(:set).once.with('reflow.git-server', 'BitBucket', local: true)
         subject
       end
     end
@@ -60,13 +60,13 @@ describe GitReflow::GitServer::BitBucket do
     context 'not yet authenticated' do
       context 'with valid BitBucket credentials' do
         before do
-          GitReflow::Config.stub(:get).and_return('')
-          GitReflow::Config.stub(:set)
-          GitReflow::Config.stub(:set).with('bitbucket.api-key', reload: true).and_return(api_key)
+          allow(GitReflow::Config).to receive(:get).and_return('')
+          allow(GitReflow::Config).to receive(:set)
+          allow(GitReflow::Config).to receive(:set).with('bitbucket.api-key', reload: true).and_return(api_key)
           allow(GitReflow::Config).to receive(:get).with('bitbucket.api-key', reload: true).and_return('')
           allow(GitReflow::Config).to receive(:get).with('remote.origin.url').and_return(remote_url)
           allow(GitReflow::Config).to receive(:get).with('reflow.local-projects').and_return('')
-          bitbucket.stub(:connection).and_return double(repos: double(all: []))
+          allow(bitbucket).to receive(:connection).and_return double(repos: double(all: []))
         end
 
         it "prompts me to setup an API key" do

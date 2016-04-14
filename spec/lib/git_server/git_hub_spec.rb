@@ -16,7 +16,7 @@ describe GitReflow::GitServer::GitHub do
   let(:existing_pull_requests) { Fixture.new('pull_requests/pull_requests.json').to_json_hashie }
 
   before do
-    HighLine.any_instance.stub(:ask) do |terminal, question|
+    allow_any_instance_of(HighLine).to receive(:ask) do |terminal, question|
       values = {
         "Please enter your GitHub username: "                                                 => user,
         "Please enter your GitHub password (we do NOT store this): "                          => password,
@@ -28,17 +28,17 @@ describe GitReflow::GitServer::GitHub do
      return_value
     end
 
-    github.class.stub(:remote_user).and_return(user)
-    github.class.stub(:remote_repo_name).and_return(repo)
+    allow(github.class).to receive(:remote_user).and_return(user)
+    allow(github.class).to receive(:remote_repo_name).and_return(repo)
   end
 
   describe '#initialize(options)' do
     subject { GitReflow::GitServer::GitHub.new({}) }
 
     it 'sets the reflow git server provider to GitHub in the git config' do
-      GitReflow::Config.should_receive(:set).once.with('github.site', github_site, local: false)
-      GitReflow::Config.should_receive(:set).once.with('github.endpoint', github_api_endpoint, local: false)
-      GitReflow::Config.should_receive(:set).once.with('reflow.git-server', 'GitHub', local: false)
+      expect(GitReflow::Config).to receive(:set).once.with('github.site', github_site, local: false)
+      expect(GitReflow::Config).to receive(:set).once.with('github.endpoint', github_api_endpoint, local: false)
+      expect(GitReflow::Config).to receive(:set).once.with('reflow.git-server', 'GitHub', local: false)
       subject
     end
 
@@ -46,9 +46,9 @@ describe GitReflow::GitServer::GitHub do
       subject { GitReflow::GitServer::GitHub.new(enterprise: true) }
 
       it 'sets the enterprise site and api as the site and api endpoints for the GitHub provider in the git config' do
-        GitReflow::Config.should_receive(:set).once.with('github.site', enterprise_site, local: false)
-        GitReflow::Config.should_receive(:set).once.with('github.endpoint', enterprise_api, local: false)
-        GitReflow::Config.should_receive(:set).once.with('reflow.git-server', 'GitHub', local: false)
+        expect(GitReflow::Config).to receive(:set).once.with('github.site', enterprise_site, local: false)
+        expect(GitReflow::Config).to receive(:set).once.with('github.endpoint', enterprise_api, local: false)
+        expect(GitReflow::Config).to receive(:set).once.with('reflow.git-server', 'GitHub', local: false)
         subject
       end
 
@@ -58,13 +58,13 @@ describe GitReflow::GitServer::GitHub do
       subject { GitReflow::GitServer::GitHub.new(project_only: true) }
 
       before do
-        GitReflow::Config.should_receive(:get).twice.with('reflow.local-projects', all: true).and_return("#{user}/#{repo}")
+        expect(GitReflow::Config).to receive(:get).twice.with('reflow.local-projects', all: true).and_return("#{user}/#{repo}")
       end
 
       it 'sets the enterprise site and api as the site and api endpoints for the GitHub provider in the git config' do
-        GitReflow::Config.should_receive(:set).once.with('github.site', github_site, local: true).and_call_original
-        GitReflow::Config.should_receive(:set).once.with('github.endpoint', github_api_endpoint, local: true)
-        GitReflow::Config.should_receive(:set).once.with('reflow.git-server', 'GitHub', local: true)
+        expect(GitReflow::Config).to receive(:set).once.with('github.site', github_site, local: true).and_call_original
+        expect(GitReflow::Config).to receive(:set).once.with('github.endpoint', github_api_endpoint, local: true)
+        expect(GitReflow::Config).to receive(:set).once.with('reflow.git-server', 'GitHub', local: true)
         subject
       end
     end
@@ -78,19 +78,19 @@ describe GitReflow::GitServer::GitHub do
     subject                     { github.authenticate }
 
     before  do
-      GitReflow::GitServer::GitHub.stub(:user).and_return('reenhanced')
-      github_api.stub(:oauth).and_return(github_authorizations)
-      github_api.stub_chain(:oauth, :all).and_return([])
-      github.stub(:run).with('hostname', loud: false).and_return(hostname)
+      allow(GitReflow::GitServer::GitHub).to receive(:user).and_return('reenhanced')
+      allow(github_api).to receive(:oauth).and_return(github_authorizations)
+      allow(github_api).to receive_message_chain(:oauth, :all).and_return([])
+      allow(github).to receive(:run).with('hostname', loud: false).and_return(hostname)
     end
 
     context 'not yet authenticated' do
       context 'with valid GitHub credentials' do
 
         before do
-          Github.stub(:new).and_return(github_api)
-          github_authorizations.stub(:authenticated?).and_return(true)
-          github_api.oauth.stub(:create).with({ scopes: ['repo'], note: "git-reflow (#{hostname})" }).and_return(oauth_token_hash)
+          allow(Github).to receive(:new).and_return(github_api)
+          allow(github_authorizations).to receive(:authenticated?).and_return(true)
+          allow(github_api.oauth).to receive(:create).with({ scopes: ['repo'], note: "git-reflow (#{hostname})" }).and_return(oauth_token_hash)
         end
 
         it "notifies the user of successful setup" do
@@ -98,7 +98,7 @@ describe GitReflow::GitServer::GitHub do
         end
 
         it "creates a new GitHub oauth token" do
-          github_api.oauth.should_receive(:create).and_return(oauth_token_hash)
+          expect(github_api.oauth).to receive(:create).and_return(oauth_token_hash)
           subject
         end
 
@@ -133,7 +133,7 @@ describe GitReflow::GitServer::GitHub do
 
         context "use GitHub enterprise account" do
           let(:github) { GitReflow::GitServer::GitHub.new(enterprise: true) }
-          before { GitReflow::GitServer::GitHub.stub(:@using_enterprise).and_return(true) }
+          before { allow(GitReflow::GitServer::GitHub).to receive(:@using_enterprise).and_return(true) }
           it "creates git config keys for github connections" do
             expect{ subject }.to have_run_command_silently "git config -f #{GitReflow::Config::CONFIG_FILE_PATH} --replace-all github.site \"#{enterprise_site}\""
             expect{ subject }.to have_run_command_silently "git config -f #{GitReflow::Config::CONFIG_FILE_PATH} --replace-all github.endpoint \"#{enterprise_api}\""
@@ -152,7 +152,7 @@ describe GitReflow::GitServer::GitHub do
         }}
 
         before do
-          Github.should_receive(:new).and_raise Github::Error::Unauthorized.new(unauthorized_error_response)
+          expect(Github).to receive(:new).and_raise Github::Error::Unauthorized.new(unauthorized_error_response)
         end
 
         it "notifies user of invalid login details" do
@@ -170,7 +170,7 @@ describe GitReflow::GitServer::GitHub do
     subject { github.create_pull_request({ title: title, body: body, base: 'master' }) }
 
     before do
-      github.class.stub(:current_branch).and_return(current_branch)
+      allow(github.class).to receive(:current_branch).and_return(current_branch)
       allow(GitReflow).to receive(:git_server).and_return(github)
       stub_request(:post, %r{/repos/#{user}/#{repo}/pulls}).
         to_return(body: Fixture.new('pull_requests/pull_request.json').to_s, status: 201, headers: {content_type: "application/json; charset=utf-8"})
@@ -179,7 +179,7 @@ describe GitReflow::GitServer::GitHub do
     specify { expect(subject.class.to_s).to eq('GitReflow::GitServer::GitHub::PullRequest') }
 
     it 'creates a pull request using the remote user and repo' do
-      github_api.stub(:pull_requests)
+      allow(github_api).to receive(:pull_requests)
       expect(github_api.pull_requests).to receive(:create).with(user, repo, title: title, body: body, head: "#{user}:#{current_branch}", base: 'master').and_return(existing_pull_request)
       subject
     end
@@ -189,25 +189,25 @@ describe GitReflow::GitServer::GitHub do
     subject { github.find_open_pull_request({ from: 'new-feature', to: 'master'}) }
 
     it 'looks for an open pull request matching the remote user/repo' do
-      subject.number.should == existing_pull_requests.first.number
+      expect(subject.number).to eq(existing_pull_requests.first.number)
     end
 
     context 'no pull request exists' do
       before do
-        github_api.stub(:pull_requests)
-        github_api.pull_requests.should_receive(:all).and_return([])
+        allow(github_api).to receive(:pull_requests)
+        expect(github_api.pull_requests).to receive(:all).and_return([])
       end
-      it     { should == nil }
+      it     { is_expected.to eq(nil) }
     end
   end
 
   describe '#get_build_status(sha)' do
     let(:sha) { '6dcb09b5b57875f334f61aebed695e2e4193db5e' }
     subject   { github.get_build_status(sha) }
-    before    { github_api.stub_chain(:repos, :statuses) }
+    before    { allow(github_api).to receive_message_chain(:repos, :statuses) }
 
     it 'gets the latest build status for the given commit hash' do
-      github_api.repos.statuses.should_receive(:all).with(user, repo, sha).and_return([{ state: 'success'}])
+      expect(github_api.repos.statuses).to receive(:all).with(user, repo, sha).and_return([{ state: 'success'}])
       subject
     end
   end

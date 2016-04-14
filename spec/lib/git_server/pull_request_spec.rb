@@ -20,11 +20,11 @@ describe GitReflow::GitServer::PullRequest do
         })
       # setup initial valid state
       allow_any_instance_of(GitReflow::GitServer::GitHub::PullRequest).to receive(:build).and_return(Struct.new(:state, :description, :url).new)
-      GitReflow.git_server.stub(:find_open_pull_request).with({from: 'new-feature', to: 'master'}).and_return(pull_request)
+      allow(GitReflow.git_server).to receive(:find_open_pull_request).with({from: 'new-feature', to: 'master'}).and_return(pull_request)
       
       # stubs approvals and last_comment conditions to default to true
-      pull_request.stub(:approvals).and_return(["Simon", "John"])
-      pull_request.stub_chain(:last_comment, :match).and_return(true)
+      allow(pull_request).to receive(:approvals).and_return(["Simon", "John"])
+      allow(pull_request).to receive_message_chain(:last_comment, :match).and_return(true)
       allow(GitReflow::GitServer::PullRequest).to receive(:minimum_approvals).and_return("2")
       allow(GitReflow::GitServer::PullRequest).to receive(:approval_regex).and_return(/(?i-mx:lgtm|looks good to me|:\+1:|:thumbsup:|:shipit:)/)
 
@@ -250,7 +250,7 @@ describe GitReflow::GitServer::PullRequest do
         allow(subject).to receive(:build_status).and_return('failure')
       end
 
-      specify { subject.rejection_message.should eq(": ") }
+      specify { expect(subject.rejection_message).to eq(": ") }
     end
 
     context "Testing Minimum Approvals Failure" do
@@ -259,7 +259,7 @@ describe GitReflow::GitServer::PullRequest do
         allow(subject).to receive(:approval_minimums_reached?).and_return(false)
         allow(GitReflow::GitServer::PullRequest).to receive(:minimum_approvals).and_return("2")
       end
-      specify { subject.rejection_message.should eq("You need approval from at least 2 users!") }
+      specify { expect(subject.rejection_message).to eq("You need approval from at least 2 users!") }
     end
 
     context "Testing Minimum Approvals Reached" do
@@ -268,7 +268,7 @@ describe GitReflow::GitServer::PullRequest do
         allow(subject).to receive(:all_comments_addressed?).and_return(false)
         allow(subject).to receive(:last_comment).and_return("Hello")
       end
-      specify { subject.rejection_message.should eq("The last comment is holding up approval:\nHello") }
+      specify { expect(subject.rejection_message).to eq("The last comment is holding up approval:\nHello") }
     end
 
     context "Testing All Comments Addressed" do
@@ -277,7 +277,7 @@ describe GitReflow::GitServer::PullRequest do
         allow(subject).to receive(:all_comments_addressed?).and_return(false)
         allow(subject).to receive(:last_comment).and_return("Hello")
       end
-      specify { subject.rejection_message.should eq("The last comment is holding up approval:\nHello") }
+      specify { expect(subject.rejection_message).to eq("The last comment is holding up approval:\nHello") }
     end
 
     context "Testing All Comments Addressed" do
@@ -287,7 +287,7 @@ describe GitReflow::GitServer::PullRequest do
         allow(subject).to receive(:all_comments_addressed?).and_return(true)
         allow(subject).to receive(:approval_minimums_reached?).and_return(true)
       end
-      specify { subject.rejection_message.should eq( "You still need a LGTM from: Simon") }
+      specify { expect(subject.rejection_message).to eq( "You still need a LGTM from: Simon") }
     end
 
     context "Testing Last Case" do
@@ -297,7 +297,7 @@ describe GitReflow::GitServer::PullRequest do
         allow(subject).to receive(:all_comments_addressed?).and_return(true)
         allow(subject).to receive(:approval_minimums_reached?).and_return(true)
       end
-      specify { subject.rejection_message.should eq("Your code has not been reviewed yet.") }
+      specify { expect(subject.rejection_message).to eq("Your code has not been reviewed yet.") }
     end
   end
 
@@ -313,7 +313,7 @@ describe GitReflow::GitServer::PullRequest do
         allow(subject).to receive(:minimum_approvals).and_return('2')
         allow(subject).to receive(:approvals).and_return(['Simon'])
       end
-      specify { subject.approval_minimums_reached?.should eq(true) }
+      specify { expect(subject.approval_minimums_reached?).to eq(true) }
     end
 
     context "Testing a Success Case" do
@@ -321,7 +321,7 @@ describe GitReflow::GitServer::PullRequest do
         allow(subject).to receive(:minimum_approvals).and_return('2')
         allow(subject).to receive(:approvals).and_return(['Simon', 'John'])
       end
-      specify { subject.approval_minimums_reached?.should eq(true) }
+      specify { expect(subject.approval_minimums_reached?).to eq(true) }
     end
 
     context "Testing Case with no minimum_approval" do
@@ -329,7 +329,7 @@ describe GitReflow::GitServer::PullRequest do
         allow(subject).to receive(:minimum_approvals).and_return('')
         allow(subject).to receive(:approvals).and_return([])
       end
-      specify { subject.approval_minimums_reached?.should eq(true) }
+      specify { expect(subject.approval_minimums_reached?).to eq(true) }
     end
   end
 
@@ -347,7 +347,7 @@ describe GitReflow::GitServer::PullRequest do
             comments: [{author: 'tito', body: 'lgtm'}, {author: 'ringo', body: ':+1:'}]
           })
         allow_any_instance_of(GitReflow::GitServer::GitHub::PullRequest).to receive(:build).and_return(Struct.new(:state, :description, :url).new)
-        GitReflow.git_server.stub(:find_open_pull_request).with({from: 'new-external-feature', to: 'master'}).and_return(pull_request)
+        allow(GitReflow.git_server).to receive(:find_open_pull_request).with({from: 'new-external-feature', to: 'master'}).and_return(pull_request)
       end
 
       it "displays relavent information about the pull request" do
@@ -377,7 +377,7 @@ describe GitReflow::GitServer::PullRequest do
             ]
           })
         allow_any_instance_of(GitReflow::GitServer::GitHub::PullRequest).to receive(:build).and_return(Struct.new(:state, :description, :url).new)
-        GitReflow.git_server.stub(:find_open_pull_request).with({from: 'new-external-feature', to: 'master'}).and_return(pull_request)
+        allow(GitReflow.git_server).to receive(:find_open_pull_request).with({from: 'new-external-feature', to: 'master'}).and_return(pull_request)
       end
 
       it "displays relavent information about the pull request" do

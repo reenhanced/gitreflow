@@ -8,7 +8,7 @@ module CommandLineHelpers
     stub_run_for GitReflow
     stub_run_for GitReflow::Sandbox
 
-    STDOUT.stub(:puts) do |output|
+    allow(STDOUT).to receive(:puts) do |output|
       $output << output
       output = ''
     end
@@ -20,14 +20,14 @@ module CommandLineHelpers
   end
 
   def stub_run_for(module_to_stub)
-    module_to_stub.stub(:run) do |command, options|
+    allow(module_to_stub).to receive(:run) do |command, options|
       options ||= {}
       $commands_ran << Hashie::Mash.new(command: command, options: options)
       ret_value = $stubbed_commands[command] || ""
       command = "" # we need this due to a bug in rspec that will keep this assignment on subsequent runs of the stub
       ret_value
     end
-    module_to_stub.stub(:say) do |output, type|
+    allow(module_to_stub).to receive(:say) do |output, type|
       $says << {message: output, type: type}
     end
   end
@@ -41,11 +41,11 @@ module CommandLineHelpers
 
   def stub_command(command, return_value)
     $stubbed_commands[command] = return_value
-    GitReflow::Sandbox.stub(:run).with(command).and_return(return_value)
+    allow(GitReflow::Sandbox).to receive(:run).with(command).and_return(return_value)
   end
 
   def stub_command_line_inputs(inputs)
-    HighLine.any_instance.stub(:ask) do |terminal, question|
+    allow_any_instance_of(HighLine).to receive(:ask) do |terminal, question|
      return_value = inputs[question]
      question = ""
      return_value
@@ -93,7 +93,7 @@ RSpec::Matchers.define :have_run_commands_in_order do |commands|
       next unless command_start_index
       if command_count >= 1
         current_command = commands[command_count - 1]
-        current_command.should == command_ran.command
+        expect(current_command).to eq(command_ran.command)
         command_count -= 1
       end
     end

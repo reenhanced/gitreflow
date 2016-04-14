@@ -40,8 +40,8 @@ describe GitReflow::GitServer::GitHub::PullRequest do
       "Please enter your Enterprise API endpoint (e.g. https://github.company.com/api/v3):" => enterprise_api
     })
 
-    github.class.stub(:remote_user).and_return(user)
-    github.class.stub(:remote_repo_name).and_return(repo)
+    allow(github.class).to receive(:remote_user).and_return(user)
+    allow(github.class).to receive(:remote_repo_name).and_return(repo)
     allow(GitReflow::GitServer::PullRequest).to receive(:approval_regex).and_return(/(?i-mx:lgtm|looks good to me|:\+1:|:thumbsup:|:shipit:)/)
   end
 

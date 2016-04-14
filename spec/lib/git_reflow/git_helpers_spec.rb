@@ -22,32 +22,32 @@ describe GitReflow::GitHelpers do
   describe ".remote_user" do
     subject { Gitacular.remote_user }
 
-    it { should == 'reenhanced.spectacular' }
+    it { is_expected.to eq('reenhanced.spectacular') }
 
     context "remote origin url isn't set" do
       let(:origin_url) { nil }
-      it { should == '' }
+      it { is_expected.to eq('') }
     end
 
     context "remote origin uses HTTP" do
       let(:origin_url) { 'https://github.com/reenhanced.spectacular/this-is-the.shit.git' }
-      it               { should == 'reenhanced.spectacular' }
+      it               { is_expected.to eq('reenhanced.spectacular') }
     end
   end
 
   describe ".remote_repo_name" do
     subject { Gitacular.remote_repo_name }
 
-    it { should == 'this-is-the.shit' }
+    it { is_expected.to eq('this-is-the.shit') }
 
     context "remote origin url isn't set" do
       let(:origin_url) { nil }
-      it { should == '' }
+      it { is_expected.to eq('') }
     end
 
     context "remote origin uses HTTP" do
       let(:origin_url) { 'https://github.com/reenhanced.spectacular/this-is-the.shit.git' }
-      it               { should == 'this-is-the.shit' }
+      it               { is_expected.to eq('this-is-the.shit') }
     end
   end
 
@@ -63,7 +63,7 @@ describe GitReflow::GitHelpers do
 
   describe ".push_current_branch" do
     subject { Gitacular.push_current_branch }
-    before  { Gitacular.stub(:current_branch).and_return('bingo') }
+    before  { allow(Gitacular).to receive(:current_branch).and_return('bingo') }
     it      { expect{ subject }.to have_run_command "git push origin bingo" }
   end
 
@@ -76,7 +76,7 @@ describe GitReflow::GitHelpers do
     let(:current_branch)     { 'bananas' }
     let(:destination_branch) { 'monkey-business' }
 
-    before  { Gitacular.stub(:current_branch).and_return(current_branch) }
+    before  { allow(Gitacular).to receive(:current_branch).and_return(current_branch) }
     subject { Gitacular.update_destination(destination_branch) }
 
     it "updates the destination branch with the latest code from the remote repo" do
@@ -90,7 +90,7 @@ describe GitReflow::GitHelpers do
 
   describe ".update_current_branch" do
     subject { Gitacular.update_current_branch }
-    before  { Gitacular.stub(:current_branch).and_return('new-feature') }
+    before  { allow(Gitacular).to receive(:current_branch).and_return('new-feature') }
 
     it "updates the remote changes and pushes any local changes" do
       expect { subject }.to have_run_commands_in_order [
@@ -122,14 +122,14 @@ describe GitReflow::GitHelpers do
     context "with a message" do
       let(:merge_options) {{ message: "don't throw doo doo" }}
       it "appends the message to the squashed commit message" do
-        Gitacular.should_receive(:append_to_squashed_commit_message).with("don't throw doo doo")
+        expect(Gitacular).to receive(:append_to_squashed_commit_message).with("don't throw doo doo")
         subject
       end
 
       context 'and a pull reuqest number' do
         before { merge_options.merge!(pull_request_number: 3) }
         it "appends the message to the squashed commit message" do
-          Gitacular.should_receive(:append_to_squashed_commit_message).with("don't throw doo doo\nCloses #3\n")
+          expect(Gitacular).to receive(:append_to_squashed_commit_message).with("don't throw doo doo\nCloses #3\n")
           subject
         end
       end
@@ -138,7 +138,7 @@ describe GitReflow::GitHelpers do
     context "with a pull request number" do
       let(:merge_options) {{ pull_request_number: 3 }}
       it "appends the message to the squashed commit message" do
-        Gitacular.should_receive(:append_to_squashed_commit_message).with("\nCloses #3\n")
+        expect(Gitacular).to receive(:append_to_squashed_commit_message).with("\nCloses #3\n")
         subject
       end
     end
@@ -146,7 +146,7 @@ describe GitReflow::GitHelpers do
     context "with one LGTM author" do
       let(:merge_options) {{ lgtm_authors: 'codenamev' }}
       it "appends the message to the squashed commit message" do
-        Gitacular.should_receive(:append_to_squashed_commit_message).with("\nLGTM given by: @#{merge_options[:lgtm_authors]}\n")
+        expect(Gitacular).to receive(:append_to_squashed_commit_message).with("\nLGTM given by: @#{merge_options[:lgtm_authors]}\n")
         subject
       end
     end
@@ -154,7 +154,7 @@ describe GitReflow::GitHelpers do
     context "with LGTM authors" do
       let(:merge_options) {{ lgtm_authors: ['codenamev', 'nhance'] }}
       it "appends the message to the squashed commit message" do
-        Gitacular.should_receive(:append_to_squashed_commit_message).with("\nLGTM given by: @#{merge_options[:lgtm_authors].join(', @')}\n")
+        expect(Gitacular).to receive(:append_to_squashed_commit_message).with("\nLGTM given by: @#{merge_options[:lgtm_authors].join(', @')}\n")
         subject
       end
     end

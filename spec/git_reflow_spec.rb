@@ -23,7 +23,7 @@ describe GitReflow do
     allow(GitReflow::Config).to receive(:get).with("constants.minimumApprovals").and_return('')
     allow(GitReflow::Config).to receive(:get).and_call_original
 
-    HighLine.any_instance.stub(:ask) do |terminal, question|
+    allow_any_instance_of(HighLine).to receive(:ask) do |terminal, question|
       values = {
         "Please enter your GitHub username: "                                                      => user,
         "Please enter your GitHub password (we do NOT store this): "                               => password,
@@ -52,21 +52,21 @@ describe GitReflow do
     end
 
     context 'with no existing pull request' do
-      before { git_server.stub(:find_open_pull_request).with({from: feature_branch, to: base_branch}).and_return(nil) }
+      before { allow(git_server).to receive(:find_open_pull_request).with({from: feature_branch, to: base_branch}).and_return(nil) }
       it     { expect{ subject }.to have_output "\n[notice] No pull request exists for #{feature_branch} -> #{base_branch}" }
       it     { expect{ subject }.to have_output "[notice] Run 'git reflow review #{base_branch}' to start the review process" }
     end
 
     context 'with an existing pull request' do
       before do
-        git_server.stub(:find_open_pull_request).with({from: feature_branch, to: base_branch}).and_return(existing_pull_request)
+        allow(git_server).to receive(:find_open_pull_request).with({from: feature_branch, to: base_branch}).and_return(existing_pull_request)
       end
 
       it 'displays a summary of the pull request and asks to open it in the browser' do
-        existing_pull_request.should_receive(:display_pull_request_summary)
-        GitReflow.should_receive(:ask_to_open_in_browser).with(existing_pull_request.html_url)
+        expect(existing_pull_request).to receive(:display_pull_request_summary)
+        expect(GitReflow).to receive(:ask_to_open_in_browser).with(existing_pull_request.html_url)
         subject
-        $output.should include "Here's the status of your review:"
+        expect($output).to include "Here's the status of your review:"
       end
     end
   end
@@ -99,27 +99,27 @@ describe GitReflow do
     subject { GitReflow.review inputs }
 
     it "fetches the latest changes to the destination branch" do
-      GitReflow.should_receive(:fetch_destination).with(inputs['base'])
-      github.should_receive(:find_open_pull_request).and_return(nil)
-      github.stub(:create_pull_request).and_return(existing_pull_request)
+      expect(GitReflow).to receive(:fetch_destination).with(inputs['base'])
+      expect(github).to receive(:find_open_pull_request).and_return(nil)
+      allow(github).to receive(:create_pull_request).and_return(existing_pull_request)
       subject
     end
 
     it "pushes the latest current branch to the origin repo" do
-      GitReflow.should_receive(:push_current_branch)
-      github.should_receive(:find_open_pull_request).and_return(nil)
-      github.stub(:create_pull_request).and_return(existing_pull_request)
+      expect(GitReflow).to receive(:push_current_branch)
+      expect(github).to receive(:find_open_pull_request).and_return(nil)
+      allow(github).to receive(:create_pull_request).and_return(existing_pull_request)
       subject
     end
 
     context "pull request doesn't exist" do
       before do
-        github.stub(:find_open_pull_request).and_return(nil)
+        allow(github).to receive(:find_open_pull_request).and_return(nil)
       end
 
       it "successfully creates a pull request if I do not provide one" do
         allow(existing_pull_request).to receive(:title).and_return(inputs['title'])
-        github.should_receive(:create_pull_request).with(inputs.except('state').symbolize_keys).and_return(existing_pull_request)
+        expect(github).to receive(:create_pull_request).with(inputs.except('state').symbolize_keys).and_return(existing_pull_request)
         expect { subject }.to have_output "Successfully created pull request #1: #{inputs['title']}\nPull Request URL: https://github.com/#{user}/#{repo}/pulls/1\n"
       end
 
@@ -130,7 +130,7 @@ describe GitReflow do
         end
 
         it "successfully creates a pull request with only the provided title" do
-          github.should_receive(:create_pull_request).with(inputs.except('state').symbolize_keys).and_return(existing_pull_request)
+          expect(github).to receive(:create_pull_request).with(inputs.except('state').symbolize_keys).and_return(existing_pull_request)
           expect { subject }.to have_output "Successfully created pull request #1: #{inputs['title']}\nPull Request URL: https://github.com/#{user}/#{repo}/pulls/1\n"
         end
       end
@@ -144,7 +144,7 @@ describe GitReflow do
         it "successfully creates a pull request with only the provided title" do
           expected_options = inputs.except('state')
           expected_options['title'] = inputs['body']
-          github.should_receive(:create_pull_request).with(expected_options.symbolize_keys).and_return(existing_pull_request)
+          expect(github).to receive(:create_pull_request).with(expected_options.symbolize_keys).and_return(existing_pull_request)
           expect { subject }.to have_output "Successfully created pull request #1: #{expected_options['title']}\nPull Request URL: https://github.com/#{user}/#{repo}/pulls/1\n"
         end
       end
@@ -152,21 +152,21 @@ describe GitReflow do
 
     context "pull request exists" do
       before do
-        GitReflow.stub(:push_current_branch)
+        allow(GitReflow).to receive(:push_current_branch)
         github_error = Github::Error::UnprocessableEntity.new( eval(Fixture.new('pull_requests/pull_request_exists_error.json').to_s) )
-        github.should_receive(:find_open_pull_request).and_return(existing_pull_request)
-        existing_pull_request.stub(:display_pull_request_summary)
+        expect(github).to receive(:find_open_pull_request).and_return(existing_pull_request)
+        allow(existing_pull_request).to receive(:display_pull_request_summary)
       end
 
       subject { GitReflow.review inputs }
 
       it "displays a pull request summary for the existing pull request" do
-        existing_pull_request.should_receive(:display_pull_request_summary)
+        expect(existing_pull_request).to receive(:display_pull_request_summary)
         subject
       end
 
       it "asks to open the pull request in the browser" do
-        GitReflow.should_receive(:ask_to_open_in_browser).with(existing_pull_request.html_url)
+        expect(GitReflow).to receive(:ask_to_open_in_browser).with(existing_pull_request.html_url)
         subject
       end
     end
@@ -188,7 +188,7 @@ describe GitReflow do
 
 
     before do
-      GitReflow.stub(:append_to_squashed_commit_message).and_return(true)
+      allow(GitReflow).to receive(:append_to_squashed_commit_message).and_return(true)
 
       module Kernel
         def system(cmd)
@@ -200,17 +200,17 @@ describe GitReflow do
     subject { GitReflow.deliver inputs }
 
     it "fetches the latest changes to the current branch" do
-      GitReflow.should_receive(:update_current_branch)
+      expect(GitReflow).to receive(:update_current_branch)
       subject
     end
 
     it "fetches the latest changes to the destination branch" do
-      GitReflow.should_receive(:fetch_destination).with('master')
+      expect(GitReflow).to receive(:fetch_destination).with('master')
       subject
     end
 
     it "looks for a pull request matching the feature branch and destination branch" do
-      github.should_receive(:find_open_pull_request).with(from: branch, to: 'master')
+      expect(github).to receive(:find_open_pull_request).with(from: branch, to: 'master')
       subject
     end
 
@@ -243,9 +243,9 @@ describe GitReflow do
           # stubbing unrelated results so we can just test that it made it insdide the conditional block
           allow(existing_pull_request).to receive(:has_comments?).and_return(true)
           allow(existing_pull_request).to receive(:reviewers).and_return([])
-          GitReflow.stub(:update_destination).and_return(true)
-          GitReflow.stub(:merge_feature_branch).and_return(true)
-          GitReflow.stub(:append_to_squashed_commit_message).and_return(true)
+          allow(GitReflow).to receive(:update_destination).and_return(true)
+          allow(GitReflow).to receive(:merge_feature_branch).and_return(true)
+          allow(GitReflow).to receive(:append_to_squashed_commit_message).and_return(true)
         end
 
         it "ignores build status when not setup" do
@@ -258,19 +258,19 @@ describe GitReflow do
 
         context 'and has comments' do
           before do
-            existing_pull_request.stub(:has_comments?).and_return(true)
+            allow(existing_pull_request).to receive(:has_comments?).and_return(true)
           end
 
           context 'but there is a LGTM' do
             let(:lgtm_comment_authors) { ['nhance'] }
             before do
-              existing_pull_request.stub(:approvals).and_return(lgtm_comment_authors)
-              existing_pull_request.stub(:reviewers_pending_response).and_return([])
+              allow(existing_pull_request).to receive(:approvals).and_return(lgtm_comment_authors)
+              allow(existing_pull_request).to receive(:reviewers_pending_response).and_return([])
             end
 
             it "includes the pull request body in the commit message" do
               squash_message = "#{existing_pull_request.body}\nCloses ##{existing_pull_request.number}\n\nLGTM given by: @nhance\n"
-              GitReflow.should_receive(:append_to_squashed_commit_message).with(squash_message)
+              expect(GitReflow).to receive(:append_to_squashed_commit_message).with(squash_message)
               subject
             end
 
@@ -278,9 +278,9 @@ describe GitReflow do
               let(:build_status) { Hashie::Mash.new({ state: 'failure', description: 'Build resulted in failed test(s)', target_url: "www.error.com" }) }
 
               before do
-                existing_pull_request.stub(:build).and_return(build_status)
-                existing_pull_request.stub(:reviewers).and_return(lgtm_comment_authors)
-                existing_pull_request.stub(:has_comments?).and_return(true)
+                allow(existing_pull_request).to receive(:build).and_return(build_status)
+                allow(existing_pull_request).to receive(:reviewers).and_return(lgtm_comment_authors)
+                allow(existing_pull_request).to receive(:has_comments?).and_return(true)
               end
 
               it "halts delivery and notifies user of a failed build" do
@@ -292,9 +292,9 @@ describe GitReflow do
               let(:build_status) { nil }
 
               before do
-                github.stub(:build).and_return(build_status)
-                existing_pull_request.stub(:reviewers_pending_response).and_return([])
-                existing_pull_request.stub(:has_comments_or_approvals).and_return(true)
+                allow(github).to receive(:build).and_return(build_status)
+                allow(existing_pull_request).to receive(:reviewers_pending_response).and_return([])
+                allow(existing_pull_request).to receive(:has_comments_or_approvals).and_return(true)
               end
 
               it "commits the changes if the build status is nil but has comments/approvals and no pending response" do
@@ -307,20 +307,20 @@ describe GitReflow do
 
               before do
                 existing_pull_request.description = ''
-                github.stub(:find_open_pull_request).and_return(existing_pull_request)
-                GitReflow.stub(:get_first_commit_message).and_return(first_commit_message)
-                existing_pull_request.stub(:reviewers).and_return(lgtm_comment_authors)
+                allow(github).to receive(:find_open_pull_request).and_return(existing_pull_request)
+                allow(GitReflow).to receive(:get_first_commit_message).and_return(first_commit_message)
+                allow(existing_pull_request).to receive(:reviewers).and_return(lgtm_comment_authors)
               end
 
               it "includes the first commit message for the new branch in the commit message of the merge" do
                 squash_message = "#{first_commit_message}\nCloses ##{existing_pull_request.number}\n\nLGTM given by: @nhance\n"
-                GitReflow.should_receive(:append_to_squashed_commit_message).with(squash_message)
+                expect(GitReflow).to receive(:append_to_squashed_commit_message).with(squash_message)
                 subject
               end
             end
 
             it "notifies user of the merge and performs it" do
-              GitReflow.should_receive(:merge_feature_branch).with('new-feature', {
+              expect(GitReflow).to receive(:merge_feature_branch).with('new-feature', {
                 destination_branch:  'master',
                 pull_request_number: existing_pull_request.number,
                 lgtm_authors:        ['nhance'],
@@ -331,7 +331,7 @@ describe GitReflow do
             end
 
             it "updates the destination brnach" do
-              GitReflow.should_receive(:update_destination).with('master')
+              expect(GitReflow).to receive(:update_destination).with('master')
               subject
             end
 
@@ -341,7 +341,7 @@ describe GitReflow do
 
             context "and cleaning up feature branch" do
               before do
-                HighLine.any_instance.stub(:ask) do |terminal, question|
+                allow_any_instance_of(HighLine).to receive(:ask) do |terminal, question|
                   values = {
                     "Please enter your GitHub username: "                                                      => user,
                     "Please enter your GitHub password (we do NOT store this): "                               => password,
@@ -358,8 +358,8 @@ describe GitReflow do
 
               context "not always" do
                 before do
-                  GitReflow::Config.stub(:get).with("reflow.always-deploy-and-cleanup").and_return("false")
-                  GitReflow::Config.stub(:get).and_call_original
+                  allow(GitReflow::Config).to receive(:get).with("reflow.always-deploy-and-cleanup").and_return("false")
+                  allow(GitReflow::Config).to receive(:get).and_call_original
                 end
 
                 it "pushes local squash merged base branch to remote repo" do
@@ -377,8 +377,8 @@ describe GitReflow do
 
               context "always" do
                 before do
-                  GitReflow::Config.stub(:get).with("reflow.always-deploy-and-cleanup").and_return("true")
-                  GitReflow::Config.stub(:get).and_call_original
+                  allow(GitReflow::Config).to receive(:get).with("reflow.always-deploy-and-cleanup").and_return("true")
+                  allow(GitReflow::Config).to receive(:get).and_call_original
                 end
 
                 it "pushes local squash merged base branch to remote repo" do
@@ -398,7 +398,7 @@ describe GitReflow do
 
             context "and not cleaning up feature branch" do
               before do
-                HighLine.any_instance.stub(:ask) do |terminal, question|
+                allow_any_instance_of(HighLine).to receive(:ask) do |terminal, question|
                   values = {
                     "Please enter your GitHub username: "                                                      => user,
                     "Please enter your GitHub password (we do NOT store this): "                               => password,
@@ -441,7 +441,7 @@ describe GitReflow do
 
           context 'but there are still unaddressed comments' do
             let(:open_comment_authors) { ['nhance', 'codenamev'] }
-            before { existing_pull_request.stub(:reviewers_pending_response).and_return(open_comment_authors) }
+            before { allow(existing_pull_request).to receive(:reviewers_pending_response).and_return(open_comment_authors) }
             it "notifies the user to get their code reviewed" do
               expect { subject }.to have_said "You still need a LGTM from: #{open_comment_authors.join(', ')}", :deliver_halted
             end
@@ -450,9 +450,9 @@ describe GitReflow do
 
         context 'but has no comments' do
           before do
-            existing_pull_request.stub(:has_comments?).and_return(false)
-            existing_pull_request.stub(:approvals).and_return([])
-            existing_pull_request.stub(:reviewers_pending_response).and_return([])
+            allow(existing_pull_request).to receive(:has_comments?).and_return(false)
+            allow(existing_pull_request).to receive(:approvals).and_return([])
+            allow(existing_pull_request).to receive(:reviewers_pending_response).and_return([])
           end
 
           it "notifies the user to get their code reviewed" do
@@ -465,19 +465,19 @@ describe GitReflow do
         end
 
         it "checks out the destination branch and updates any remote changes" do
-          GitReflow.should_receive(:update_destination)
+          expect(GitReflow).to receive(:update_destination)
           subject
         end
 
         it "merges and squashes the feature branch into the master branch" do
-          GitReflow.should_receive(:merge_feature_branch)
+          expect(GitReflow).to receive(:merge_feature_branch)
           subject
         end
       end
     end
 
     context "and no pull request exists for the feature branch to the destination branch" do
-      before { github.stub(:find_open_pull_request).and_return(nil) }
+      before { allow(github).to receive(:find_open_pull_request).and_return(nil) }
 
       it "notifies the user of a missing pull request" do
         expect { subject }.to have_said "No pull request exists for #{user}:#{branch}\nPlease submit your branch for review first with \`git reflow review\`", :deliver_halted

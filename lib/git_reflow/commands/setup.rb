@@ -15,11 +15,15 @@ command :setup do |c|
     end
 
     choose do |menu|
-      menu.header = "Available remote Git Server services:"
+      menu.header = "Available remote Git Server services"
       menu.prompt = "Which service would you like to use for this project?  "
 
       menu.choice('GitHub')    { GitReflow::GitServer.connect reflow_options.merge({ provider: 'GitHub', silent: false }) }
       menu.choice('BitBucket (team-owned repos only)') { GitReflow::GitServer.connect reflow_options.merge({ provider: 'BitBucket', silent: false }) }
     end
+
+    GitReflow::Config.add "constants.minimumApprovals", ask("Set the minimum number of approvals (leaving blank will require approval from all commenters): "), local: reflow_options[:project_only]
+    GitReflow::Config.add "constants.approvalRegex", GitReflow::GitServer::PullRequest::DEFAULT_APPROVAL_REGEX, local: reflow_options[:project_only]
+    
   end
 end

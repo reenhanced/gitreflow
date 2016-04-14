@@ -21,8 +21,6 @@ module GitReflow
 
   extend self
 
-  LGTM = /lgtm|looks good to me|:\+1:|:thumbsup:|:shipit:/i
-
   def status(destination_branch)
     pull_request = git_server.find_open_pull_request( :from => current_branch, :to => destination_branch )
 
@@ -156,12 +154,8 @@ module GitReflow
           else
             say "There were problems commiting your feature... please check the errors above and try again.", :error
           end
-        elsif !existing_pull_request.build_status.nil? and existing_pull_request.build_status != "success"
-          say "#{existing_pull_request.build.description}: #{existing_pull_request.build.url}", :deliver_halted
-        elsif existing_pull_request.reviewers_pending_response.count > 0
-          say "You still need a LGTM from: #{existing_pull_request.reviewers_pending_response.join(', ')}", :deliver_halted
         else
-          say "Your code has not been reviewed yet.", :deliver_halted
+          say existing_pull_request.rejection_message, :deliver_halted
         end
       end
 

@@ -22,18 +22,8 @@ command :setup do |c|
       menu.choice('BitBucket (team-owned repos only)') { GitReflow::GitServer.connect reflow_options.merge({ provider: 'BitBucket', silent: false }) }
     end
 
-    choose do |lgtm_menu|
-      lgtm_menu.header = "LGTM Options"
-      lgtm_menu.prompt = "Would you rather?  "
-
-      lgtm_menu.choice('Set a minimum LGTM ') {  
-        print "How many LGTM would you like? " 
-        GitReflow::Config.add "constants.numlgtm", gets.to_i  
-      }
-      lgtm_menu.choice('Have a approval from every reviewer ') {  GitReflow::Config.add "constants.numlgtm", ""  }
-    end
-
-    GitReflow::Config.add "constants.lgtmregex", /lgtm|looks good to me|[:\+1:]|:thumbsup:|:shipit:/i 
+    GitReflow::Config.add "constants.minimumApprovals", ask("Set the minimum number of approvals (leaving blank will require approval from all commenters): "), local: reflow_options[:project_only]
+    GitReflow::Config.add "constants.approvalRegex", GitReflow::GitServer::PullRequest::DEFAULT_APPROVAL_REGEX, local: reflow_options[:project_only]
     
   end
 end

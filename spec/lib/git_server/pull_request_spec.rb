@@ -4,6 +4,7 @@ describe GitReflow::GitServer::PullRequest do
   let(:pull_request) { Fixture.new('pull_requests/external_pull_request.json').to_json_hashie }
   let(:github)      { stub_github_with({ user: 'reenhanced', repo: 'repo', pull: pull_request }) }
   let!(:github_api) { github.connection }
+  let(:git_server)  { GitReflow::GitServer::GitHub.new {} }
 
   describe "#good_to_merge?(options)" do
     subject            { GitReflow::GitServer::GitHub::PullRequest.new(pull_request) }
@@ -24,8 +25,8 @@ describe GitReflow::GitServer::PullRequest do
       # stubs approvals and last_comment conditions to default to true
       pull_request.stub(:approvals).and_return(["Simon", "John"])
       pull_request.stub_chain(:last_comment, :match).and_return(true)
-      GitReflow::GitServer::PullRequest.stub(:num_lgtm).and_return("2")
-      GitReflow::GitServer::PullRequest.stub(:lgtm_regex).and_return(/(?i-mx:lgtm|looks good to me|[:\\+1:]|:thumbsup:|:shipit:)/)
+      allow(GitReflow::GitServer::PullRequest).to receive(:minimum_approvals).and_return("2")
+      allow(GitReflow::GitServer::PullRequest).to receive(:approval_regex).and_return(/(?i-mx:lgtm|looks good to me|:\+1:|:thumbsup:|:shipit:)/)
 
     end
     context "with no status" do
@@ -106,6 +107,232 @@ describe GitReflow::GitServer::PullRequest do
     end
   end
 
+  describe "#approved?" do
+    subject            { GitReflow::GitServer::GitHub::PullRequest.new(pull_request) }
+
+    context "no approvals and build success" do
+      before do
+        FakeGitHub.new(
+        repo_owner:   'reenhanced',
+        repo_name:    'repo',
+          pull_request: {
+            number: pull_request.number,
+            owner: pull_request.head.user.login,
+            comments: []
+          })
+        allow(GitReflow.git_server).to receive(:get_build_status).and_return(Struct.new(:state, :description, :target_url).new())
+        allow(GitReflow::GitServer::GitHub::PullRequest).to receive(:minimum_approvals).and_return("0")
+      end
+      specify { expect(subject.approved?).to be_truthy }
+    end
+
+    context "all commenters must approve and minimum_approvals is nil" do
+      before do
+        FakeGitHub.new(
+        repo_owner:   'reenhanced',
+        repo_name:    'repo',
+          pull_request: {
+            number: pull_request.number,
+            owner: pull_request.head.user.login,
+            comments: []
+          })
+        allow(GitReflow.git_server).to receive(:get_build_status).and_return(Struct.new(:state, :description, :target_url).new())
+        allow(GitReflow::GitServer::GitHub::PullRequest).to receive(:minimum_approvals).and_return(nil)
+        allow(subject).to receive(:approvals).and_return(["Simon"])
+        allow(subject).to receive(:has_comments?).and_return(true)
+        allow(subject).to receive(:reviewers_pending_response).and_return([])
+      end
+      specify { expect(subject.approved?).to be_truthy }
+    end
+
+    context "all commenters must approve but we have no pending reviewers" do
+      before do
+        FakeGitHub.new(
+          repo_owner:   'reenhanced',
+          repo_name:    'repo',
+          pull_request: {
+            number: pull_request.number,
+            owner: pull_request.head.user.login,
+            comments: []
+          })
+        allow(GitReflow.git_server).to receive(:get_build_status).and_return(Struct.new(:state, :description, :target_url).new())
+        allow(GitReflow::GitServer::GitHub::PullRequest).to receive(:minimum_approvals).and_return("")
+        allow(subject).to receive(:has_comments?).and_return(true)
+        allow(subject).to receive(:approvals).and_return(["Simon"])
+        allow(subject).to receive(:reviewers_pending_response).and_return([])
+      end
+      specify { expect(subject.approved?).to be_truthy }
+    end
+
+    context "all commenters must approve but we have 1 pending reviewer" do
+      before do
+        FakeGitHub.new(
+          repo_owner:   'reenhanced',
+          repo_name:    'repo',
+          pull_request: {
+            number: pull_request.number,
+            owner: pull_request.head.user.login,
+            comments: []
+          })
+        allow(GitReflow.git_server).to receive(:get_build_status).and_return(Struct.new(:state, :description, :target_url).new())
+        allow(GitReflow::GitServer::GitHub::PullRequest).to receive(:minimum_approvals).and_return("")
+        allow(subject).to receive(:has_comments?).and_return(true)
+        allow(subject).to receive(:approvals).and_return(["Simon"])
+        allow(subject).to receive(:reviewers_pending_response).and_return(["Simon"])
+      end
+      specify { expect(subject.approved?).to be_falsy }
+    end
+
+    context "2 approvals required but we only have 1 approval" do
+      before do
+        FakeGitHub.new(
+          repo_owner:   'reenhanced',
+          repo_name:    'repo',
+          pull_request: {
+            number: pull_request.number,
+            owner: pull_request.head.user.login,
+            comments: []
+          })
+        allow(GitReflow.git_server).to receive(:get_build_status).and_return(Struct.new(:state, :description, :target_url).new())
+        allow(GitReflow::GitServer::GitHub::PullRequest).to receive(:minimum_approvals).and_return("2")
+        allow(subject).to receive(:approvals).and_return(["Simon"])
+        allow(subject).to receive(:last_comment).and_return("LGTM")
+      end
+      specify { expect(subject.approved?).to be_falsy }
+    end
+
+    context "2 approvals required and we have 2 approvals but last comment is not approval" do
+      before do
+        FakeGitHub.new(
+          repo_owner:   'reenhanced',
+          repo_name:    'repo',
+          pull_request: {
+            number: pull_request.number,
+            owner: pull_request.head.user.login,
+            comments: []
+          })
+        allow(GitReflow.git_server).to receive(:get_build_status).and_return(Struct.new(:state, :description, :target_url).new())
+        allow(GitReflow::GitServer::GitHub::PullRequest).to receive(:minimum_approvals).and_return("2")
+        allow(subject).to receive(:approvals).and_return(["Simon", "Peter"])
+        allow(subject).to receive(:last_comment).and_return("Boo")
+      end
+      specify { expect(subject.approved?).to be_falsy }
+    end
+
+    context "2 approvals required and we have 2 approvals and last comment is approval" do
+      before do
+        FakeGitHub.new(
+          repo_owner:   'reenhanced',
+          repo_name:    'repo',
+          pull_request: {
+            number: pull_request.number,
+            owner: pull_request.head.user.login,
+            comments: []
+          })
+        allow(GitReflow.git_server).to receive(:get_build_status).and_return(Struct.new(:state, :description, :target_url).new())
+        allow(GitReflow::GitServer::GitHub::PullRequest).to receive(:minimum_approvals).and_return("2")
+        allow(subject).to receive(:approvals).and_return(["Simon", "Peter"])
+        allow(subject).to receive(:last_comment).and_return("LGTM")
+      end
+      specify { expect(subject.approved?).to be_truthy }
+    end
+  end
+
+  describe "#rejection_message" do
+    subject            { GitReflow::GitServer::GitHub::PullRequest.new(pull_request) }
+
+    before do
+      allow(GitReflow.git_server).to receive(:get_build_status).and_return(Struct.new(:state, :description, :target_url).new())
+    end
+
+    context "Testing a Failure Build Status" do
+      before do
+        allow(subject).to receive(:build_status).and_return('failure')
+      end
+
+      specify { subject.rejection_message.should eq(": ") }
+    end
+
+    context "Testing Minimum Approvals Failure" do
+      before do
+        allow(subject).to receive(:build_status).and_return('success')
+        allow(subject).to receive(:approval_minimums_reached?).and_return(false)
+        allow(GitReflow::GitServer::PullRequest).to receive(:minimum_approvals).and_return("2")
+      end
+      specify { subject.rejection_message.should eq("You need approval from at least 2 users!") }
+    end
+
+    context "Testing Minimum Approvals Reached" do
+      before do
+        allow(subject).to receive(:build_status).and_return(nil)
+        allow(subject).to receive(:all_comments_addressed?).and_return(false)
+        allow(subject).to receive(:last_comment).and_return("Hello")
+      end
+      specify { subject.rejection_message.should eq("The last comment is holding up approval:\nHello") }
+    end
+
+    context "Testing All Comments Addressed" do
+      before do
+        allow(subject).to receive(:build_status).and_return('success')
+        allow(subject).to receive(:all_comments_addressed?).and_return(false)
+        allow(subject).to receive(:last_comment).and_return("Hello")
+      end
+      specify { subject.rejection_message.should eq("The last comment is holding up approval:\nHello") }
+    end
+
+    context "Testing All Comments Addressed" do
+      before do
+        allow(subject).to receive(:reviewers_pending_response).and_return(['Simon'])
+        allow(subject).to receive(:build?).and_return('success')
+        allow(subject).to receive(:all_comments_addressed?).and_return(true)
+        allow(subject).to receive(:approval_minimums_reached?).and_return(true)
+      end
+      specify { subject.rejection_message.should eq( "You still need a LGTM from: Simon") }
+    end
+
+    context "Testing Last Case" do
+      before do
+        allow(subject).to receive(:reviewers_pending_response).and_return([])
+        allow(subject).to receive(:build?).and_return('success')
+        allow(subject).to receive(:all_comments_addressed?).and_return(true)
+        allow(subject).to receive(:approval_minimums_reached?).and_return(true)
+      end
+      specify { subject.rejection_message.should eq("Your code has not been reviewed yet.") }
+    end
+  end
+
+  describe "#all_comments_addressed" do
+    subject            { GitReflow::GitServer::GitHub::PullRequest.new(pull_request) }
+
+    before do
+      allow(GitReflow.git_server).to receive(:get_build_status).and_return(Struct.new(:state, :description, :target_url).new())
+    end
+
+    context "Testing a Failure Case" do
+      before do
+        allow(subject).to receive(:minimum_approvals).and_return('2')
+        allow(subject).to receive(:approvals).and_return(['Simon'])
+      end
+      specify { subject.approval_minimums_reached?.should eq(true) }
+    end
+
+    context "Testing a Success Case" do
+      before do
+        allow(subject).to receive(:minimum_approvals).and_return('2')
+        allow(subject).to receive(:approvals).and_return(['Simon', 'John'])
+      end
+      specify { subject.approval_minimums_reached?.should eq(true) }
+    end
+
+    context "Testing Case with no minimum_approval" do
+      before do
+        allow(subject).to receive(:minimum_approvals).and_return('')
+        allow(subject).to receive(:approvals).and_return([])
+      end
+      specify { subject.approval_minimums_reached?.should eq(true) }
+    end
+  end
+
   describe "#display_pull_request_summary" do
     subject            { GitReflow::GitServer::GitHub::PullRequest.new(pull_request).display_pull_request_summary }
 
@@ -132,7 +359,7 @@ describe GitReflow::GitServer::PullRequest do
       end
     end
 
-    context "Testing Different LGTM Regex Expressions (Found Bug in :\\+1)" do
+    context "Testing Different LGTM Regex Expressions " do
       before do
         FakeGitHub.new(
           repo_owner:   'reenhanced',

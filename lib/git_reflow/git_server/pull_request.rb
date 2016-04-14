@@ -3,14 +3,18 @@ module GitReflow
     class PullRequest
       attr_accessor :description, :html_url, :feature_branch_name, :base_branch_name, :build_status, :source_object, :number
 
-      LGTM_REGEX = /(?i-mx:lgtm|looks good to me|[:\\+1:]|:thumbsup:|:shipit:)/
+      DEFAULT_APPROVAL_REGEX = /(?i-mx:lgtm|looks good to me|:\+1:|:thumbsup:|:shipit:)/
 
-      def self.num_lgtm
-        "#{GitReflow::Config.get('constants.numlgtm')}".length > 0 ? "#{GitReflow::Config.get('constants.numlgtm')}" : ""
+      def self.minimum_approvals
+        "#{GitReflow::Config.get('constants.minimumApprovals')}"
       end
 
-      def self.lgtm_regex
-        "#{GitReflow::Config.get('constants.lgtmregex')}".length > 0 ? Regexp.new("#{GitReflow::Config.get('constants.lgtmregex')}") : LGTM_REGEX
+      def self.approval_regex
+        if "#{GitReflow::Config.get('constants.approvalRegex')}".length > 0
+          Regexp.new("#{GitReflow::Config.get('constants.approvalRegex')}")
+        else
+          DEFAULT_APPROVAL_REGEX
+        end
       end
 
       def initialize(attributes)
@@ -45,33 +49,47 @@ module GitReflow
         reviewers - approvals
       end
 
-      def enough_approvals?
-        # Approvals from every commentor
-        if self.class.num_lgtm == ''
-          reviewers_pending_response.empty?
-        else
-          approvals.size >= self.class.num_lgtm.to_i and !last_comment.match(self.class.lgtm_regex).nil?
-
-        end
-      end
-
-      def check_approvals
+      def approved?
         has_comments_or_approvals = (has_comments? or approvals.any?)
 
-        case PullRequest.num_lgtm
+        case self.class.minimum_approvals
         when "0"
           true
         when "", nil
+          # Approvals from every commenter
           has_comments_or_approvals && reviewers_pending_response.empty?
         else
-          enough_approvals? 
+          approvals.size >= self.class.minimum_approvals.to_i
         end
+      end
+
+      def rejection_message
+        if !build_status.nil? and build_status != "success"
+          "#{build.description}: #{build.url}"
+        elsif !approval_minimums_reached?
+          "You need approval from at least #{self.class.minimum_approvals} users!"
+        elsif !all_comments_addressed?
+          # Maybe add what the last comment is?
+          "The last comment is holding up approval:\n#{last_comment}"
+        elsif reviewers_pending_response.count > 0
+          "You still need a LGTM from: #{reviewers_pending_response.join(', ')}"
+        else
+          "Your code has not been reviewed yet."
+        end
+      end
+
+      def approval_minimums_reached?
+        self.class.minimum_approvals.length <= 0 or approvals.size >= self.class.minimum_approvals.to_i
+      end
+
+      def all_comments_addressed?
+        self.class.minimum_approvals.length <= 0 or last_comment.match(self.class.approval_regex)
       end
 
       def good_to_merge?(force: false)
         return true if force
 
-        (build_status.nil? or build_status == "success") and check_approvals
+        (build_status.nil? or build_status == "success") and approved?
       end
 
       def display_pull_request_summary

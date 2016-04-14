@@ -52,7 +52,7 @@ module GitReflow
 
         def approvals
           pull_last_committed_at = get_committed_time(self.head.sha)
-          comment_authors(with: self.class.lgtm_regex, after: pull_last_committed_at)
+          comment_authors(with: self.class.approval_regex, after: pull_last_committed_at)
         end
 
         def comments
@@ -63,10 +63,18 @@ module GitReflow
         end
 
         def last_comment
-          if comments.nil? or comments.last.nil?
-            nil
+          if comments.last.nil?
+            ""
           else
             "#{comments.last.body.inspect}"
+          end
+        end
+
+        def approved?
+          if self.class.minimum_approvals.to_i == 0
+            super
+          else
+            approvals.size >= self.class.minimum_approvals.to_i and !last_comment.match(self.class.approval_regex).nil?
           end
         end
 

@@ -154,16 +154,8 @@ module GitReflow
           else
             say "There were problems commiting your feature... please check the errors above and try again.", :error
           end
-        elsif !existing_pull_request.build_status.nil? and existing_pull_request.build_status != "success"
-          say "#{existing_pull_request.build.description}: #{existing_pull_request.build.target_url}", :deliver_halted
-        elsif existing_pull_request.class.num_lgtm.length > 0 and existing_pull_request.approvals.size < existing_pull_request.class.num_lgtm.to_i
-          say "You need LGTM from at least #{existing_pull_request.class.num_lgtm} users!", :deliver_halted
-        elsif existing_pull_request.class.num_lgtm.length > 0 and !existing_pull_request.last_comment.nil? and !existing_pull_request.last_comment.match(existing_pull_request.class.lgtm_regex)
-          say "The last comment needs to be an LGTM!", :deliver_halted
-        elsif existing_pull_request.reviewers_pending_response.count > 0
-          say "You still need a LGTM from: #{existing_pull_request.reviewers_pending_response.join(', ')}", :deliver_halted
         else
-          say "Your code has not been reviewed yet.", :deliver_halted
+          say existing_pull_request.rejection_message, :deliver_halted
         end
       end
 

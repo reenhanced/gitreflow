@@ -42,7 +42,7 @@ describe GitReflow::GitServer::GitHub::PullRequest do
 
     github.class.stub(:remote_user).and_return(user)
     github.class.stub(:remote_repo_name).and_return(repo)
-    GitReflow::GitServer::PullRequest.stub(:lgtm_regex).and_return(/(?i-mx:lgtm|looks good to me|[:\\+1:]|:thumbsup:|:shipit:)/)
+    allow(GitReflow::GitServer::PullRequest).to receive(:approval_regex).and_return(/(?i-mx:lgtm|looks good to me|:\+1:|:thumbsup:|:shipit:)/)
   end
 
   describe '#initialize(options)' do
@@ -65,21 +65,43 @@ describe GitReflow::GitServer::GitHub::PullRequest do
   end
 
   describe '#comments' do
-    before do
-      FakeGitHub.new(
-        repo_owner: user,
-        repo_name: repo,
-        pull_request: {
-          number: existing_pull_request.number,
-          comments: [{author: comment_author}]
-        },
-        issue: {
-          number: existing_pull_request.number,
-          comments: [{author: comment_author}]
-        })
+    context "Testing Appending of Comments" do
+      before do
+        FakeGitHub.new(
+          repo_owner: user,
+          repo_name: repo,
+          pull_request: {
+            number: existing_pull_request.number,
+            comments: [{author: comment_author}]
+          },
+          issue: {
+            number: existing_pull_request.number,
+            comments: [{author: comment_author}]
+          })
+      end
+      specify { expect(subject.comments).to eql(existing_pull_comments.to_a + existing_issue_comments.to_a) }
     end
 
-    specify { expect(subject.comments).to eql(existing_pull_comments.to_a + existing_issue_comments.to_a) }
+    context "Testing Nil Comments" do
+      before do
+        stub_request(:get, "https://api.github.com/repos/reenhanced/repo/pulls/2/comments?access_token=a1b2c3d4e5f6g7h8i9j0").
+         with(:headers => {'Accept'=>'application/vnd.github.v3+json,application/vnd.github.beta+json;q=0.5,application/json;q=0.1', 'Accept-Charset'=>'utf-8', 'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3', 'Authorization'=>'token a1b2c3d4e5f6g7h8i9j0', 'User-Agent'=>'Github API Ruby Gem 0.12.4'}).
+         to_return(:status => 200, :body => "", :headers => {})
+
+        FakeGitHub.new(
+          repo_owner: user,
+          repo_name: repo,
+          pull_request: {
+            number: existing_pull_request.number,
+            comments: nil
+          },
+          issue: {
+            number: existing_pull_request.number,
+            comments: nil
+          })
+      end
+      specify { expect(subject.comments).to eql([]) }
+    end
   end
 
   describe '#reviewers' do
@@ -100,7 +122,131 @@ describe GitReflow::GitServer::GitHub::PullRequest do
         })
     end
 
-    specify { expect(subject.reviewers).to eql(['tito', 'bobby', 'randy']) }
+    specify { expect(subject.reviewers).to eq(['tito', 'bobby', 'randy']) }
+  end
+
+
+  describe "#approved?" do
+
+    context "no approvals and build success" do
+      before do
+        FakeGitHub.new(
+          repo_owner: user,
+          repo_name: repo,
+          pull_request: {
+            number: existing_pull_request.number,
+            owner: existing_pull_request.head.user.login,
+            comments: []
+          })
+        allow(GitReflow::GitServer::GitHub::PullRequest).to receive(:minimum_approvals).and_return("0")
+      end
+      specify { expect(subject.approved?).to be_truthy }
+    end
+
+    context "all commenters must approve and minimum_approvals is nil" do
+      before do
+        FakeGitHub.new(
+          repo_owner: user,
+          repo_name: repo,
+          pull_request: {
+            number: existing_pull_request.number,
+            owner: existing_pull_request.head.user.login,
+            comments: []
+          })
+        allow(GitReflow::GitServer::GitHub::PullRequest).to receive(:minimum_approvals).and_return(nil)
+        allow(subject).to receive(:has_comments?).and_return(true)
+        allow(subject).to receive(:approvals).and_return(["Simon"])
+        allow(subject).to receive(:reviewers_pending_response).and_return([])
+      end
+      specify { expect(subject.approved?).to be_truthy }
+    end
+
+    context "all commenters must approve but we have no pending reviewers" do
+      before do
+        FakeGitHub.new(
+          repo_owner: user,
+          repo_name: repo,
+          pull_request: {
+            number: existing_pull_request.number,
+            owner: existing_pull_request.head.user.login,
+            comments: []
+          })
+        allow(GitReflow::GitServer::GitHub::PullRequest).to receive(:minimum_approvals).and_return("")
+        allow(subject).to receive(:has_comments?).and_return(true)
+        allow(subject).to receive(:approvals).and_return(["Simon"])
+        allow(subject).to receive(:reviewers_pending_response).and_return([])
+      end
+      specify { expect(subject.approved?).to be_truthy }
+    end
+
+    context "all commenters must approve but we have 1 pending reviewer" do
+      before do
+        FakeGitHub.new(
+          repo_owner: user,
+          repo_name: repo,
+          pull_request: {
+            number: existing_pull_request.number,
+            owner: existing_pull_request.head.user.login,
+            comments: []
+          })
+        allow(GitReflow::GitServer::GitHub::PullRequest).to receive(:minimum_approvals).and_return("")
+        allow(subject).to receive(:has_comments?).and_return(true)
+        allow(subject).to receive(:approvals).and_return(["Simon"])
+        allow(subject).to receive(:reviewers_pending_response).and_return(["Simon"])
+      end
+      specify { expect(subject.approved?).to be_falsy }
+    end
+
+    context "2 approvals required but we only have 1 approval" do
+      before do
+        FakeGitHub.new(
+          repo_owner: user,
+          repo_name: repo,
+          pull_request: {
+            number: existing_pull_request.number,
+            owner: existing_pull_request.head.user.login,
+            comments: []
+          })
+        allow(GitReflow::GitServer::GitHub::PullRequest).to receive(:minimum_approvals).and_return("2")
+        allow(subject).to receive(:approvals).and_return(["Simon"])
+        allow(subject).to receive(:last_comment).and_return("LGTM")
+      end
+      specify { expect(subject.approved?).to be_falsy }
+    end
+
+    context "2 approvals required and we have 2 approvals but last comment is not approval" do
+      before do
+        FakeGitHub.new(
+          repo_owner: user,
+          repo_name: repo,
+          pull_request: {
+            number: existing_pull_request.number,
+            owner: existing_pull_request.head.user.login,
+            comments: []
+          })
+        allow(GitReflow::GitServer::GitHub::PullRequest).to receive(:minimum_approvals).and_return("2")
+        allow(subject).to receive(:approvals).and_return(["Simon", "Peter"])
+        allow(subject).to receive(:last_comment).and_return("Boo")
+      end
+      specify { expect(subject.approved?).to be_falsy }
+    end
+
+    context "2 approvals required and we have 2 approvals and last comment is approval" do
+      before do
+        FakeGitHub.new(
+          repo_owner: user,
+          repo_name: repo,
+          pull_request: {
+            number: existing_pull_request.number,
+            owner: existing_pull_request.head.user.login,
+            comments: []
+          })
+        allow(GitReflow::GitServer::GitHub::PullRequest).to receive(:minimum_approvals).and_return("2")
+        allow(subject).to receive(:approvals).and_return(["Simon", "Peter"])
+        allow(subject).to receive(:last_comment).and_return("LGTM")
+      end
+      specify { expect(subject.approved?).to be_truthy }
+    end
   end
 
   describe '#approvals' do
@@ -197,7 +343,7 @@ describe GitReflow::GitServer::GitHub::PullRequest do
             comments: [{author: 'tito', body: 'lgtm'}, {author: 'ringo', body: ':+1:'}]
           })
 
-        GitReflow::GitServer::GitHub::PullRequest.stub(:lgtm_regex).and_return(/(?i-mx:lgtm|looks good to me|[:\\+1:]|:thumbsup:|:shipit:)/)
+        allow(GitReflow::GitServer::GitHub::PullRequest).to receive(:approval_regex).and_return(/(?i-mx:lgtm|looks good to me|:\+1:|:thumbsup:|:shipit:)/)
       end
 
       context "2 approvals" do

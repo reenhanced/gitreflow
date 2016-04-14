@@ -19,10 +19,9 @@ describe GitReflow do
 
   before do
 
-    # Stubbing out numlgtm value to test 2 LGTM reviewers in gitconfig file
-    GitReflow::Config.stub(:get).with("constants.numlgtm").and_return(2)
-    GitReflow::Config.stub(:get).and_call_original
-
+    # Stubbing out numlgtm value to test all reviewers in gitconfig file
+    allow(GitReflow::Config).to receive(:get).with("constants.minimumApprovals").and_return('')
+    allow(GitReflow::Config).to receive(:get).and_call_original
 
     HighLine.any_instance.stub(:ask) do |terminal, question|
       values = {
@@ -200,6 +199,11 @@ describe GitReflow do
 
     subject { GitReflow.deliver inputs }
 
+    it "fetches the latest changes to the current branch" do
+      GitReflow.should_receive(:update_current_branch)
+      subject
+    end
+
     it "fetches the latest changes to the destination branch" do
       GitReflow.should_receive(:fetch_destination).with('master')
       subject
@@ -212,21 +216,18 @@ describe GitReflow do
 
     context "and pull request exists for the feature branch to the destination branch" do
       before do
-        github.stub(:build_status).and_return(build_status)
-        github.should_receive(:find_open_pull_request).and_return(existing_pull_request)
-        existing_pull_request.stub(:has_comments?).and_return(true)
-        github.stub(:reviewers).and_return(['codenamev'])
-        
-        existing_pull_request.stub(:approvals).and_return(["Simon", "John"])
-        existing_pull_request.stub_chain(:last_comment, :match).and_return(true)
+        allow(github).to receive(:build_status).and_return(build_status)
+        allow(github).to receive(:find_open_pull_request).and_return(existing_pull_request)
+        allow(existing_pull_request).to receive(:has_comments?).and_return(true)
+        allow(github).to receive(:reviewers).and_return(['codenamev'])
       end
 
       context 'and build status is not "success"' do
         let(:build_status) { Hashie::Mash.new({ state: 'failure', description: 'Build resulted in failed test(s)' }) }
 
         before do
-          existing_pull_request.stub(:build).and_return(build_status)
-          existing_pull_request.stub(:has_comments?).and_return(true)
+          allow(existing_pull_request).to receive(:build).and_return(build_status)
+          allow(existing_pull_request).to receive(:has_comments?).and_return(true)
         end
 
         it "halts delivery and notifies user of a failed build" do
@@ -236,12 +237,12 @@ describe GitReflow do
 
       context 'and build status is nil' do
         let(:build_status) { nil }
-        let(:inputs) {{ 'skip_lgtm' => true }}
+        let(:inputs) {{ skip_lgtm: true }}
 
         before do
           # stubbing unrelated results so we can just test that it made it insdide the conditional block
-          existing_pull_request.stub(:has_comments?).and_return(true)
-          existing_pull_request.stub(:reviewers).and_return([])
+          allow(existing_pull_request).to receive(:has_comments?).and_return(true)
+          allow(existing_pull_request).to receive(:reviewers).and_return([])
           GitReflow.stub(:update_destination).and_return(true)
           GitReflow.stub(:merge_feature_branch).and_return(true)
           GitReflow.stub(:append_to_squashed_commit_message).and_return(true)
@@ -260,162 +261,15 @@ describe GitReflow do
             existing_pull_request.stub(:has_comments?).and_return(true)
           end
 
-          context 'but there are 2 LGTMs and irrelevant last comment' do
-            let(:lgtm_comment_authors) { ['nhance', 'Simon'] }
-            before do
-              existing_pull_request.stub(:build).and_return(build_status)
-              existing_pull_request.stub(:approvals).and_return(lgtm_comment_authors)
-              GitReflow::GitServer::PullRequest.stub(:num_lgtm).and_return("2")
-              existing_pull_request.stub(:reviewers_pending_response).and_return([])
-              existing_pull_request.stub_chain(:last_comment, :match).and_return(nil)
-            end
-
-            it "doesn't include the pull request body in the commit message" do
-              squash_message = "#{existing_pull_request.body}\nCloses ##{existing_pull_request.number}\n\nLGTM given by: @nhance, @Simon\n"
-              GitReflow.should_receive(:append_to_squashed_commit_message).never.with(squash_message)
-              subject
-            end
-
-            context "and the pull request has no body" do
-              let(:first_commit_message) { "We'll do it live." }
-
-              before do
-                existing_pull_request.description = ''
-                github.stub(:find_open_pull_request).and_return(existing_pull_request)
-                GitReflow.stub(:get_first_commit_message).and_return(first_commit_message)
-                existing_pull_request.stub(:reviewers).and_return(lgtm_comment_authors)
-              end
-
-              it "doesn't include the first commit message for the new branch in the commit message of the merge" do
-                squash_message = "#{first_commit_message}\nCloses ##{existing_pull_request.number}\n\nLGTM given by: @nhance, @Simon\n"
-                GitReflow.should_receive(:append_to_squashed_commit_message).never.with(squash_message)
-                subject
-              end
-            end
-
-            it "doesn't notify user of the merge and performs it" do
-              GitReflow.should_receive(:merge_feature_branch).never.with('new-feature', {
-                destination_branch:  'master',
-                pull_request_number: existing_pull_request.number,
-                lgtm_authors:        ['nhance', 'Simon'],
-                message:             existing_pull_request.body
-              })
-
-              expect { subject }.to_not have_output "Merging pull request ##{existing_pull_request.number}: '#{existing_pull_request.title}', from '#{existing_pull_request.head.label}' into '#{existing_pull_request.base.label}'"
-            end
-
-            it "doesn't update the destination branch" do
-              GitReflow.should_receive(:update_destination).with('master').never
-              subject
-            end
-
-            context "and doesn't clean up feature branch" do
-              before do
-                HighLine.any_instance.stub(:ask) do |terminal, question|
-                  values = {
-                    "Please enter your GitHub username: "                                                      => user,
-                    "Please enter your GitHub password (we do NOT store this): "                               => password,
-                    "Please enter your Enterprise site URL (e.g. https://github.company.com):"                 => enterprise_site,
-                    "Please enter your Enterprise API endpoint (e.g. https://github.company.com/api/v3):"      => enterprise_api,
-                    "Would you like to push this branch to your remote repo and cleanup your feature branch? " => 'yes',
-                    "Would you like to open it in your browser?"                                               => 'no'
-                  }
-                 return_value = values[question] || values[terminal]
-                 question = ""
-                 return_value
-                end
-              end
-
-              context "not always" do
-                before do
-                  GitReflow::Config.stub(:get) { "false" }
-                end
-
-                it "doesn't push local squash merged base branch to remote repo" do
-                  expect { subject }.to_not have_run_command("git push origin master")
-                end
-
-                it "doesn't delete the remote feature branch" do
-                  expect { subject }.to_not have_run_command("git push origin :new-feature")
-                end
-
-                it "doesn't delete the local feature branch" do
-                  expect { subject }.to_not have_run_command("git branch -D new-feature")
-                end
-              end
-
-              context "always" do
-                before do
-                  GitReflow::Config.stub(:get) { "true" }
-                end
-
-                it "doesn't push local squash merged base branch to remote repo" do
-                  expect { subject }.to_not have_run_command("git push origin master")
-                end
-
-                it "doesn't delete the remote feature branch" do
-                  expect { subject }.to_not have_run_command("git push origin :new-feature")
-                end
-
-                it "doesn't delete the local feature branch" do
-                  expect { subject }.to_not have_run_command("git branch -D new-feature")
-                end
-              end
-
-            end
-
-            context "and not cleaning up feature branch" do
-              before do
-                HighLine.any_instance.stub(:ask) do |terminal, question|
-                  values = {
-                    "Please enter your GitHub username: "                                                      => user,
-                    "Please enter your GitHub password (we do NOT store this): "                               => password,
-                    "Please enter your Enterprise site URL (e.g. https://github.company.com):"                 => enterprise_site,
-                    "Please enter your Enterprise API endpoint (e.g. https://github.company.com/api/v3):"      => enterprise_api,
-                    "Would you like to push this branch to your remote repo and cleanup your feature branch? " => 'no',
-                    "Would you like to open it in your browser?"                                               => 'no'
-                  }
-                 return_value = values[question] || values[terminal]
-                 question = ""
-                 return_value
-                end
-              end
-
-              it "doesn't update the remote repo with the new squash merge" do
-                expect { subject }.to_not have_run_command('git push origin master')
-              end
-
-              it "doesn't delete the feature branch on the remote repo" do
-                expect { subject }.to_not have_run_command('git push origin :new-feature')
-              end
-
-              it "doesn't delete the local feature branch" do
-                expect { subject }.to_not have_run_command('git branch -D new-feature')
-              end
-
-              it "doesn't provide instructions to undo the steps taken" do
-                expect { subject }.to_not have_output("To reset and go back to your branch run \`git reset --hard origin/master && git checkout new-feature\`")
-              end
-            end
-
-            context "and there were issues commiting the squash merge to the base branch" do
-              before { stub_with_fallback(GitReflow, :run_command_with_label).with('git commit', {with_system: true}).and_return false }
-              it "doesn't notifies user of issues commiting the squash merge of the feature branch" do
-                expect { subject }.to_not have_said("There were problems commiting your feature... please check the errors above and try again.", :error)
-              end
-            end
-          end
-
-          context 'but there are 2 LGTMs and LGTM last comment' do
-            let(:lgtm_comment_authors) { ['nhance', 'Simon'] }
+          context 'but there is a LGTM' do
+            let(:lgtm_comment_authors) { ['nhance'] }
             before do
               existing_pull_request.stub(:approvals).and_return(lgtm_comment_authors)
               existing_pull_request.stub(:reviewers_pending_response).and_return([])
-              existing_pull_request.stub_chain(:last_comment, :match).and_return(true)
             end
 
             it "includes the pull request body in the commit message" do
-              squash_message = "#{existing_pull_request.body}\nCloses ##{existing_pull_request.number}\n\nLGTM given by: @nhance, @Simon\n"
+              squash_message = "#{existing_pull_request.body}\nCloses ##{existing_pull_request.number}\n\nLGTM given by: @nhance\n"
               GitReflow.should_receive(:append_to_squashed_commit_message).with(squash_message)
               subject
             end
@@ -430,7 +284,7 @@ describe GitReflow do
               end
 
               it "halts delivery and notifies user of a failed build" do
-                expect { subject }.to have_said "#{build_status.description}: #{build_status.target_url}", :deliver_halted
+                expect { subject }.to have_said "#{build_status.description}: #{build_status.url}", :deliver_halted
               end
             end
 
@@ -459,7 +313,7 @@ describe GitReflow do
               end
 
               it "includes the first commit message for the new branch in the commit message of the merge" do
-                squash_message = "#{first_commit_message}\nCloses ##{existing_pull_request.number}\n\nLGTM given by: @nhance, @Simon\n"
+                squash_message = "#{first_commit_message}\nCloses ##{existing_pull_request.number}\n\nLGTM given by: @nhance\n"
                 GitReflow.should_receive(:append_to_squashed_commit_message).with(squash_message)
                 subject
               end
@@ -469,14 +323,14 @@ describe GitReflow do
               GitReflow.should_receive(:merge_feature_branch).with('new-feature', {
                 destination_branch:  'master',
                 pull_request_number: existing_pull_request.number,
-                lgtm_authors:        ['nhance', 'Simon'],
+                lgtm_authors:        ['nhance'],
                 message:             existing_pull_request.body
               })
 
               expect { subject }.to have_output "Merging pull request ##{existing_pull_request.number}: '#{existing_pull_request.title}', from '#{existing_pull_request.head.label}' into '#{existing_pull_request.base.label}'"
             end
 
-            it "updates the destination branch" do
+            it "updates the destination brnach" do
               GitReflow.should_receive(:update_destination).with('master')
               subject
             end
@@ -504,7 +358,8 @@ describe GitReflow do
 
               context "not always" do
                 before do
-                  GitReflow::Config.stub(:get) { "false" }
+                  GitReflow::Config.stub(:get).with("reflow.always-deploy-and-cleanup").and_return("false")
+                  GitReflow::Config.stub(:get).and_call_original
                 end
 
                 it "pushes local squash merged base branch to remote repo" do
@@ -522,7 +377,8 @@ describe GitReflow do
 
               context "always" do
                 before do
-                  GitReflow::Config.stub(:get) { "true" }
+                  GitReflow::Config.stub(:get).with("reflow.always-deploy-and-cleanup").and_return("true")
+                  GitReflow::Config.stub(:get).and_call_original
                 end
 
                 it "pushes local squash merged base branch to remote repo" do
@@ -537,6 +393,7 @@ describe GitReflow do
                   expect { subject }.to have_run_command("git branch -D new-feature")
                 end
               end
+
             end
 
             context "and not cleaning up feature branch" do
@@ -594,13 +451,12 @@ describe GitReflow do
         context 'but has no comments' do
           before do
             existing_pull_request.stub(:has_comments?).and_return(false)
-            existing_pull_request.stub(:approvals).and_return(['John', 'Simon'])
+            existing_pull_request.stub(:approvals).and_return([])
             existing_pull_request.stub(:reviewers_pending_response).and_return([])
-            existing_pull_request.stub(:build).and_return(build_status)
           end
 
           it "notifies the user to get their code reviewed" do
-            expect { subject }.to have_said "Merge complete!", :success
+            expect { subject }.to have_said "Your code has not been reviewed yet.", :deliver_halted
           end
         end
 

@@ -25,7 +25,7 @@ spec = Gem::Specification.new do |s|
   s.add_development_dependency('pry-byebug')
   s.add_development_dependency('rake', "~> 10.0")
   s.add_development_dependency('rdoc')
-  s.add_development_dependency('rspec', "~> 3.0")
+  s.add_development_dependency('rspec', "~> 3.3.0")
   s.add_development_dependency('webmock')
   s.add_development_dependency('wwtd', '0.7.0')
 

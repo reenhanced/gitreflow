@@ -61,25 +61,6 @@ module GitReflow
       run_command_with_label "git merge #{base_branch}"
     end
 
-    def merge_feature_branch(feature_branch_name, options = {})
-      options[:destination_branch] ||= 'master'
-
-      message = "#{options[:message]}"
-
-      if "#{options[:pull_request_number]}".length > 0
-        message << "\nCloses ##{options[:pull_request_number]}\n"
-      end
-
-      if lgtm_authors = Array(options[:lgtm_authors]) and lgtm_authors.any?
-        message << "\nLGTM given by: @#{lgtm_authors.join(', @')}\n"
-      end
-
-      run_command_with_label "git checkout #{options[:destination_branch]}"
-      run_command_with_label "git merge --squash #{feature_branch_name}"
-
-      append_to_squashed_commit_message(message) if message.length > 0
-    end
-
     def append_to_squashed_commit_message(message = '')
       tmp_squash_message_path = "#{git_root_dir}/.git/tmp_squash_msg"
       squash_message_path     = "#{git_root_dir}/.git/SQUASH_MSG"

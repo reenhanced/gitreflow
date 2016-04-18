@@ -5,6 +5,10 @@ describe GitReflow::GitServer::PullRequest do
   let(:github)      { stub_github_with({ user: 'reenhanced', repo: 'repo', pull: pull_request }) }
   let!(:github_api) { github.connection }
   let(:git_server)  { GitReflow::GitServer::GitHub.new {} }
+  let(:user)             { 'reenhanced' }
+  let(:password)         { 'shazam' }
+  let(:enterprise_site)  { 'https://github.reenhanced.com' }
+  let(:enterprise_api)   { 'https://github.reenhanced.com' }
 
   describe "#good_to_merge?(options)" do
     subject            { GitReflow::GitServer::GitHub::PullRequest.new(pull_request) }
@@ -386,6 +390,200 @@ describe GitReflow::GitServer::PullRequest do
         expect{ subject }.to have_output("url: #{pull_request.html_url}")
         expect{ subject }.to have_output("reviewed by: #{"tito".colorize(:green)}, #{"ringo".colorize(:green)}, #{"Simon".colorize(:green)}, #{"Peter".colorize(:green)}, #{"Johnny".colorize(:green)}, #{"Jacob".colorize(:green)}")
         expect{ subject }.to have_output("Last comment: \"LOOKS GOOD TO ME\"")
+      end
+    end
+  end
+
+  context ".merge!" do
+    subject            { GitReflow::GitServer::GitHub::PullRequest.new(pull_request) }
+
+    let(:inputs) {
+      { 
+        :base => "base_branch",
+        :title => "title",
+        :message => "message"
+      }
+    }
+
+    let(:lgtm_comment_authors) {
+      ["simonzhu24", "reenhanced"]
+    }
+
+    let(:merge_response) { { :message => "Failure_Message" } }
+
+    context "finds pull request but merge response fails" do
+      before do
+        allow(Github).to receive(:new).and_return(github)
+        allow(GitReflow).to receive(:git_server).and_return(git_server)
+        allow(git_server).to receive(:connection).and_return(github)
+        allow(git_server).to receive(:get_build_status).and_return(Struct.new(:state, :description, :target_url).new())
+        allow(GitReflow::GitServer::GitHub).to receive_message_chain(:connection, :pull_requests, :merge).and_return(merge_response)
+        allow(merge_response).to receive(:success?).and_return(false)
+        allow_any_instance_of(GitReflow::GitServer::GitHub::PullRequest).to receive(:approvals).and_return(lgtm_comment_authors)
+        allow(subject).to receive(:deliver?).and_return(true)
+        allow(merge_response).to receive(:to_s).and_return("Merge failed")
+      end
+
+      it "throws an error" do
+        expect { subject.merge! inputs }.to have_said "Merge failed", :deliver_halted
+        expect { subject.merge! inputs }.to have_said "There were problems commiting your feature... please check the errors above and try again.", :error
+      end
+    end
+  end
+
+  context ".commit_message_for_merge" do
+    subject            { GitReflow::GitServer::GitHub::PullRequest.new(pull_request) }
+
+    let(:lgtm_comment_authors) {
+      ["simonzhu24", "reenhanced"]
+    }
+
+    let(:output) { lgtm_comment_authors.join(', @') }
+
+    context "checks commit message generated is correct" do
+      before do
+        allow_any_instance_of(GitReflow::GitServer::GitHub::PullRequest).to receive(:build).and_return(Struct.new(:state, :description, :url).new)
+        allow_any_instance_of(GitReflow::GitServer::GitHub::PullRequest).to receive(:description).and_return("Description")
+        allow_any_instance_of(GitReflow::GitServer::GitHub::PullRequest).to receive(:number).and_return(1)
+        allow_any_instance_of(GitReflow::GitServer::GitHub::PullRequest).to receive(:approvals).and_return(lgtm_comment_authors)
+      end
+
+      it "throws an exception without message" do
+        expect(subject.commit_message_for_merge).to eq("Description\nMerges #1\n\nLGTM given by: @simonzhu24, @reenhanced\n")
+      end
+    end
+  end
+
+  context :cleanup_feature_branch? do
+    subject { GitReflow::GitServer::GitHub::PullRequest.new(pull_request).cleanup_feature_branch? }
+
+    before do
+      allow(GitReflow::Config).to receive(:get).with("reflow.always-cleanup").and_return("false")
+      allow_any_instance_of(GitReflow::GitServer::GitHub::PullRequest).to receive(:build).and_return(Struct.new(:state, :description, :url).new)
+      FakeGitHub.new(
+        repo_owner:   'reenhanced',
+        repo_name:    'repo',
+        pull_request: {
+          number:   pull_request.number,
+          owner:    pull_request.head.user.login,
+          comments: [{author: 'tito', body: 'lgtm'}, {author: 'ringo', body: ':+1:'}]
+        })
+    end
+
+    context "doesn't cleanup feature branch" do
+      before do
+        allow_any_instance_of(HighLine).to receive(:ask) do |terminal, question|
+          values = {
+            "Please enter your GitHub username: "                                                      => user,
+            "Please enter your GitHub password (we do NOT store this): "                               => password,
+            "Please enter your Enterprise site URL (e.g. https://github.company.com):"                 => enterprise_site,
+            "Please enter your Enterprise API endpoint (e.g. https://github.company.com/api/v3):"      => enterprise_api,
+            "Would you like to cleanup your feature branch? "                                          => 'no',
+            "Would you like to open it in your browser?"                                               => 'n',
+            "This is the current status of your Pull Request. Are you sure you want to deliver? "      => 'n', 
+            "Please enter your delivery commit title: (leaving blank will use default)"                => 'title',
+            "Please enter your delivery commit message: (leaving blank will use default)"              => 'message'
+          }
+         return_value = values[question] || values[terminal]
+         question = ""
+         return_value
+        end
+      end
+
+      it "doesn't cleans up feature branch" do
+        expect(subject).to be_falsy
+      end
+    end
+
+    context "does cleanup feature branch" do
+      before do
+        allow_any_instance_of(HighLine).to receive(:ask) do |terminal, question|
+          values = {
+            "Please enter your GitHub username: "                                                      => user,
+            "Please enter your GitHub password (we do NOT store this): "                               => password,
+            "Please enter your Enterprise site URL (e.g. https://github.company.com):"                 => enterprise_site,
+            "Please enter your Enterprise API endpoint (e.g. https://github.company.com/api/v3):"      => enterprise_api,
+            "Would you like to cleanup your feature branch? "                                          => 'yes',
+            "Would you like to open it in your browser?"                                               => 'n',
+            "This is the current status of your Pull Request. Are you sure you want to deliver? "      => 'n', 
+            "Please enter your delivery commit title: (leaving blank will use default)"                => 'title',
+            "Please enter your delivery commit message: (leaving blank will use default)"              => 'message'
+          }
+         return_value = values[question] || values[terminal]
+         question = ""
+         return_value
+        end
+      end
+
+      it "cleans up feature branch" do
+        expect(subject).to be_truthy
+      end
+    end
+  end
+
+  context :deliver? do
+    subject { GitReflow::GitServer::GitHub::PullRequest.new(pull_request).deliver? }
+
+    before do
+      allow(GitReflow::Config).to receive(:get).with("reflow.always-deliver").and_return("false")
+      allow_any_instance_of(GitReflow::GitServer::GitHub::PullRequest).to receive(:build).and_return(Struct.new(:state, :description, :url).new)
+      FakeGitHub.new(
+        repo_owner:   'reenhanced',
+        repo_name:    'repo',
+        pull_request: {
+          number:   pull_request.number,
+          owner:    pull_request.head.user.login,
+          comments: [{author: 'tito', body: 'lgtm'}, {author: 'ringo', body: ':+1:'}]
+        })
+    end
+
+    context "doesn't deliver feature branch" do
+      before do
+        allow_any_instance_of(HighLine).to receive(:ask) do |terminal, question|
+          values = {
+            "Please enter your GitHub username: "                                                      => user,
+            "Please enter your GitHub password (we do NOT store this): "                               => password,
+            "Please enter your Enterprise site URL (e.g. https://github.company.com):"                 => enterprise_site,
+            "Please enter your Enterprise API endpoint (e.g. https://github.company.com/api/v3):"      => enterprise_api,
+            "Would you like to cleanup your feature branch? "                                          => 'no',
+            "Would you like to open it in your browser?"                                               => 'n',
+            "This is the current status of your Pull Request. Are you sure you want to deliver? "      => 'n', 
+            "Please enter your delivery commit title: (leaving blank will use default)"                => 'title',
+            "Please enter your delivery commit message: (leaving blank will use default)"              => 'message'
+          }
+         return_value = values[question] || values[terminal]
+         question = ""
+         return_value
+        end
+      end
+
+      it "doesn't deliver feature branch" do
+        expect(subject).to be_falsy
+      end
+    end
+
+    context "does deliver feature branch" do
+      before do
+        allow_any_instance_of(HighLine).to receive(:ask) do |terminal, question|
+          values = {
+            "Please enter your GitHub username: "                                                      => user,
+            "Please enter your GitHub password (we do NOT store this): "                               => password,
+            "Please enter your Enterprise site URL (e.g. https://github.company.com):"                 => enterprise_site,
+            "Please enter your Enterprise API endpoint (e.g. https://github.company.com/api/v3):"      => enterprise_api,
+            "Would you like to cleanup your feature branch? "                                          => 'no',
+            "Would you like to open it in your browser?"                                               => 'n',
+            "This is the current status of your Pull Request. Are you sure you want to deliver? "      => 'y', 
+            "Please enter your delivery commit title: (leaving blank will use default)"                => 'title',
+            "Please enter your delivery commit message: (leaving blank will use default)"              => 'message'
+          }
+         return_value = values[question] || values[terminal]
+         question = ""
+         return_value
+        end
+      end
+
+      it "does deliver feature branch" do
+        expect(subject).to be_truthy
       end
     end
   end

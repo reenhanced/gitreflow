@@ -29,8 +29,11 @@ describe GitReflow do
         "Please enter your GitHub password (we do NOT store this): "                               => password,
         "Please enter your Enterprise site URL (e.g. https://github.company.com):"                 => enterprise_site,
         "Please enter your Enterprise API endpoint (e.g. https://github.company.com/api/v3):"      => enterprise_api,
-        "Would you like to push this branch to your remote repo and cleanup your feature branch? " => 'yes',
-        "Would you like to open it in your browser?"                                               => 'n'
+        "Would you like to cleanup your feature branch? "                                          => 'yes',
+        "Would you like to open it in your browser?"                                               => 'n',
+        "This is the current status of your Pull Request. Are you sure you want to deliver? "      => 'y', 
+        "Please enter your delivery commit title: (leaving blank will use default)"                => 'title',
+        "Please enter your delivery commit message: (leaving blank will use default)"              => 'message'
       }
      return_value = values[question] || values[terminal]
      question = ""
@@ -40,7 +43,13 @@ describe GitReflow do
 
   context :deliver do
     let(:branch)                { 'new-feature' }
-    let(:inputs)                { {} }
+    let(:inputs) { 
+      { :title => "new-feature", 
+        :message => "message",
+        :head => "reenhanced:new-feature" 
+      } 
+    }
+    let(:merge_response) { {} }
     let!(:github) do
       allow_any_instance_of(GitReflow::GitServer::GitHub::PullRequest).to receive(:build).and_return(Struct.new(:state, :description, :url).new)
       stub_github_with({
@@ -54,7 +63,13 @@ describe GitReflow do
 
 
     before do
-      allow(GitReflow).to receive(:append_to_squashed_commit_message).and_return(true)
+      allow_any_instance_of(Object).to receive(:strip).and_return("")
+      allow(GitReflow::GitServer::GitHub).to receive_message_chain(:connection, :pull_requests, :merge).and_return(merge_response)
+      allow(merge_response).to receive(:success?).and_return(true)
+
+      # Stubs out the http response to github api
+      allow(GitReflow::GitServer::GitHub).to receive_message_chain(:connection, :pull_requests, :merge).and_return(merge_response)
+      allow(merge_response).to receive(:success?).and_return(true);
 
       module Kernel
         def system(cmd)
@@ -64,11 +79,6 @@ describe GitReflow do
     end
 
     subject { GitReflow.deliver inputs }
-
-    it "fetches the latest changes to the destination branch" do
-      expect(GitReflow).to receive(:fetch_destination).with('master')
-      subject
-    end
 
     it "looks for a pull request matching the feature branch and destination branch" do
       expect(github).to receive(:find_open_pull_request).with(from: branch, to: 'master')
@@ -81,9 +91,10 @@ describe GitReflow do
         expect(github).to receive(:find_open_pull_request).and_return(existing_pull_request)
         allow(existing_pull_request).to receive(:has_comments?).and_return(true)
         allow(github).to receive(:reviewers).and_return(['codenamev'])
-        
         allow(existing_pull_request).to receive(:approvals).and_return(["Simon", "John"])
         allow(existing_pull_request).to receive_message_chain(:last_comment, :match).and_return(true)
+        allow(GitReflow::Config).to receive(:get).with("reflow.always-deliver").and_return("true")
+        allow(GitReflow).to receive(:status)
       end
 
       context 'and build status is not "success"' do
@@ -97,23 +108,40 @@ describe GitReflow do
         it "halts delivery and notifies user of a failed build" do
           expect { subject }.to have_said "#{build_status.description}: #{build_status.target_url}", :deliver_halted
         end
+
+        context 'forces a merge' do
+          before do
+            inputs[:skip_lgtm] = true 
+            allow(existing_pull_request).to receive(:has_comments?).and_return(true)
+            allow(existing_pull_request).to receive(:reviewers).and_return([])
+            allow(existing_pull_request).to receive(:reviewers_pending_response).and_return([])
+            allow(existing_pull_request).to receive(:approvals).and_return(['simonzhu24'])
+            allow(GitReflow).to receive(:append_to_squashed_commit_message)
+            allow(GitReflow::Config).to receive(:get).with("reflow.always-cleanup").and_return("true")
+          end
+
+          it "forces a merge" do
+            expect(existing_pull_request).to receive(:good_to_merge?).and_return(true)
+            expect { subject }.to have_said "Merging pull request ##{existing_pull_request.number}: '#{existing_pull_request.title}', from '#{existing_pull_request.head.label}' into '#{existing_pull_request.base.label}'", :notice
+            expect { subject }.to have_said "Pull Request successfully merged.", :success
+          end
+        end
       end
 
       context 'and build status is nil' do
         let(:build_status) { nil }
-        let(:inputs) {{ 'skip_lgtm' => true }}
 
         before do
           # stubbing unrelated results so we can just test that it made it insdide the conditional block
+          inputs[:skip_lgtm] = false
           allow(existing_pull_request).to receive(:has_comments?).and_return(true)
           allow(existing_pull_request).to receive(:reviewers).and_return([])
-          allow(GitReflow).to receive(:update_destination).and_return(true)
-          allow(GitReflow).to receive(:merge_feature_branch).and_return(true)
-          allow(GitReflow).to receive(:append_to_squashed_commit_message).and_return(true)
+          allow(existing_pull_request).to receive(:reviewers_pending_response).and_return([])
+          allow(existing_pull_request).to receive(:approvals).and_return(['simonzhu24'])
         end
 
         it "ignores build status when not setup" do
-          expect { subject }.to have_said "Merge complete!", :success
+          expect { subject }.to have_said "Pull Request successfully merged.", :success
         end
       end
 
@@ -122,6 +150,7 @@ describe GitReflow do
 
         context 'and has comments' do
           before do
+            inputs[:skip_lgtm] = false
             allow(existing_pull_request).to receive(:has_comments?).and_return(true)
           end
 
@@ -135,12 +164,6 @@ describe GitReflow do
               allow(existing_pull_request).to receive_message_chain(:last_comment, :match).and_return(nil)
             end
 
-            it "doesn't include the pull request body in the commit message" do
-              squash_message = "#{existing_pull_request.body}\nCloses ##{existing_pull_request.number}\n\nLGTM given by: @nhance, @Simon\n"
-              expect(GitReflow).to receive(:append_to_squashed_commit_message).never.with(squash_message)
-              subject
-            end
-
             context "and the pull request has no body" do
               let(:first_commit_message) { "We'll do it live." }
 
@@ -150,23 +173,10 @@ describe GitReflow do
                 allow(GitReflow).to receive(:get_first_commit_message).and_return(first_commit_message)
                 allow(existing_pull_request).to receive(:reviewers).and_return(lgtm_comment_authors)
               end
-
-              it "doesn't include the first commit message for the new branch in the commit message of the merge" do
-                squash_message = "#{first_commit_message}\nCloses ##{existing_pull_request.number}\n\nLGTM given by: @nhance, @Simon\n"
-                expect(GitReflow).to receive(:append_to_squashed_commit_message).never.with(squash_message)
-                subject
-              end
             end
 
             it "doesn't notify user of the merge and performs it" do
-              expect(GitReflow).to receive(:merge_feature_branch).never.with('new-feature', {
-                destination_branch:  'master',
-                pull_request_number: existing_pull_request.number,
-                lgtm_authors:        ['nhance', 'Simon'],
-                message:             existing_pull_request.body
-              })
-
-              expect { subject }.to_not have_output "Merging pull request ##{existing_pull_request.number}: '#{existing_pull_request.title}', from '#{existing_pull_request.head.label}' into '#{existing_pull_request.base.label}'"
+              expect { subject }.to_not have_said "Merging pull request ##{existing_pull_request.number}: '#{existing_pull_request.title}', from '#{existing_pull_request.head.label}' into '#{existing_pull_request.base.label}'"
             end
 
             it "doesn't update the destination branch" do
@@ -182,8 +192,11 @@ describe GitReflow do
                     "Please enter your GitHub password (we do NOT store this): "                               => password,
                     "Please enter your Enterprise site URL (e.g. https://github.company.com):"                 => enterprise_site,
                     "Please enter your Enterprise API endpoint (e.g. https://github.company.com/api/v3):"      => enterprise_api,
-                    "Would you like to push this branch to your remote repo and cleanup your feature branch? " => 'yes',
-                    "Would you like to open it in your browser?"                                               => 'no'
+                    "Would you like to cleanup your feature branch?"                                           => 'yes',
+                    "Would you like to open it in your browser?"                                               => 'no',
+                    "This is the current status of your Pull Request. Are you sure you want to deliver? "      => 'y', 
+                    "Please enter your delivery commit title: (leaving blank will use default)"                => 'title',
+                    "Please enter your delivery commit message: (leaving blank will use default)"              => 'message'
                   }
                  return_value = values[question] || values[terminal]
                  question = ""
@@ -237,8 +250,11 @@ describe GitReflow do
                     "Please enter your GitHub password (we do NOT store this): "                               => password,
                     "Please enter your Enterprise site URL (e.g. https://github.company.com):"                 => enterprise_site,
                     "Please enter your Enterprise API endpoint (e.g. https://github.company.com/api/v3):"      => enterprise_api,
-                    "Would you like to push this branch to your remote repo and cleanup your feature branch? " => 'no',
-                    "Would you like to open it in your browser?"                                               => 'no'
+                    "Would you like to cleanup your feature branch? "                                          => 'no',
+                    "Would you like to open it in your browser?"                                               => 'no',
+                    "This is the current status of your Pull Request. Are you sure you want to deliver? "      => 'y', 
+                    "Please enter your delivery commit title: (leaving blank will use default)"                => 'title',
+                    "Please enter your delivery commit message: (leaving blank will use default)"              => 'message'
                   }
                  return_value = values[question] || values[terminal]
                  question = ""
@@ -279,12 +295,6 @@ describe GitReflow do
               allow(existing_pull_request).to receive_message_chain(:last_comment, :match).and_return(true)
             end
 
-            it "includes the pull request body in the commit message" do
-              squash_message = "#{existing_pull_request.body}\nCloses ##{existing_pull_request.number}\n\nLGTM given by: @nhance, @Simon\n"
-              expect(GitReflow).to receive(:append_to_squashed_commit_message).with(squash_message)
-              subject
-            end
-
             context "build status failure, testing description and target_url" do
               let(:build_status) { Hashie::Mash.new({ state: 'failure', description: 'Build resulted in failed test(s)', target_url: "www.error.com" }) }
 
@@ -309,7 +319,7 @@ describe GitReflow do
               end
 
               it "commits the changes if the build status is nil but has comments/approvals and no pending response" do
-                expect{ subject }.to have_said 'Merge complete!', :success
+                expect{ subject }.to have_said 'Pull Request successfully merged.', :success
               end
             end
 
@@ -322,32 +332,19 @@ describe GitReflow do
                 allow(GitReflow).to receive(:get_first_commit_message).and_return(first_commit_message)
                 allow(existing_pull_request).to receive(:reviewers).and_return(lgtm_comment_authors)
               end
+            end
 
-              it "includes the first commit message for the new branch in the commit message of the merge" do
-                squash_message = "#{first_commit_message}\nCloses ##{existing_pull_request.number}\n\nLGTM given by: @nhance, @Simon\n"
-                expect(GitReflow).to receive(:append_to_squashed_commit_message).with(squash_message)
-                subject
-              end
+            it "doesn't always deliver" do
+              expect(GitReflow::Config).to receive(:get).with("reflow.always-deliver").and_return("false")
+              expect { subject }.to have_said "Merge aborted", :deliver_halted
             end
 
             it "notifies user of the merge and performs it" do
-              expect(GitReflow).to receive(:merge_feature_branch).with('new-feature', {
-                destination_branch:  'master',
-                pull_request_number: existing_pull_request.number,
-                lgtm_authors:        ['nhance', 'Simon'],
-                message:             existing_pull_request.body
-              })
-
-              expect { subject }.to have_output "Merging pull request ##{existing_pull_request.number}: '#{existing_pull_request.title}', from '#{existing_pull_request.head.label}' into '#{existing_pull_request.base.label}'"
-            end
-
-            it "updates the destination branch" do
-              expect(GitReflow).to receive(:update_destination).with('master')
-              subject
+              expect { subject }.to have_said "Merging pull request ##{existing_pull_request.number}: '#{existing_pull_request.title}', from '#{existing_pull_request.head.label}' into '#{existing_pull_request.base.label}'", :notice
             end
 
             it "commits the changes for the squash merge" do
-              expect{ subject }.to have_said 'Merge complete!', :success
+              expect{ subject }.to have_said 'Pull Request successfully merged.', :success
             end
 
             context "and cleaning up feature branch" do
@@ -358,8 +355,11 @@ describe GitReflow do
                     "Please enter your GitHub password (we do NOT store this): "                               => password,
                     "Please enter your Enterprise site URL (e.g. https://github.company.com):"                 => enterprise_site,
                     "Please enter your Enterprise API endpoint (e.g. https://github.company.com/api/v3):"      => enterprise_api,
-                    "Would you like to push this branch to your remote repo and cleanup your feature branch? " => 'yes',
-                    "Would you like to open it in your browser?"                                               => 'no'
+                    "Would you like to cleanup your feature branch? "                                          => 'yes',
+                    "Would you like to open it in your browser?"                                               => 'no',
+                    "This is the current status of your Pull Request. Are you sure you want to deliver? "      => 'y', 
+                    "Please enter your delivery commit title: (leaving blank will use default)"                => 'title',
+                    "Please enter your delivery commit message: (leaving blank will use default)"              => 'message'
                   }
                  return_value = values[question] || values[terminal]
                  question = ""
@@ -369,11 +369,11 @@ describe GitReflow do
 
               context "not always" do
                 before do
-                  allow(GitReflow::Config).to receive(:get) { "false" }
+                  allow(GitReflow::Config).to receive(:get).with("reflow.always-cleanup").and_return("false")
                 end
 
-                it "pushes local squash merged base branch to remote repo" do
-                  expect { subject }.to have_run_command("git push origin master")
+                it "pulls changes from remote repo to local branch" do
+                  expect { subject }.to have_run_command("git pull origin master")
                 end
 
                 it "deletes the remote feature branch" do
@@ -387,11 +387,11 @@ describe GitReflow do
 
               context "always" do
                 before do
-                  allow(GitReflow::Config).to receive(:get) { "true" }
+                  allow(GitReflow::Config).to receive(:get).with("reflow.always-cleanup").and_return("true")
                 end
 
-                it "pushes local squash merged base branch to remote repo" do
-                  expect { subject }.to have_run_command("git push origin master")
+                it "pulls changes from remote repo to local branch" do
+                  expect { subject }.to have_run_command("git pull origin master")
                 end
 
                 it "deletes the remote feature branch" do
@@ -412,8 +412,11 @@ describe GitReflow do
                     "Please enter your GitHub password (we do NOT store this): "                               => password,
                     "Please enter your Enterprise site URL (e.g. https://github.company.com):"                 => enterprise_site,
                     "Please enter your Enterprise API endpoint (e.g. https://github.company.com/api/v3):"      => enterprise_api,
-                    "Would you like to push this branch to your remote repo and cleanup your feature branch? " => 'no',
-                    "Would you like to open it in your browser?"                                               => 'no'
+                    "Would you like to cleanup your feature branch? "                                          => 'no',
+                    "Would you like to open it in your browser?"                                               => 'no',
+                    "This is the current status of your Pull Request. Are you sure you want to deliver? "      => 'y', 
+                    "Please enter your delivery commit title: (leaving blank will use default)"                => 'title',
+                    "Please enter your delivery commit message: (leaving blank will use default)"              => 'message'
                   }
                  return_value = values[question] || values[terminal]
                  question = ""
@@ -421,8 +424,8 @@ describe GitReflow do
                 end
               end
 
-              it "doesn't update the remote repo with the new squash merge" do
-                expect { subject }.to_not have_run_command('git push origin master')
+              it "does update the local repo with the new squash merge" do
+                expect { subject }.to have_run_command('git pull origin master')
               end
 
               it "doesn't delete the feature branch on the remote repo" do
@@ -434,17 +437,9 @@ describe GitReflow do
               end
 
               it "provides instructions to undo the steps taken" do
-                expect { subject }.to have_output("To reset and go back to your branch run \`git reset --hard origin/master && git checkout new-feature\`")
+                expect { subject }.to have_said("To reset and go back to your branch run \`git reset --hard origin/master && git checkout new-feature\`")
               end
             end
-
-            context "and there were issues commiting the squash merge to the base branch" do
-              before { stub_with_fallback(GitReflow, :run_command_with_label).with('git commit', {with_system: true}).and_return false }
-              it "notifies user of issues commiting the squash merge of the feature branch" do
-                expect { subject }.to have_said("There were problems commiting your feature... please check the errors above and try again.", :error)
-              end
-            end
-
           end
 
           context 'but there are still unaddressed comments' do
@@ -465,21 +460,22 @@ describe GitReflow do
           end
 
           it "notifies the user to get their code reviewed" do
-            expect { subject }.to have_said "Merge complete!", :success
+            expect { subject }.to have_said "Pull Request successfully merged.", :success
           end
         end
 
         it "successfully finds a pull request for the current feature branch" do
-          expect { subject }.to have_output "Merging pull request #1: 'new-feature', from 'new-feature' into 'master'"
-        end
-
-        it "checks out the destination branch and updates any remote changes" do
-          expect(GitReflow).to receive(:update_destination)
-          subject
+          allow(existing_pull_request).to receive(:good_to_merge?).and_return(true)
+          allow(existing_pull_request).to receive(:approvals).and_return(["Simon"])
+          allow(existing_pull_request).to receive(:title).and_return(inputs[:title])
+          expect { subject }.to have_said "Merging pull request #1: 'new-feature', from 'new-feature' into 'master'", :notice
         end
 
         it "merges and squashes the feature branch into the master branch" do
-          expect(GitReflow).to receive(:merge_feature_branch)
+          allow(existing_pull_request).to receive(:good_to_merge?).and_return(true)
+          allow(existing_pull_request).to receive(:approvals).and_return(["Simon"])
+          allow(existing_pull_request).to receive(:title).and_return(inputs[:title])
+          expect(existing_pull_request).to receive(:merge!).and_return(true)
           subject
         end
       end

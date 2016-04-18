@@ -6,11 +6,11 @@ command :review do |c|
   c.flag [:t, :title], default_value: 'last commit message'
   c.flag [:m, :message], default_value: 'title'
   c.action do |global_options,options,args|
-    if global_options[:title] || global_options[:message]
+    if options[:title] || options[:message]
       review_options = {
         'base' => args[0],
-        'title' => global_options[:title],
-        'body' =>  global_options[:message]
+        'title' => options[:title],
+        'body' =>  options[:message]
       }
     else
       review_options = { 'base' => args[0] }

@@ -88,6 +88,16 @@ Then for your Enterprise projects, you have to setup GitReflow for each one:
   cd replace_with_your_enterprise_project_path
   git reflow setup --enterprise --local
 
+=== Refreshing your current branch based on your base branch
+
+  git reflow refresh
+
+This command updates your feature_branch and base_branch according to the remote_location and then merges your base_branch into your feature_branch. This is just a handy command to keep your branches up to date at any point in time if someone else has committed to the base_branch or the remote.
+
+  git reflow refresh -r <remote_location> -b <base_branch_name>
+
+You pass in the name of the remote to fetch from and the name of the base_branch that you would like to merge into your feature_branch. The remote_location defaults to "origin" and the base_branch defaults to "master". This command also takes in remote and branch name as flag options.
+
 === Starting a feature branch
 http://reenhanced.com/reflow/git-reflow-start.gif
 
@@ -111,6 +121,8 @@ The +review+ step creates a pull request for the currently checked out feature b
 We assume you know what you're doing, so if you need something different, do it by hand.
 
 After making commits to your branch, run +review+. Didn't push it up? We don't care, we'll do it for you.
+
+git reflow review -t <title> -m <message>
 
 If you do not pass the title or message options to the review command, you will be given an editor to write your PR request in, similar to `git commit`. The first line is the title, the rest is the body. 
 

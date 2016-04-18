@@ -27,24 +27,38 @@ module GitReflow
       run('git log --pretty=format:"%s" --no-merges -n 1', loud: false).strip
     end
 
-    def push_current_branch
-      run_command_with_label "git push origin #{current_branch}"
+    def push_current_branch(options = {})
+      remote = options[:remote] || "origin"
+      run_command_with_label "git push #{remote} #{current_branch}"
     end
 
-    def update_current_branch
-      run_command_with_label "git pull origin #{current_branch}"
-      push_current_branch
+    def update_current_branch(options = {})
+      remote = options[:remote] || "origin"
+      run_command_with_label "git pull #{remote} #{current_branch}"
+      push_current_branch(options)
     end
 
     def fetch_destination(destination_branch)
       run_command_with_label "git fetch origin #{destination_branch}"
     end
 
-    def update_destination(destination_branch)
+    def update_destination(destination_branch, options = {})
       origin_branch = current_branch
+      remote = options[:remote] || 'origin'
       run_command_with_label "git checkout #{destination_branch}"
-      run_command_with_label "git pull origin #{destination_branch}"
+      run_command_with_label "git pull #{remote} #{destination_branch}"
       run_command_with_label "git checkout #{origin_branch}"
+    end
+
+    def update_feature_branch(options = {})
+      base_branch = options[:branch]
+      remote = options[:remote]
+      update_destination(base_branch, options) 
+
+      # update feature branch in case there are multiple authors and remote changes
+      run_command_with_label "git pull origin #{current_branch}"
+      # rebase on base branch
+      run_command_with_label "git merge #{base_branch}"
     end
 
     def merge_feature_branch(feature_branch_name, options = {})

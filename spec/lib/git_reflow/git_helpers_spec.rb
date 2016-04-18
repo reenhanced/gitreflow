@@ -129,7 +129,7 @@ describe GitReflow::GitHelpers do
       context 'and a pull reuqest number' do
         before { merge_options.merge!(pull_request_number: 3) }
         it "appends the message to the squashed commit message" do
-          expect(Gitacular).to receive(:append_to_squashed_commit_message).with("don't throw doo doo\nCloses #3\n")
+          expect(Gitacular).to receive(:append_to_squashed_commit_message).with("don't throw doo doo\nMerges #3\n")
           subject
         end
       end
@@ -138,7 +138,7 @@ describe GitReflow::GitHelpers do
     context "with a pull request number" do
       let(:merge_options) {{ pull_request_number: 3 }}
       it "appends the message to the squashed commit message" do
-        expect(Gitacular).to receive(:append_to_squashed_commit_message).with("\nCloses #3\n")
+        expect(Gitacular).to receive(:append_to_squashed_commit_message).with("\nMerges #3\n")
         subject
       end
     end

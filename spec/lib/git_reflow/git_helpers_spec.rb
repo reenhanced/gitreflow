@@ -100,6 +100,22 @@ describe GitReflow::GitHelpers do
     end
   end
 
+  describe ".update_feature_branch" do
+    options = {branch: "base", remote: "remote"}
+    subject { Gitacular.update_feature_branch(options) }
+    before  { allow(Gitacular).to receive(:current_branch).and_return('feature') }
+
+    it "calls the correct methods" do
+      expect { subject }.to have_run_commands_in_order [
+        "git checkout base",
+        "git pull remote base",
+        "git checkout feature",
+        "git pull origin feature",
+        "git merge base"
+      ]
+    end
+  end
+
   describe ".merge_feature_branch(options)" do
     let(:destination_branch) { 'monkey-business' }
     let(:feature_branch)     { 'bananas' }

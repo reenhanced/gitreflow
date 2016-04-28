@@ -95,7 +95,14 @@ http://reenhanced.com/reflow/git-reflow-start.gif
 
 This sets up a feature branch remotely and brings a local copy to your machine. Yeah, you can do this by hand pretty easily, so skip this command if you want. This is just a handy shortcut with no magic.
 
-  $ git reflow start nh-branch-name
+  git reflow start nh-branch-name
+
+"Git Reflow Start" takes in the name of the new branch name that you want to create your feature on. 
+In addition, it takes in an optional flag of a base branch name. If you don't pass in this parameter, then it defaults to "master". 
+The base branch name is the base branch that you want to base your feature off of. 
+This ensures that everytime you start a new base branch, it will be based off of your latest remote base.
+
+  git reflow start nh-branch-name --base base-branch-name
 
 [PROTIP]  Use your initials at the beginning of each branch so your team knows
           who is responsible for each. My initials are 'NH', so all of my branches start with +nh-+

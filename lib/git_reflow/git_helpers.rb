@@ -51,7 +51,7 @@ module GitReflow
     end
 
     def update_feature_branch(options = {})
-      base_branch = options[:branch]
+      base_branch = options[:base]
       remote = options[:remote]
       update_destination(base_branch, options) 
 

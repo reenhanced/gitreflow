@@ -101,7 +101,7 @@ describe GitReflow::GitHelpers do
   end
 
   describe ".update_feature_branch" do
-    options = {branch: "base", remote: "remote"}
+    options = {base: "base", remote: "remote"}
     subject { Gitacular.update_feature_branch(options) }
     before  { allow(Gitacular).to receive(:current_branch).and_return('feature') }
 

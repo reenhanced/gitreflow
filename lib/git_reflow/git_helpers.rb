@@ -67,7 +67,7 @@ module GitReflow
       message = "#{options[:message]}"
 
       if "#{options[:pull_request_number]}".length > 0
-        message << "\nCloses ##{options[:pull_request_number]}\n"
+        message << "\nMerges ##{options[:pull_request_number]}\n"
       end
 
       if lgtm_authors = Array(options[:lgtm_authors]) and lgtm_authors.any?

@@ -136,7 +136,7 @@ describe GitReflow do
             end
 
             it "doesn't include the pull request body in the commit message" do
-              squash_message = "#{existing_pull_request.body}\nCloses ##{existing_pull_request.number}\n\nLGTM given by: @nhance, @Simon\n"
+              squash_message = "#{existing_pull_request.body}\nMerges ##{existing_pull_request.number}\n\nLGTM given by: @nhance, @Simon\n"
               expect(GitReflow).to receive(:append_to_squashed_commit_message).never.with(squash_message)
               subject
             end
@@ -152,7 +152,7 @@ describe GitReflow do
               end
 
               it "doesn't include the first commit message for the new branch in the commit message of the merge" do
-                squash_message = "#{first_commit_message}\nCloses ##{existing_pull_request.number}\n\nLGTM given by: @nhance, @Simon\n"
+                squash_message = "#{first_commit_message}\nMerges ##{existing_pull_request.number}\n\nLGTM given by: @nhance, @Simon\n"
                 expect(GitReflow).to receive(:append_to_squashed_commit_message).never.with(squash_message)
                 subject
               end
@@ -280,7 +280,7 @@ describe GitReflow do
             end
 
             it "includes the pull request body in the commit message" do
-              squash_message = "#{existing_pull_request.body}\nCloses ##{existing_pull_request.number}\n\nLGTM given by: @nhance, @Simon\n"
+              squash_message = "#{existing_pull_request.body}\nMerges ##{existing_pull_request.number}\n\nLGTM given by: @nhance, @Simon\n"
               expect(GitReflow).to receive(:append_to_squashed_commit_message).with(squash_message)
               subject
             end
@@ -324,7 +324,7 @@ describe GitReflow do
               end
 
               it "includes the first commit message for the new branch in the commit message of the merge" do
-                squash_message = "#{first_commit_message}\nCloses ##{existing_pull_request.number}\n\nLGTM given by: @nhance, @Simon\n"
+                squash_message = "#{first_commit_message}\nMerges ##{existing_pull_request.number}\n\nLGTM given by: @nhance, @Simon\n"
                 expect(GitReflow).to receive(:append_to_squashed_commit_message).with(squash_message)
                 subject
               end

@@ -8,15 +8,20 @@ module CommandLineHelpers
     stub_run_for GitReflow
     stub_run_for GitReflow::Sandbox
 
-    allow(STDOUT).to receive(:puts) do |output|
-      $output << output
-      output = ''
-    end
+    stub_output_for(GitReflow)
+    stub_output_for(GitReflow::Sandbox)
 
     allow_any_instance_of(GitReflow::GitServer::PullRequest).to receive(:printf) do |format, *output|
       $output << Array(output).join(" ")
       output = ''
     end.and_return("")
+  end
+
+  def stub_output_for(object_to_stub, method_to_stub = :puts)
+    allow_any_instance_of(object_to_stub).to receive(method_to_stub) do |output|
+      $output << output
+      output = ''
+    end
   end
 
   def stub_run_for(module_to_stub)

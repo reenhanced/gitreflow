@@ -110,11 +110,11 @@ module GitReflow
                 options[:title] = title
                 options[:body]  = "#{pr_msg.join("\n")}\n"
 
-                puts "\nReview your PR:\n"
-                puts "--------\n"
-                puts "Title:\n#{options[:title]}\n\n"
-                puts "Body:\n#{options[:body]}\n"
-                puts "--------\n"
+                GitReflow.say "\nReview your PR:\n"
+                GitReflow.say "--------\n"
+                GitReflow.say "Title:\n#{options[:title]}\n\n"
+                GitReflow.say "Body:\n#{options[:body]}\n"
+                GitReflow.say "--------\n"
 
                 create_pull_request = ask("Submit pull request? (Y)") =~ /y/i
               end

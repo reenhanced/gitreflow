@@ -86,9 +86,9 @@ module GitReflow
       def authenticate(options = {silent: false})
         if connection and self.class.oauth_token.length > 0
           unless options[:silent]
-            puts "Your GitHub account was already setup with: "
-            puts "\tUser Name: #{self.class.user}"
-            puts "\tEndpoint: #{self.class.api_endpoint}"
+            GitReflow.say "Your GitHub account was already setup with: "
+            GitReflow.say "\tUser Name: #{self.class.user}"
+            GitReflow.say "\tEndpoint: #{self.class.api_endpoint}"
           end
         else
           begin
@@ -118,12 +118,12 @@ module GitReflow
               two_factor_code = ask("Please enter your two-factor authentication code: ")
               self.authenticate options.merge({user: gh_user, password: gh_password, two_factor_auth_code: two_factor_code})
             else
-              puts "\nGithub Authentication Error: #{e.inspect}"
+              GitReflow.say "\nGithub Authentication Error: #{e.inspect}", :error
             end
           rescue StandardError => e
-            puts "\nInvalid username or password: #{e.inspect}"
+            GitReflow.say "\nInvalid username or password: #{e.inspect}", :error
           else
-            puts "\nYour GitHub account was successfully setup!"
+            GitReflow.say "\nYour GitHub account was successfully setup!", :success
           end
         end
 

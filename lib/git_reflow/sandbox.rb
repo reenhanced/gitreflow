@@ -7,7 +7,8 @@ module GitReflow
       error:          :red,
       deliver_halted: :red,
       review_halted:  :red,
-      success:        :green
+      success:        :green,
+      plain:          :white
     }
 
     def run(command, options = {})
@@ -32,7 +33,8 @@ module GitReflow
 
     def say(message, label_type = :plain)
       if COLOR_FOR_LABEL[label_type]
-        puts "[#{ label_type.to_s.gsub('_', ' ').colorize(COLOR_FOR_LABEL[label_type]) }] #{message}"
+        label = (label_type.to_s == "plain") ? "" : "[#{ label_type.to_s.gsub('_', ' ').colorize(COLOR_FOR_LABEL[label_type]) }] "
+        puts "#{label}#{message}"
       else
         puts message
       end

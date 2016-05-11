@@ -99,12 +99,12 @@ module GitReflow
           "url"         => self.html_url
         }
 
-        notices = ""
+        notices = []
         reviewed_by = []
 
         # check for CI build status
         if self.build_status
-          notices << "[notice] Your build status is not successful: #{self.build.url}.\n" unless self.build.state == "success"
+          notices << "Your build status is not successful: #{self.build.url}.\n" unless self.build.state == "success"
           summary_data.merge!( "Build status" => GitReflow.git_server.colorized_build_description(self.build.state, self.build.description) )
         end
 
@@ -117,9 +117,9 @@ module GitReflow
             reviewed_by.map! { |author| approvals.include?(author.uncolorize) ? author.colorize(:green) : author }
           end
 
-          notices << "[notice] You still need a LGTM from: #{reviewers_pending_response.join(', ')}\n" if reviewers_pending_response.any?
+          notices << "You still need a LGTM from: #{reviewers_pending_response.join(', ')}\n" if reviewers_pending_response.any?
         else
-          notices << "[notice] No one has reviewed your pull request.\n"
+          notices << "No one has reviewed your pull request.\n"
         end
 
         summary_data['reviewed by'] = reviewed_by.join(', ')
@@ -130,7 +130,9 @@ module GitReflow
           printf string_format, "#{name}:", summary_data[name]
         end
 
-        puts "\n#{notices}" unless notices.empty?
+        notices.each do |notice|
+          GitReflow.say notice, :notice
+        end
       end
 
       def method_missing(method_sym, *arguments, &block)

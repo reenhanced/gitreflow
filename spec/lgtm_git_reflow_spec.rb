@@ -63,7 +63,6 @@ describe GitReflow do
 
 
     before do
-      allow_any_instance_of(Object).to receive(:strip).and_return("")
       allow(GitReflow::GitServer::GitHub).to receive_message_chain(:connection, :pull_requests, :merge).and_return(merge_response)
       allow(merge_response).to receive(:success?).and_return(true)
 

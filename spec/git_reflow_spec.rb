@@ -67,7 +67,6 @@ describe GitReflow do
 
       it 'displays a summary of the pull request and asks to open it in the browser' do
         expect(existing_pull_request).to receive(:display_pull_request_summary)
-        expect(GitReflow).to receive(:ask_to_open_in_browser).with(existing_pull_request.html_url)
         subject
         expect($output).to include "Here's the status of your review:"
       end
@@ -165,11 +164,6 @@ describe GitReflow do
 
       it "displays a pull request summary for the existing pull request" do
         expect(existing_pull_request).to receive(:display_pull_request_summary)
-        subject
-      end
-
-      it "asks to open the pull request in the browser" do
-        expect(GitReflow).to receive(:ask_to_open_in_browser).with(existing_pull_request.html_url)
         subject
       end
     end

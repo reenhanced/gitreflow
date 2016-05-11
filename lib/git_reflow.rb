@@ -32,7 +32,6 @@ module GitReflow
     else
       puts "Here's the status of your review:"
       pull_request.display_pull_request_summary
-      ask_to_open_in_browser(pull_request.html_url)
     end
   end
 
@@ -49,7 +48,6 @@ module GitReflow
       if existing_pull_request
         say "A pull request already exists for these branches:", :notice
         existing_pull_request.display_pull_request_summary
-        ask_to_open_in_browser(existing_pull_request.html_url)
       else
         unless options[:title] || options[:body]
           pull_request_msg_file = "#{GitReflow.git_root_dir}/.git/GIT_REFLOW_PR_MSG"
@@ -88,7 +86,6 @@ module GitReflow
                                                         base:  options[:base])
 
           puts "Successfully created pull request ##{pull_request.number}: #{pull_request.title}\nPull Request URL: #{pull_request.html_url}\n"
-          ask_to_open_in_browser(pull_request.html_url)
         else
           say "Review aborted.  No pull request has been created.", :review_halted
         end
@@ -101,8 +98,7 @@ module GitReflow
   end
 
   def deliver(options = {})
-    feature_branch    = current_branch
-    base_branch       = options[:base] || 'master'
+    base_branch = options[:base] || 'master'
 
     begin
       existing_pull_request = git_server.find_open_pull_request( :from => current_branch, :to => base_branch )

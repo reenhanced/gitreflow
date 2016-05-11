@@ -38,19 +38,5 @@ module GitReflow
       end
     end
 
-    # WARNING: this currently only supports OS X and UBUNTU
-    def ask_to_open_in_browser(url)
-      if OS.unix?
-        open_in_browser = ask "Would you like to open it in your browser? "
-        if open_in_browser =~ /^y/i
-          if OS.mac?
-            run "open #{url}"
-          else
-            run "xdg-open #{url}"
-          end
-        end
-      end
-    end
-
   end
 end

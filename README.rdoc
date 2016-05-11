@@ -20,10 +20,10 @@ Reflow automatically creates pull requests, ensures the code review is approved,
 Create and switch to new branch +nh-branchy-branch+:
   $ git reflow start nh-branchy-branch
 
-Create a pull request for your branch against +master+:
+Create a pull request for your branch against +master+ or a custom +base_branch+: 
   $ git reflow review
 
-If your code is 'LGTM'd, squash merge to +master+ and delete the feature branch:
+If your code is 'LGTM'd, squash merge to +base_branch+ and delete the feature branch:
   $ git reflow deliver
 
 ----
@@ -131,7 +131,7 @@ After making commits to your branch, run +review+. Didn't push it up? We don't c
 
 git reflow review -t <title> -m <message>
 
-If you do not pass the title or message options to the review command, you will be given an editor to write your PR request in, similar to `git commit`. The first line is the title, the rest is the body. 
+If you do not pass the title or message options to the review command, you will be given an editor to write your PR request commit message, similar to `git commit`. The first line is the title, the rest is the body. 
 
   $ git reflow review         
 
@@ -196,6 +196,11 @@ This gives you details on who's reviewed your pull request. If someone has parti
 +status+ prevents you from having to open a browser to find out where your pull request is at. But in case you want to take a look, we give you the option to open it for you.
 
 === Delivering approved code
+
+==== Note: This documentation is for the process for the github "remote" merge process via the github_api. 
+For the bitbucket standard or github manual process (used when the user applies -f force flag to the "remote" merge via the github_api), please go to section B.
+
+==== A:
 http://reenhanced.com/reflow/git-reflow-deliver.gif
 
   git reflow deliver
@@ -205,24 +210,112 @@ You kick butt. You've got your code reviewed and now you're ready to merge it do
 Reflow's +deliver+ requires you to have a pull request, so you'll be protected on those mornings when the coffee isn't working yet.
 We built this <b>to get in your way and make you follow the process</b>. If you don't like it, do it by hand. You already know what you're doing.
 
-You'll be presented with a prefilled commit message based on the body of your pull request which includes the text <code>Closes #XX</code> that will automatically close the associated pull request on github when deliver completes.
+You'll be presented with a prefilled commit message based on the body of your pull request with references to the pull request and reviewers.
 
-Make a mistake and deliver too early? It happens. You'll be prompted after you edit your commit message if you want to push your updated +master+ to github. If you answer 'n', then you'll want to do <code>git reset --hard origin/master</code> and checkout your branch again.
+Want to clean up your feature branch afterwards? You'll be prompted after you edit your commit message if you want to clean up your +feature_branch+ on github. If you answer 'n', then your feature_branch will exist for you to clean it up later.
 
 This is what it looks like:
+
   $ git reflow deliver
+  Here's the status of your review:
+      branches:     simonzhu24:test1234 -> simonzhu24:master
+      number:       51
+      reviewed by:
+      url:          https://github.com/simonzhu24/test/pull/51
+
+  [notice] No one has reviewed your pull request.
+  Would you like to open it in your browser? n
+  This is the current status of your Pull Request. Are you sure you want to deliver? Y
+  Merging pull request #51: 'last commit message', from 'simonzhu24:test1234' into 'simonzhu24:master'
+  git checkout master
+  Switched to branch 'master'
+  Your branch is ahead of 'origin/master' by 1 commit.
+    (use "git push" to publish your local commits)
+
+  [success] Pull Request successfully merged.
+  Would you like to cleanup your feature branch? Y
+  git pull origin master
+  remote: Counting objects: 1, done.
+  remote: Total 1 (delta 0), reused 0 (delta 0), pack-reused 0
+  Unpacking objects: 100% (1/1), done.
+  From https://github.com/simonzhu24/test
+   * branch            master     -> FETCH_HEAD
+     0d8f5e0..f853efa  master     -> origin/master
+  Updating 0b6782f..f853efa
+  Fast-forward
+   README.md | 2 +-
+   1 file changed, 1 insertion(+), 1 deletion(-)
+
+  git push origin :test1234
+  To https://github.com/simonzhu24/test.git
+   - [deleted]         test1234
+
+  git branch -D test1234
+  Deleted branch test1234 (was e130c7a).
+  Nice job buddy.
+
+==== How it works
+
+This is what we do behind the scenes when you do +deliver+
+
+* Does a pull request exist?
+
+  If not, stop here. You need to run +review+.
+
+* Has the review been completed? Did we get a +LGTM+ from everyone who's participated?
+
+  If not, show a list of authors that need to provide a +LGTM+.
+  
+* If the review is done, it's time to merge. Here's what happens:
+
+  First, we use the github_api gem to merge the pull request. 
+
+  We call the public API for: 
+
+    github.pull_requests.merge 'user-name', 'repo-name', 'number', payload
+
+    Please take a look at lib/git_reflow/git_server/git_hub/pull_request.rb:102-107 for an example of the call.
+    This call makes an HTTP request using the Github API to merge the available pull request passing in the user name, repository name, pull request number, and some additional data in the payload.
+
+    The payload contains data in the following format:
+
+    data = {
+      "commit_title",
+      "commit_message",
+      "sha",
+      "squash"
+    }
+
+    Notice: "squash" is set to true, meaning that we will do a squash-merge for each pull request.
+
+    For more detailed documentation, please read: https://github.com/piotrmurach/github/blob/master/lib/github_api/client/pull_requests.rb#L197
+
+* Next, we prompt you if you want to cleanup
+  Would you like cleanup your feature branch?
+  
+  If 'y', then we'll update the +base_branch+ and delete the feature branch
+    
+    git pull origin #{base_branch}
+    git push origin :#{feature_branch}
+    git branch -D #{feature_branch}
+  
+  If 'n', then just stop here. The user can clean up his branch locally.
+
+    And we're done.
+
+==== Note: This documentation is for the bitbucket standard or github manual process (used when the user applies -f force flag to the "remote" merge via the github_api).
+  
+==== B:
+  This is what the process looks like for bitbucket or if you force deliver:
+
   From github.com:reenhanced/gitreflow
   * branch            master     -> FETCH_HEAD
   Merging pull request #36: 'Enforce at least one LGTM before delivery', from 'reenhanced:nh-fail-without-lgtm' into 'reenhanced:master'
-  Switched to branch 'master'
-  From github.com:reenhanced/gitreflow
-   * branch            master     -> FETCH_HEAD
   Already up-to-date.
   Switched to branch 'nh-fail-without-lgtm'
   Switched to branch 'master'
   Updating c2ec1b1..f90e111
-  Fast-forward
-  Squash commit -- not updating HEAD
+   Squash commit -- not updating HEAD
    lib/git_reflow.rb | 71 +++++++++++++++++++++++++++----------------------------
    1 file changed, 35 insertions(+), 36 deletions(-)
   [master d1b4dd5] Enforces LGTM before deliver, even with no comments.
@@ -241,9 +334,8 @@ This is what it looks like:
    - [deleted]         nh-fail-without-lgtm
 
   Deleted branch nh-fail-without-lgtm (was f90e111).
-  Nice job buddy.
-  
-This is what the default commit message looks like:
+
+  This is what the default commit message looks like:
   Enforces LGTM before deliver, even with no comments.
   Removes the need to review the pull request yourself if you make a
   comment.
@@ -262,41 +354,30 @@ This is what the default commit message looks like:
   Author: Nicholas Hance <nhance@reenhanced.com>
   Date:   Thu Jul 11 15:33:29 2013 -0400
   ...
-  
-==== How it works
-This is what we do behind the scenes when you do +deliver+
 
-* Does a pull request exist?
+  If the review is done, it's time to merge. Here's what happens:
 
-  If not, stop here. You need to run +review+.
+  First, update our local +master+ so we don't get conflicts
+    git checkout master
+    git pull origin master
 
-* Has the review been completed? Did we get a +LGTM+ from everyone who's participated?
+  Next, squash merge our feature branch
+    git merge --squash nh-branch-name
+    
+  Now, we'll apply a little magic so we have a great commit message by default. Your editor will open and you'll see a nice default for your commit message based on the pull request body.
 
-  If not, show a list of authors that need to provide a +LGTM+.
-  
-If the review is done, it's time to merge. Here's what happens:
+  Once you've saved the commit, prompt the user to see if we should continue
+    Merge complete!
+    Would you like to push this branch to your remote repo and cleanup your feature branch?
 
-First, update our local +master+ so we don't get conflicts
-  git checkout master
-  git pull origin master
+  If 'y', then we'll push to +master+ and delete the feature branch
+    git pull origin master
+    git push origin master
+    git push origin :nh-branch-name
+    git branch -D nh-branch-name
 
-Next, squash merge our feature branch
-  git merge --squash nh-branch-name
-  
-Now, we'll apply a little magic so we have a great commit message by default. Your editor will open and you'll see a nice default for your commit message based on the pull request body.
-
-Once you've saved the commit, prompt the user to see if we should continue
-  Merge complete!
-  Would you like to push this branch to your remote repo and cleanup your feature branch?
-  
-If 'y', then we'll push to +master+ and delete the feature branch
-  git push origin master
-  git push origin :nh-branch-name
-  git branch -D nh-branch-name
-  
-If 'n', then just stop here. The user can reset his local +master+.
-
-And we're done.
+  If 'n', then just stop here. The user can reset his local +master+.
+  And we're done.
 
 == Guiding principles:
 * Your workflow should resemble the following:
@@ -321,23 +402,30 @@ http://reenhanced.com/images/reflow.png
 
 * If you make a new commit in your branch, you require another review.
 
-* All participants in a pull request must approve the pull request.
-  If 2 people comment, you need 2 'LGTM's before the code is ready to merge.
+* Depending on the minimumApprovals that you specify in your ~/.gitconfig.reflow (created upon reflow setup), you can have the following:
+  
+  "" : All participants in a pull request must approve the pull request.
+  "0": 0 approvals required for you to merge PR.
+  "1": You need a minimum of 1 LGTM and the last comment on your PR must be an LGTM.
+  "2": You need a minimum of 2 LGTM and the last comment on your PR must be an LGTM.
+  ...
 
-* Once approved, your feature branch is squash merged to master.
-  This makes the history of the master branch extremely clean and easy to follow.
+* Once approved, your feature branch is squash-merged to your base_branch.
+  This makes the history of the base_branch branch extremely clean and easy to follow.
 
 * Git blame becomes your friend. You'll know who to blame and can see the full context of changes.
-  Squash commits to master mean every commit represents the whole feature, not a "typo fix".
+  Squash commits to base_branch mean every commit represents the whole feature, not a "typo fix".
 
 
 == Configuration
 
-  In order to streamline delivery you can set the following git config to
-  always push the branch after merge and clean up the feature branch.
+  In order to streamline delivery you can set the following git config to:
 
-  git config --global --add "reflow.always-deploy-and-cleanup" "true"
+  1. always clean up the feature branch after the PR is merged
+  2. always deliver without further prompt
 
+  git config --global --add "reflow.always-cleanup" "true"
+  git config --global --add "reflow.always-deliver" "true"
 
 ---
 

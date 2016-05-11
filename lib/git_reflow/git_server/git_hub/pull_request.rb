@@ -78,6 +78,84 @@ module GitReflow
           end
         end
 
+        def merge!(options = {})
+           
+          # fallback to default merge process if user "forces" merge
+          if(options[:skip_lgtm])
+            super options
+          else
+            if deliver?
+              GitReflow.say "Merging pull request ##{number}: '#{title}', from '#{feature_branch_name}' into '#{base_branch_name}'", :notice
+
+              unless options[:title] || options[:message]
+
+                # prompts user for commit_title and commit_message
+                pull_request_msg_file = "#{GitReflow.git_root_dir}/.git/SQUASH_MSG"
+
+                File.open(pull_request_msg_file, 'w') do |file|
+                  file.write("#{self.title}\n#{self.body}\n")
+                end
+
+                GitReflow.run("#{GitReflow::DEFAULT_EDITOR} #{pull_request_msg_file}", with_system: true)
+                pr_msg = File.read(pull_request_msg_file).split(/[\r\n]|\r\n/).map(&:strip)
+        
+                title  = pr_msg.shift
+
+                File.delete(pull_request_msg_file)
+
+                unless pr_msg.empty? 
+                  pr_msg.shift if pr_msg.first.empty?
+                end
+
+                options[:title] = title
+                options[:body]  = "#{pr_msg.join("\n")}\n"
+
+                puts "\nReview your PR:\n"
+                puts "--------\n"
+                puts "Title:\n#{options[:title]}\n\n"
+                puts "Body:\n#{options[:body]}\n"
+                puts "--------\n"
+
+                create_pull_request = ask("Submit pull request? (Y)") =~ /y/i
+              end
+
+              message = self.commit_message_for_merge
+
+              merge_response = GitReflow::GitServer::GitHub.connection.pull_requests.merge(
+                "#{GitReflow.git_server.class.remote_user}", 
+                "#{GitReflow.git_server.class.remote_repo_name}", 
+                "#{self.number}", 
+                {
+                  "commit_title" => "#{options[:title]}",
+                  "commit_message" => "#{options[:body]}",
+                  "sha" => "#{self.head.sha}",
+                  "squash" => true
+                }
+              )
+
+              if merge_response.success?
+                GitReflow.run_command_with_label "git checkout #{base_branch_name}"
+                # Pulls merged changes from remote base_branch
+                GitReflow.run_command_with_label "git pull origin #{base_branch_name}"
+                GitReflow.say "Pull Request successfully merged.", :success
+
+                if cleanup_feature_branch?
+                  GitReflow.run_command_with_label "git push origin :#{feature_branch_name}"
+                  GitReflow.run_command_with_label "git branch -D #{feature_branch_name}"
+                  GitReflow.say "Nice job buddy."
+                else
+                  cleanup_failure_message
+                end
+              else
+                GitReflow.say merge_response.to_s, :deliver_halted
+                GitReflow.say "There were problems commiting your feature... please check the errors above and try again.", :error
+              end
+            else
+              GitReflow.say "Merge aborted", :deliver_halted
+            end
+          end
+        end
+
         def build
           github_build_status = GitReflow.git_server.get_build_status(self.head.sha)
           build_status_object = Struct.new(:state, :description, :url)

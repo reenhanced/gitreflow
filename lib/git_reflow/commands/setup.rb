@@ -24,6 +24,5 @@ command :setup do |c|
 
     GitReflow::Config.add "constants.minimumApprovals", ask("Set the minimum number of approvals (leaving blank will require approval from all commenters): "), local: reflow_options[:project_only]
     GitReflow::Config.add "constants.approvalRegex", GitReflow::GitServer::PullRequest::DEFAULT_APPROVAL_REGEX, local: reflow_options[:project_only]
-    
   end
 end

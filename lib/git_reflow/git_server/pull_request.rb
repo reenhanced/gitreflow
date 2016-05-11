@@ -140,6 +140,81 @@ module GitReflow
           super
         end
       end
+
+      def commit_message_for_merge
+        message = ""
+
+        if "#{self.description}".length > 0
+          message << "#{self.description}"
+        else
+          message << "#{GitReflow.get_first_commit_message}"
+        end
+
+        message << "\nMerges ##{self.number}\n"
+
+        if lgtm_authors = Array(self.approvals) and lgtm_authors.any?
+          message << "\nLGTM given by: @#{lgtm_authors.join(', @')}\n"
+        end
+
+        message
+      end
+
+      def cleanup_feature_branch?
+        GitReflow::Config.get('reflow.always-cleanup') == "true" || (ask "Would you like to cleanup your feature branch? ") =~ /^y/i
+      end
+
+      def deliver?
+        GitReflow::Config.get('reflow.always-deliver') == "true" || (ask "This is the current status of your Pull Request. Are you sure you want to deliver? ") =~ /^y/i
+      end
+
+      def cleanup_failure_message
+        GitReflow.say "Cleanup halted.  Local changes were not pushed to remote repo.".colorize(:red)
+        GitReflow.say "To reset and go back to your branch run \`git reset --hard origin/#{base_branch_name} && git checkout #{feature_branch_name}\`"
+      end
+
+      def merge!(options = {})
+        if deliver? 
+
+          GitReflow.say "Merging pull request ##{number}: '#{title}', from '#{feature_branch_name}' into '#{base_branch_name}'", :notice
+
+          unless base_branch_name.index(':').nil?
+            base = base_branch_name[(base_branch_name.index(':') + 1)..-1]
+          end
+
+          unless feature_branch_name.index(':').nil?
+            feature = feature_branch_name[(feature_branch_name.index(':') + 1)..-1]
+          end
+
+          GitReflow.update_current_branch
+          GitReflow.fetch_destination(base)
+
+          message = commit_message_for_merge
+
+          GitReflow.run_command_with_label "git checkout #{base}"
+          GitReflow.run_command_with_label "git merge --squash #{feature}"
+
+          GitReflow.append_to_squashed_commit_message(message) if message.length > 0
+
+          if GitReflow.run_command_with_label 'git commit', with_system: true
+            # Pulls merged changes from remote base_branch
+            GitReflow.run_command_with_label "git pull origin #{base}"
+            GitReflow.run_command_with_label "git push origin #{base}"
+            GitReflow.say "Pull Request successfully merged.", :success
+
+            if cleanup_feature_branch?
+              GitReflow.run_command_with_label "git push origin :#{feature}"
+              GitReflow.run_command_with_label "git branch -D #{feature}"
+              GitReflow.say "Nice job buddy."
+            else
+              cleanup_failure_message
+            end
+          else
+            GitReflow.say "There were problems commiting your feature... please check the errors above and try again.", :error
+          end
+        else
+          GitReflow.say "Merge aborted", :deliver_halted
+        end  
+      end
     end
   end
 end

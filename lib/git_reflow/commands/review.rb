@@ -8,12 +8,12 @@ command :review do |c|
   c.action do |global_options,options,args|
     if options[:title] || options[:message]
       review_options = {
-        'base' => args[0],
-        'title' => options[:title],
-        'body' =>  options[:message]
+        :base => args[0],
+        :title => options[:title],
+        :body =>  options[:message]
       }
     else
-      review_options = { 'base' => args[0] }
+      review_options = { :base => args[0] }
     end
 
     GitReflow.review(review_options)

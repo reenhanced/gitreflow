@@ -14,12 +14,14 @@ require 'git_reflow/git_server/bit_bucket'
 require 'git_reflow/os_detector'
 require 'git_reflow/sandbox'
 require 'git_reflow/git_helpers'
+require 'git_reflow/merge_error'
 
 module GitReflow
   include Sandbox
   include GitHelpers
-
   extend self
+
+  DEFAULT_EDITOR = "#{ENV['EDITOR']}".freeze || "vi".freeze
 
   def status(destination_branch)
     pull_request = git_server.find_open_pull_request( :from => current_branch, :to => destination_branch )
@@ -35,33 +37,28 @@ module GitReflow
   end
 
   def review(options = {})
-    options['base']     ||= 'master'
+    options[:base]     ||= 'master'
     create_pull_request   = true
 
-    fetch_destination options['base']
+    fetch_destination options[:base]
 
     begin
       push_current_branch
 
-      existing_pull_request = git_server.find_open_pull_request( from: current_branch, to: options['base'] )
+      existing_pull_request = git_server.find_open_pull_request( from: current_branch, to: options[:base] )
       if existing_pull_request
         say "A pull request already exists for these branches:", :notice
         existing_pull_request.display_pull_request_summary
         ask_to_open_in_browser(existing_pull_request.html_url)
       else
-        unless options['title'] || options['body']
+        unless options[:title] || options[:body]
           pull_request_msg_file = "#{GitReflow.git_root_dir}/.git/GIT_REFLOW_PR_MSG"
-          default_editor        = "#{ENV['EDITOR']}"
-
-          if default_editor.empty?
-            default_editor = 'vi'
-          end
 
           File.open(pull_request_msg_file, 'w') do |file|
-            file.write(options['title'] || GitReflow.current_branch)
+            file.write(options[:title] || GitReflow.current_branch)
           end
 
-          GitReflow.run("#{default_editor} #{pull_request_msg_file}", with_system: true)
+          GitReflow.run("#{DEFAULT_EDITOR} #{pull_request_msg_file}", with_system: true)
 
           pr_msg = File.read(pull_request_msg_file).split(/[\r\n]|\r\n/).map(&:strip)
           title  = pr_msg.shift
@@ -72,23 +69,23 @@ module GitReflow
             pr_msg.shift if pr_msg.first.empty?
           end
 
-          options['title'] = title
-          options['body']  = "#{pr_msg.join("\n")}\n"
+          options[:title] = title
+          options[:body]  = "#{pr_msg.join("\n")}\n"
 
           puts "\nReview your PR:\n"
           puts "--------\n"
-          puts "Title:\n#{options['title']}\n\n"
-          puts "Body:\n#{options['body']}\n"
+          puts "Title:\n#{options[:title]}\n\n"
+          puts "Body:\n#{options[:body]}\n"
           puts "--------\n"
 
           create_pull_request = ask("Submit pull request? (Y)") =~ /y/i
         end
 
         if create_pull_request
-          pull_request = git_server.create_pull_request(title: options['title'] || options['body'],
-                                                        body:  options['body'],
+          pull_request = git_server.create_pull_request(title: options[:title] || options[:body],
+                                                        body:  options[:body],
                                                         head:  "#{remote_user}:#{current_branch}",
-                                                        base:  options['base'])
+                                                        base:  options[:base])
 
           puts "Successfully created pull request ##{pull_request.number}: #{pull_request.title}\nPull Request URL: #{pull_request.html_url}\n"
           ask_to_open_in_browser(pull_request.html_url)
@@ -105,11 +102,7 @@ module GitReflow
 
   def deliver(options = {})
     feature_branch    = current_branch
-    base_branch       = options['base'] || 'master'
-
-    update_current_branch
-    fetch_destination(base_branch)
-    update_destination(feature_branch)
+    base_branch       = options[:base] || 'master'
 
     begin
       existing_pull_request = git_server.find_open_pull_request( :from => current_branch, :to => base_branch )
@@ -118,42 +111,10 @@ module GitReflow
         say "No pull request exists for #{remote_user}:#{current_branch}\nPlease submit your branch for review first with \`git reflow review\`", :deliver_halted
       else
 
-        commit_message = if "#{existing_pull_request.description}".length > 0
-                           existing_pull_request.description
-                         else
-                           "#{get_first_commit_message}"
-                         end
-
-        if existing_pull_request.good_to_merge?(force: options['skip_lgtm'])
-          puts "Merging pull request ##{existing_pull_request.number}: '#{existing_pull_request.title}', from '#{existing_pull_request.feature_branch_name}' into '#{existing_pull_request.base_branch_name}'"
-
-          update_destination(base_branch)
-          merge_feature_branch(feature_branch,
-                               :destination_branch  => base_branch,
-                               :pull_request_number => existing_pull_request.number,
-                               :lgtm_authors        => existing_pull_request.approvals,
-                               :message             => commit_message)
-          committed = run_command_with_label 'git commit', with_system: true
-
-          if committed
-            say "Merge complete!", :success
-
-            # check if user always wants to push and cleanup, otherwise ask
-            always_deploy_and_cleanup = GitReflow::Config.get('reflow.always-deploy-and-cleanup') == "true"
-            deploy_and_cleanup = always_deploy_and_cleanup || (ask "Would you like to push this branch to your remote repo and cleanup your feature branch? ") =~ /^y/i
-
-            if deploy_and_cleanup
-              run_command_with_label "git push origin #{base_branch}"
-              run_command_with_label "git push origin :#{feature_branch}"
-              run_command_with_label "git branch -D #{feature_branch}"
-              puts "Nice job buddy."
-            else
-              puts "Cleanup halted.  Local changes were not pushed to remote repo.".colorize(:red)
-              puts "To reset and go back to your branch run \`git reset --hard origin/#{base_branch} && git checkout #{feature_branch}\`"
-            end
-          else
-            say "There were problems commiting your feature... please check the errors above and try again.", :error
-          end
+        if existing_pull_request.good_to_merge?(force: options[:skip_lgtm])
+          # displays current status and prompts user for confirmation
+          self.status base_branch
+          existing_pull_request.merge!(options)
         else
           say existing_pull_request.rejection_message, :deliver_halted
         end

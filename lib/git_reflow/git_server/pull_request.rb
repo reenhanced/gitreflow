@@ -175,25 +175,29 @@ module GitReflow
       end
 
       def merge!(options = {})
-        if deliver? 
+        if deliver?
 
           GitReflow.say "Merging pull request ##{number}: '#{title}', from '#{feature_branch_name}' into '#{base_branch_name}'", :notice
 
-          unless base_branch_name.index(':').nil?
-            base = base_branch_name[(base_branch_name.index(':') + 1)..-1]
+          if base_branch_name.index(':').nil?
+            base_branch = base_branch_name
+          else
+            base_branch = base_branch_name[(base_branch_name.index(':') + 1)..-1]
           end
 
-          unless feature_branch_name.index(':').nil?
-            feature = feature_branch_name[(feature_branch_name.index(':') + 1)..-1]
+          if feature_branch_name.index(':').nil?
+            feature_branch = feature_branch_name
+          else
+            feature_branch = feature_branch_name[(feature_branch_name.index(':') + 1)..-1]
           end
 
           GitReflow.update_current_branch
-          GitReflow.fetch_destination(base)
+          GitReflow.fetch_destination(base_branch)
 
           message = commit_message_for_merge
 
-          GitReflow.run_command_with_label "git checkout #{base}"
-          GitReflow.run_command_with_label "git merge --squash #{feature}"
+          GitReflow.run_command_with_label "git checkout #{base_branch}"
+          GitReflow.run_command_with_label "git merge --squash #{feature_branch}"
 
           GitReflow.append_to_squashed_commit_message(message) if message.length > 0
 
@@ -213,7 +217,7 @@ module GitReflow
           end
         else
           GitReflow.say "Merge aborted", :deliver_halted
-        end  
+        end
       end
     end
   end

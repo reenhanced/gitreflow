@@ -6,7 +6,7 @@ module GitReflow
       class PullRequest < GitReflow::GitServer::PullRequest
         def initialize(attributes)
           self.number              = attributes.id
-          self.description         = attributes.description
+          self.description         = attributes.body || attributes.description
           self.html_url            = "#{attributes.source.repository.links.html.href}/pull-request/#{self.number}"
           self.feature_branch_name = attributes.source.branch.name
           self.base_branch_name    = attributes.destination.branch.name
@@ -19,7 +19,7 @@ module GitReflow
             GitReflow.git_server.class.remote_user,
             GitReflow.git_server.class.remote_repo_name,
             title: options[:title],
-            body: options[:body],
+            description: options[:body] || options[:description],
             source: {
               branch: { name: GitReflow.git_server.class.current_branch },
               repository: { full_name: "#{GitReflow.git_server.class.remote_user}/#{GitReflow.git_server.class.remote_repo_name}" }

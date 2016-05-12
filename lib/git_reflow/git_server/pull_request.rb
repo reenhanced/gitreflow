@@ -158,7 +158,7 @@ module GitReflow
           message << "\nLGTM given by: @#{lgtm_authors.join(', @')}\n"
         end
 
-        message
+        "#{message}\n"
       end
 
       def cleanup_feature_branch?

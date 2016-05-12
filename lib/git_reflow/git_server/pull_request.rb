@@ -162,7 +162,7 @@ module GitReflow
       end
 
       def cleanup_feature_branch?
-        GitReflow::Config.get('reflow.always-cleanup') == "true" || (ask "Would you like to cleanup your feature branch? ") =~ /^y/i
+        GitReflow::Config.get('reflow.always-cleanup') == "true" || (ask "Would you like to push this branch to your remote repo and cleanup your feature branch? ") =~ /^y/i
       end
 
       def deliver?
@@ -170,7 +170,7 @@ module GitReflow
       end
 
       def cleanup_failure_message
-        GitReflow.say "Cleanup halted.  Local changes were not pushed to remote repo.".colorize(:red)
+        GitReflow.say "Cleanup halted.  Local changes were not pushed to remote repo.", :deliver_halted
         GitReflow.say "To reset and go back to your branch run \`git reset --hard origin/#{base_branch_name} && git checkout #{feature_branch_name}\`"
       end
 
@@ -198,14 +198,12 @@ module GitReflow
           GitReflow.append_to_squashed_commit_message(message) if message.length > 0
 
           if GitReflow.run_command_with_label 'git commit', with_system: true
-            # Pulls merged changes from remote base_branch
-            GitReflow.run_command_with_label "git pull origin #{base}"
-            GitReflow.run_command_with_label "git push origin #{base}"
             GitReflow.say "Pull Request successfully merged.", :success
 
             if cleanup_feature_branch?
-              GitReflow.run_command_with_label "git push origin :#{feature}"
-              GitReflow.run_command_with_label "git branch -D #{feature}"
+              GitReflow.run_command_with_label "git push origin #{base_branch}"
+              GitReflow.run_command_with_label "git push origin :#{feature_branch}"
+              GitReflow.run_command_with_label "git branch -D #{feature_branch}"
               GitReflow.say "Nice job buddy."
             else
               cleanup_failure_message

@@ -245,9 +245,31 @@ describe GitReflow do
             allow(existing_pull_request).to receive(:reviewers_pending_response).and_return([])
             allow(existing_pull_request).to receive(:approvals).and_return(lgtm_comment_authors)
             allow(GitReflow).to receive(:append_to_squashed_commit_message)
+            allow(GitReflow::Config).to receive(:get).with("reflow.always-cleanup").and_return("true")
+          end
+
+          it "checks out the base branch" do
+            expect { subject }.to have_run_command("git checkout master")
+          end
+
+          it "pulls changes from remote repo to local branch" do
+            expect { subject }.to have_run_command("git pull origin master")
+          end
+
+          it "pushes the changes to remote repo" do
+            expect { subject }.to have_run_command("git push origin master")
+          end
+
+          it "deletes the remote feature branch" do
+            expect { subject }.to have_run_command("git push origin :new-feature")
+          end
+
+          it "deletes the local feature branch" do
+            expect { subject }.to have_run_command("git branch -D new-feature")
           end
 
           it "forces a merge" do
+            expect { subject }.to have_said "Merging pull request ##{existing_pull_request.number}: '#{existing_pull_request.title}', from '#{existing_pull_request.head.label}' into '#{existing_pull_request.base.label}'", :notice
             expect { subject }.to have_said "Pull Request successfully merged.", :success
           end
         end
@@ -333,10 +355,6 @@ describe GitReflow do
               expect { subject }.to have_said "Merging pull request ##{existing_pull_request.number}: '#{existing_pull_request.title}', from '#{existing_pull_request.head.label}' into '#{existing_pull_request.base.label}'", :notice
             end
 
-            it "notifies user of the merge and performs it" do
-              expect { subject }.to have_said "Merging pull request ##{existing_pull_request.number}: '#{existing_pull_request.title}', from '#{existing_pull_request.head.label}' into '#{existing_pull_request.base.label}'", :notice
-            end
-
             it "commits the changes for the squash merge" do
               expect{ subject }.to have_said 'Pull Request successfully merged.', :success
             end
@@ -366,6 +384,10 @@ describe GitReflow do
                   allow(GitReflow::Config).to receive(:get).with("reflow.always-cleanup").and_return("false")
                 end
 
+                it "checks out the base branch" do
+                  expect { subject }.to have_run_command("git checkout master")
+                end
+
                 it "pulls changes from remote repo to local branch" do
                   expect { subject }.to have_run_command("git pull origin master")
                 end
@@ -382,6 +404,10 @@ describe GitReflow do
               context "always" do
                 before do
                   allow(GitReflow::Config).to receive(:get).with("reflow.always-cleanup").and_return("true")
+                end
+
+                it "checks out the base branch" do
+                  expect { subject }.to have_run_command("git checkout master")
                 end
 
                 it "pulls changes from remote repo to local branch" do
@@ -417,6 +443,10 @@ describe GitReflow do
                  question = ""
                  return_value
                 end
+              end
+
+              it "does checkout the local base branch" do
+                expect { subject }.to have_run_command("git checkout master")
               end
 
               it "does update the local repo with the new squash merge" do

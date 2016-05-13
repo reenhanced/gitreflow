@@ -169,41 +169,33 @@ module GitReflow
 
       def cleanup_failure_message
         GitReflow.say "Cleanup halted.  Local changes were not pushed to remote repo.".colorize(:red)
-        GitReflow.say "To reset and go back to your branch run \`git reset --hard origin/#{base_branch_name} && git checkout #{feature_branch_name}\`"
+        GitReflow.say "To reset and go back to your branch run \`git reset --hard origin/#{self.base_branch_name} && git checkout #{self.feature_branch_name}\`"
       end
 
       def merge!(options = {})
         if deliver? 
 
-          GitReflow.say "Merging pull request ##{number}: '#{title}', from '#{feature_branch_name}' into '#{base_branch_name}'", :notice
-
-          unless base_branch_name.index(':').nil?
-            base = base_branch_name[(base_branch_name.index(':') + 1)..-1]
-          end
-
-          unless feature_branch_name.index(':').nil?
-            feature = feature_branch_name[(feature_branch_name.index(':') + 1)..-1]
-          end
+          GitReflow.say "Merging pull request ##{self.number}: '#{self.title}', from '#{self.feature_branch_name}' into '#{self.base_branch_name}'", :notice
 
           GitReflow.update_current_branch
-          GitReflow.fetch_destination(base)
+          GitReflow.fetch_destination(self.base_branch_name)
 
           message = commit_message_for_merge
 
-          GitReflow.run_command_with_label "git checkout #{base}"
-          GitReflow.run_command_with_label "git merge --squash #{feature}"
+          GitReflow.run_command_with_label "git checkout #{self.base_branch_name}"
+          GitReflow.run_command_with_label "git merge --squash #{self.feature_branch_name}"
 
           GitReflow.append_to_squashed_commit_message(message) if message.length > 0
 
           if GitReflow.run_command_with_label 'git commit', with_system: true
             # Pulls merged changes from remote base_branch
-            GitReflow.run_command_with_label "git pull origin #{base}"
-            GitReflow.run_command_with_label "git push origin #{base}"
+            GitReflow.run_command_with_label "git pull origin #{self.base_branch_name}"
+            GitReflow.run_command_with_label "git push origin #{self.base_branch_name}"
             GitReflow.say "Pull Request successfully merged.", :success
 
             if cleanup_feature_branch?
-              GitReflow.run_command_with_label "git push origin :#{feature}"
-              GitReflow.run_command_with_label "git branch -D #{feature}"
+              GitReflow.run_command_with_label "git push origin :#{self.feature_branch_name}"
+              GitReflow.run_command_with_label "git branch -D #{self.feature_branch_name}"
               GitReflow.say "Nice job buddy."
             else
               cleanup_failure_message

@@ -1,6 +1,6 @@
 = git-reflow (2015 Fukuoka Ruby Award Winner)
 
-{<img src="https://circleci.com/gh/reenhanced/gitreflow/tree/master.svg?style=svg" alt="Circle CI" />}[https://circleci.com/gh/reenhanced/gitreflow/tree/master]
+{<img src="https://circleci.com/gh/reenhanced/gitreflow.svg?style=svg" alt="Circle CI" />}[https://circleci.com/gh/reenhanced/gitreflow]
 {<img src="https://img.shields.io/badge/git--reflow-v0.7.5-blue.svg?style=flat&link=https://github.com/reenhanced/gitreflow" alt="Git workflow powered by git-reflow" />}[https://github.com/reenhanced/gitreflow]
 
 http://reenhanced.com/reflow/git-reflow-deliver.gif

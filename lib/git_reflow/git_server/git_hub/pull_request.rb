@@ -8,8 +8,8 @@ module GitReflow
           self.number              = attributes.number
           self.description         = attributes[:body]
           self.html_url            = attributes.html_url
-          self.feature_branch_name = attributes.head.label
-          self.base_branch_name    = attributes.base.label
+          self.feature_branch_name = attributes.head.label[/[^:]+$/]
+          self.base_branch_name    = attributes.base.label[/[^:]+$/]
           self.source_object       = attributes
           self.build_status        = build.state
         end
@@ -85,7 +85,7 @@ module GitReflow
             super options
           else
             if deliver?
-              GitReflow.say "Merging pull request ##{number}: '#{title}', from '#{feature_branch_name}' into '#{base_branch_name}'", :notice
+              GitReflow.say "Merging pull request ##{self.number}: '#{self.title}', from '#{self.feature_branch_name}' into '#{self.base_branch_name}'", :notice
 
               unless options[:title] || options[:message]
 
@@ -134,14 +134,14 @@ module GitReflow
               )
 
               if merge_response.success?
-                GitReflow.run_command_with_label "git checkout #{base_branch_name}"
+                GitReflow.run_command_with_label "git checkout #{self.base_branch_name}"
                 # Pulls merged changes from remote base_branch
-                GitReflow.run_command_with_label "git pull origin #{base_branch_name}"
+                GitReflow.run_command_with_label "git pull origin #{self.base_branch_name}"
                 GitReflow.say "Pull Request successfully merged.", :success
 
                 if cleanup_feature_branch?
-                  GitReflow.run_command_with_label "git push origin :#{feature_branch_name}"
-                  GitReflow.run_command_with_label "git branch -D #{feature_branch_name}"
+                  GitReflow.run_command_with_label "git push origin :#{self.feature_branch_name}"
+                  GitReflow.run_command_with_label "git branch -D #{self.feature_branch_name}"
                   GitReflow.say "Nice job buddy."
                 else
                   cleanup_failure_message

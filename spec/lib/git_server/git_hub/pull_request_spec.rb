@@ -16,6 +16,8 @@ describe GitReflow::GitServer::GitHub::PullRequest do
   let(:existing_pull_requests)  { Fixture.new('pull_requests/pull_requests.json').to_json_hashie }
   let(:existing_pull_commits)   { Fixture.new('pull_requests/commits.json').to_json_hashie }
   let(:comment_author)          { 'octocat' }
+  let(:feature_branch_name)     { existing_pull_request.head.label[/[^:]+$/] }
+  let(:base_branch_name)        { existing_pull_request.base.label[/[^:]+$/] }
   let(:existing_pull_comments)  {
     Fixture.new('pull_requests/comments.json.erb',
                 repo_owner: user,
@@ -49,8 +51,8 @@ describe GitReflow::GitServer::GitHub::PullRequest do
     specify { expect(subject.number).to eql(existing_pull_request.number) }
     specify { expect(subject.description).to eql(existing_pull_request.body) }
     specify { expect(subject.html_url).to eql(existing_pull_request.html_url) }
-    specify { expect(subject.feature_branch_name).to eql(existing_pull_request.head.label) }
-    specify { expect(subject.base_branch_name).to eql(existing_pull_request.base.label) }
+    specify { expect(subject.feature_branch_name).to eql(feature_branch_name) }
+    specify { expect(subject.base_branch_name).to eql(base_branch_name) }
     specify { expect(subject.build_status).to eql('success') }
     specify { expect(subject.source_object).to eql(existing_pull_request) }
   end

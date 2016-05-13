@@ -119,8 +119,23 @@ describe GitReflow do
             allow(GitReflow::Config).to receive(:get).with("reflow.always-cleanup").and_return("true")
           end
 
+          it "checks out the base branch" do
+            expect { subject }.to have_run_command("git checkout master")
+          end
+
+          it "pulls changes from remote repo to local branch" do
+            expect { subject }.to have_run_command("git pull origin master")
+          end
+
+          it "deletes the remote feature branch" do
+            expect { subject }.to have_run_command("git push origin :new-feature")
+          end
+
+          it "deletes the local feature branch" do
+            expect { subject }.to have_run_command("git branch -D new-feature")
+          end
+
           it "forces a merge" do
-            expect(existing_pull_request).to receive(:good_to_merge?).and_return(true)
             expect { subject }.to have_said "Merging pull request ##{existing_pull_request.number}: '#{existing_pull_request.title}', from '#{existing_pull_request.head.label}' into '#{existing_pull_request.base.label}'", :notice
             expect { subject }.to have_said "Pull Request successfully merged.", :success
           end
@@ -208,8 +223,12 @@ describe GitReflow do
                   allow(GitReflow::Config).to receive(:get) { "false" }
                 end
 
+                it "doesn't checkout the base branch" do
+                  expect { subject }.to_not have_run_command("git checkout master")
+                end
+
                 it "doesn't push local squash merged base branch to remote repo" do
-                  expect { subject }.to_not have_run_command("git push origin master")
+                  expect { subject }.to_not have_run_command("git pull origin master")
                 end
 
                 it "doesn't delete the remote feature branch" do
@@ -226,8 +245,12 @@ describe GitReflow do
                   allow(GitReflow::Config).to receive(:get) { "true" }
                 end
 
+                it "doesn't checkout the base branch" do
+                  expect { subject }.to_not have_run_command("git checkout master")
+                end
+
                 it "doesn't push local squash merged base branch to remote repo" do
-                  expect { subject }.to_not have_run_command("git push origin master")
+                  expect { subject }.to_not have_run_command("git pull origin master")
                 end
 
                 it "doesn't delete the remote feature branch" do
@@ -261,8 +284,12 @@ describe GitReflow do
                 end
               end
 
-              it "doesn't update the remote repo with the new squash merge" do
-                expect { subject }.to_not have_run_command('git push origin master')
+              it "doesn't checkout the base branch" do
+                expect { subject }.to_not have_run_command('git checkout master')
+              end
+
+              it "doesn't pull changes from remote repo to local branch" do
+                expect { subject }.to_not have_run_command('git pull origin master')
               end
 
               it "doesn't delete the feature branch on the remote repo" do
@@ -387,6 +414,10 @@ describe GitReflow do
               context "always" do
                 before do
                   allow(GitReflow::Config).to receive(:get).with("reflow.always-cleanup").and_return("true")
+                end
+
+                it "checks out the base branch" do
+                  expect { subject }.to have_run_command("git checkout master")
                 end
 
                 it "pulls changes from remote repo to local branch" do

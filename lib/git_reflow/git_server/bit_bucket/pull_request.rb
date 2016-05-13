@@ -8,8 +8,8 @@ module GitReflow
           self.number              = attributes.id
           self.description         = attributes.body || attributes.description
           self.html_url            = "#{attributes.source.repository.links.html.href}/pull-request/#{self.number}"
-          self.feature_branch_name = attributes.source.branch.name
-          self.base_branch_name    = attributes.destination.branch.name
+          self.feature_branch_name = attributes.source.branch.name[/[^:]+$/]
+          self.base_branch_name    = attributes.destination.branch.name[/[^:]+$/]
           self.build_status        = nil
           self.source_object       = attributes
         end

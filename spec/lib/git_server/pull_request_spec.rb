@@ -355,7 +355,7 @@ describe GitReflow::GitServer::PullRequest do
       end
 
       it "displays relavent information about the pull request" do
-        expect{ subject }.to have_output("branches: new-external-feature -> reenhanced:master")
+        expect{ subject }.to have_output("branches: new-external-feature -> master")
         expect{ subject }.to have_output("number: #{pull_request.number}")
         expect{ subject }.to have_output("url: #{pull_request.html_url}")
         expect{ subject }.to have_output("reviewed by: #{"tito".colorize(:green)}, #{"ringo".colorize(:green)}")
@@ -385,7 +385,7 @@ describe GitReflow::GitServer::PullRequest do
       end
 
       it "displays relavent information about the pull request" do
-        expect{ subject }.to have_output("branches: new-external-feature -> reenhanced:master")
+        expect{ subject }.to have_output("branches: new-external-feature -> master")
         expect{ subject }.to have_output("number: #{pull_request.number}")
         expect{ subject }.to have_output("url: #{pull_request.html_url}")
         expect{ subject }.to have_output("reviewed by: #{"tito".colorize(:green)}, #{"ringo".colorize(:green)}, #{"Simon".colorize(:green)}, #{"Peter".colorize(:green)}, #{"Johnny".colorize(:green)}, #{"Jacob".colorize(:green)}")

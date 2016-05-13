@@ -171,33 +171,21 @@ module GitReflow
 
       def cleanup_failure_message
         GitReflow.say "Cleanup halted.  Local changes were not pushed to remote repo.", :deliver_halted
-        GitReflow.say "To reset and go back to your branch run \`git reset --hard origin/#{base_branch_name} && git checkout #{feature_branch_name}\`"
+        GitReflow.say "To reset and go back to your branch run \`git reset --hard origin/#{self.base_branch_name} && git checkout #{self.feature_branch_name}\`"
       end
 
       def merge!(options = {})
         if deliver?
 
-          GitReflow.say "Merging pull request ##{number}: '#{title}', from '#{feature_branch_name}' into '#{base_branch_name}'", :notice
-
-          if base_branch_name.index(':').nil?
-            base_branch = base_branch_name
-          else
-            base_branch = base_branch_name[(base_branch_name.index(':') + 1)..-1]
-          end
-
-          if feature_branch_name.index(':').nil?
-            feature_branch = feature_branch_name
-          else
-            feature_branch = feature_branch_name[(feature_branch_name.index(':') + 1)..-1]
-          end
+          GitReflow.say "Merging pull request ##{self.number}: '#{self.title}', from '#{self.feature_branch_name}' into '#{self.base_branch_name}'", :notice
 
           GitReflow.update_current_branch
-          GitReflow.fetch_destination(base_branch)
+          GitReflow.fetch_destination(self.base_branch_name)
 
           message = commit_message_for_merge
 
-          GitReflow.run_command_with_label "git checkout #{base_branch}"
-          GitReflow.run_command_with_label "git merge --squash #{feature_branch}"
+          GitReflow.run_command_with_label "git checkout #{self.base_branch_name}"
+          GitReflow.run_command_with_label "git merge --squash #{self.feature_branch}"
 
           GitReflow.append_to_squashed_commit_message(message) if message.length > 0
 
@@ -205,9 +193,9 @@ module GitReflow
             GitReflow.say "Pull Request successfully merged.", :success
 
             if cleanup_feature_branch?
-              GitReflow.run_command_with_label "git push origin #{base_branch}"
-              GitReflow.run_command_with_label "git push origin :#{feature_branch}"
-              GitReflow.run_command_with_label "git branch -D #{feature_branch}"
+              GitReflow.run_command_with_label "git push origin #{self.base_branch_name}"
+              GitReflow.run_command_with_label "git push origin :#{self.feature_branch_name}"
+              GitReflow.run_command_with_label "git branch -D #{self.feature_branch_name}"
               GitReflow.say "Nice job buddy."
             else
               cleanup_failure_message

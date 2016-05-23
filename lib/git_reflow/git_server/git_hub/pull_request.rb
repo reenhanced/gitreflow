@@ -93,7 +93,7 @@ module GitReflow
                 squash_merge_message_file = "#{GitReflow.git_root_dir}/.git/SQUASH_MSG"
 
                 File.open(squash_merge_message_file, 'w') do |file|
-                  file.write("#{self.title}\n#{self.body}\n")
+                  file.write("#{self.title}\n#{self.commit_message_for_merge}\n")
                 end
 
                 GitReflow.run("#{GitReflow::DEFAULT_EDITOR} #{squash_merge_message_file}", with_system: true)

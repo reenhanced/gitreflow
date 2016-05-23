@@ -191,7 +191,7 @@ module GitReflow
           GitReflow.append_to_squashed_commit_message(message) if message.length > 0
 
           if GitReflow.run_command_with_label 'git commit', with_system: true
-            GitReflow.say "Pull Request successfully merged.", :success
+            GitReflow.say "Pull request ##{self.number} successfully merged.", :success
 
             if cleanup_feature_branch?
               GitReflow.run_command_with_label "git push origin #{self.base_branch_name}"

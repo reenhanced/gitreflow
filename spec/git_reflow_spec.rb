@@ -262,7 +262,7 @@ describe GitReflow do
 
           it "forces a merge" do
             expect { subject }.to have_said "Merging pull request ##{existing_pull_request.number}: '#{existing_pull_request.title}', from '#{existing_pull_request.head.label}' into '#{existing_pull_request.base.label}'", :notice
-            expect { subject }.to have_said "Pull Request successfully merged.", :success
+            expect { subject }.to have_said "Pull request ##{existing_pull_request.number} successfully merged.", :success
           end
         end
       end
@@ -279,7 +279,7 @@ describe GitReflow do
         end
 
         it "ignores build status when not setup" do
-          expect { subject }.to have_said "Pull Request successfully merged.", :success
+          expect { subject }.to have_said "Pull request ##{existing_pull_request.number} successfully merged.", :success
         end
       end
 
@@ -323,7 +323,7 @@ describe GitReflow do
               end
 
               it "commits the changes if the build status is nil but has comments/approvals and no pending response" do
-                expect{ subject }.to have_said 'Pull Request successfully merged.', :success
+                expect{ subject }.to have_said "Pull request ##{existing_pull_request.number} successfully merged.", :success
               end
             end
 
@@ -343,7 +343,7 @@ describe GitReflow do
             end
 
             it "commits the changes for the squash merge" do
-              expect{ subject }.to have_said 'Pull Request successfully merged.', :success
+              expect{ subject }.to have_said "Pull request ##{existing_pull_request.number} successfully merged.", :success
             end
 
             context "and cleaning up feature branch" do

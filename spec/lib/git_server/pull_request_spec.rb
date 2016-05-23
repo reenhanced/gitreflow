@@ -413,7 +413,6 @@ describe GitReflow::GitServer::PullRequest do
 
     context "finds pull request but merge response fails" do
       before do
-        allow(Github).to receive(:new).and_return(github)
         allow(GitReflow).to receive(:git_server).and_return(git_server)
         allow(git_server).to receive(:connection).and_return(github)
         allow(git_server).to receive(:get_build_status).and_return(Struct.new(:state, :description, :target_url).new())
@@ -449,7 +448,7 @@ describe GitReflow::GitServer::PullRequest do
       end
 
       it "throws an exception without message" do
-        expect(subject.commit_message_for_merge).to eq("Description\nMerges #1\n\nLGTM given by: @simonzhu24, @reenhanced\n")
+        expect(subject.commit_message_for_merge).to eq("Description\nMerges #1\n\nLGTM given by: @simonzhu24, @reenhanced\n\n")
       end
     end
   end
@@ -478,7 +477,7 @@ describe GitReflow::GitServer::PullRequest do
             "Please enter your GitHub password (we do NOT store this): "                               => password,
             "Please enter your Enterprise site URL (e.g. https://github.company.com):"                 => enterprise_site,
             "Please enter your Enterprise API endpoint (e.g. https://github.company.com/api/v3):"      => enterprise_api,
-            "Would you like to cleanup your feature branch? "                                          => 'no',
+            "Would you like to push this branch to your remote repo and cleanup your feature branch? " => 'no',
             "Would you like to open it in your browser?"                                               => 'n',
             "This is the current status of your Pull Request. Are you sure you want to deliver? "      => 'n', 
             "Please enter your delivery commit title: (leaving blank will use default)"                => 'title',
@@ -497,22 +496,16 @@ describe GitReflow::GitServer::PullRequest do
 
     context "does cleanup feature branch" do
       before do
-        allow_any_instance_of(HighLine).to receive(:ask) do |terminal, question|
-          values = {
+        stub_command_line_inputs({
             "Please enter your GitHub username: "                                                      => user,
             "Please enter your GitHub password (we do NOT store this): "                               => password,
             "Please enter your Enterprise site URL (e.g. https://github.company.com):"                 => enterprise_site,
             "Please enter your Enterprise API endpoint (e.g. https://github.company.com/api/v3):"      => enterprise_api,
-            "Would you like to cleanup your feature branch? "                                          => 'yes',
-            "Would you like to open it in your browser?"                                               => 'n',
+            "Would you like to push this branch to your remote repo and cleanup your feature branch? " => 'yes',
             "This is the current status of your Pull Request. Are you sure you want to deliver? "      => 'n', 
             "Please enter your delivery commit title: (leaving blank will use default)"                => 'title',
             "Please enter your delivery commit message: (leaving blank will use default)"              => 'message'
-          }
-         return_value = values[question] || values[terminal]
-         question = ""
-         return_value
-        end
+        })
       end
 
       it "cleans up feature branch" do
@@ -545,7 +538,7 @@ describe GitReflow::GitServer::PullRequest do
             "Please enter your GitHub password (we do NOT store this): "                               => password,
             "Please enter your Enterprise site URL (e.g. https://github.company.com):"                 => enterprise_site,
             "Please enter your Enterprise API endpoint (e.g. https://github.company.com/api/v3):"      => enterprise_api,
-            "Would you like to cleanup your feature branch? "                                          => 'no',
+            "Would you like to push this branch to your remote repo and cleanup your feature branch? " => 'no',
             "Would you like to open it in your browser?"                                               => 'n',
             "This is the current status of your Pull Request. Are you sure you want to deliver? "      => 'n', 
             "Please enter your delivery commit title: (leaving blank will use default)"                => 'title',
@@ -570,7 +563,7 @@ describe GitReflow::GitServer::PullRequest do
             "Please enter your GitHub password (we do NOT store this): "                               => password,
             "Please enter your Enterprise site URL (e.g. https://github.company.com):"                 => enterprise_site,
             "Please enter your Enterprise API endpoint (e.g. https://github.company.com/api/v3):"      => enterprise_api,
-            "Would you like to cleanup your feature branch? "                                          => 'no',
+            "Would you like to push this branch to your remote repo and cleanup your feature branch? " => 'no',
             "Would you like to open it in your browser?"                                               => 'n',
             "This is the current status of your Pull Request. Are you sure you want to deliver? "      => 'y', 
             "Please enter your delivery commit title: (leaving blank will use default)"                => 'title',

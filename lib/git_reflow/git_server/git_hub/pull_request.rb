@@ -79,7 +79,7 @@ module GitReflow
         end
 
         def merge!(options = {})
-           
+
           # fallback to default merge process if user "forces" merge
           if(options[:skip_lgtm])
             super options
@@ -98,12 +98,12 @@ module GitReflow
 
                 GitReflow.run("#{GitReflow::DEFAULT_EDITOR} #{pull_request_msg_file}", with_system: true)
                 pr_msg = File.read(pull_request_msg_file).split(/[\r\n]|\r\n/).map(&:strip)
-        
+
                 title  = pr_msg.shift
 
                 File.delete(pull_request_msg_file)
 
-                unless pr_msg.empty? 
+                unless pr_msg.empty?
                   pr_msg.shift if pr_msg.first.empty?
                 end
 
@@ -122,9 +122,9 @@ module GitReflow
               message = self.commit_message_for_merge
 
               merge_response = GitReflow::GitServer::GitHub.connection.pull_requests.merge(
-                "#{GitReflow.git_server.class.remote_user}", 
-                "#{GitReflow.git_server.class.remote_repo_name}", 
-                "#{self.number}", 
+                "#{GitReflow.git_server.class.remote_user}",
+                "#{GitReflow.git_server.class.remote_repo_name}",
+                "#{self.number}",
                 {
                   "commit_title" => "#{options[:title]}",
                   "commit_message" => "#{options[:body]}",

@@ -21,7 +21,7 @@ Reflow automatically creates pull requests, ensures the code review is approved,
 Create and switch to new branch +nh-branchy-branch+:
   $ git reflow start nh-branchy-branch
 
-Create a pull request for your branch against +master+ or a custom +base_branch+: 
+Create a pull request for your branch against +master+ or a custom +base_branch+:
   $ git reflow review
 
 If your code is 'LGTM'd, squash merge to +base_branch+ and delete the feature branch:
@@ -108,9 +108,9 @@ This sets up a feature branch remotely and brings a local copy to your machine. 
 
   git reflow start nh-branch-name
 
-"Git Reflow Start" takes in the name of the new branch name that you want to create your feature on. 
-In addition, it takes in an optional flag of a base branch name. If you don't pass in this parameter, then it defaults to "master". 
-The base branch name is the base branch that you want to base your feature off of. 
+"Git Reflow Start" takes in the name of the new branch name that you want to create your feature on.
+In addition, it takes in an optional flag of a base branch name. If you don't pass in this parameter, then it defaults to "master".
+The base branch name is the base branch that you want to base your feature off of.
 This ensures that everytime you start a new base branch, it will be based off of your latest remote base.
 
   git reflow start nh-branch-name --base base-branch-name
@@ -132,9 +132,9 @@ After making commits to your branch, run +review+. Didn't push it up? We don't c
 
 git reflow review -t <title> -m <message>
 
-If you do not pass the title or message options to the review command, you will be given an editor to write your PR request commit message, similar to `git commit`. The first line is the title, the rest is the body. 
+If you do not pass the title or message options to the review command, you will be given an editor to write your PR request commit message, similar to `git commit`. The first line is the title, the rest is the body.
 
-  $ git reflow review         
+  $ git reflow review
 
   Review your PR:
   --------
@@ -154,13 +154,13 @@ If you do not pass the title or message options to the review command, you will 
 
   Successfully created pull request #6: rj_test
   Pull Request URL: https://github.com/meesterdude/gitreflow/pull/6
-  Would you like to open it in your browser? y
+  Would you like to push this branch to your remote repo and cleanup your feature branch? y
 
 
 [OSX/Ubuntu only]  You can automatically open your default web browser to the pull request.
                    This lets you edit the pull request with all of the detailed information you'll need before submitting it to your team.
 
-We output the pull request URL so you can distribute it to your team without leaving the terminal. 
+We output the pull request URL so you can distribute it to your team without leaving the terminal.
 
 ==== How it works
 Behind the scenes, this is how +review+ works:
@@ -198,7 +198,7 @@ This gives you details on who's reviewed your pull request. If someone has parti
 
 === Delivering approved code
 
-==== Note: This documentation is for the process for the github "remote" merge process via the github_api. 
+==== Note: This documentation is for the process for the github "remote" merge process via the github_api.
 For the bitbucket standard or github manual process (used when the user applies -f force flag to the "remote" merge via the github_api), please go to section B.
 
 ==== A:
@@ -266,12 +266,12 @@ This is what we do behind the scenes when you do +deliver+
 * Has the review been completed? Did we get a +LGTM+ from everyone who's participated?
 
   If not, show a list of authors that need to provide a +LGTM+.
-  
+
 * If the review is done, it's time to merge. Here's what happens:
 
-  First, we use the github_api gem to merge the pull request. 
+  First, we use the github_api gem to merge the pull request.
 
-  We call the public API for: 
+  We call the public API for:
 
     github.pull_requests.merge 'user-name', 'repo-name', 'number', payload
 
@@ -293,19 +293,19 @@ This is what we do behind the scenes when you do +deliver+
 
 * Next, we prompt you if you want to cleanup
   Would you like cleanup your feature branch?
-  
+
   If 'y', then we'll update the +base_branch+ and delete the feature branch
-    
+
     git pull origin #{base_branch}
     git push origin :#{feature_branch}
     git branch -D #{feature_branch}
-  
+
   If 'n', then just stop here. The user can clean up his branch locally.
 
     And we're done.
 
 ==== Note: This documentation is for the bitbucket standard or github manual process (used when the user applies -f force flag to the "remote" merge via the github_api).
-  
+
 ==== B:
   This is what the process looks like for bitbucket or if you force deliver:
 
@@ -340,17 +340,17 @@ This is what we do behind the scenes when you do +deliver+
   Enforces LGTM before deliver, even with no comments.
   Removes the need to review the pull request yourself if you make a
   comment.
-  
+
   Better error message if setup fails.
-  
+
   Bug fixes.
-  
+
   Closes #36
-  
+
   LGTM given by: @codenamev
-  
+
   Squashed commit of the following:
-  
+
   commit f90e111
   Author: Nicholas Hance <nhance@reenhanced.com>
   Date:   Thu Jul 11 15:33:29 2013 -0400
@@ -364,7 +364,7 @@ This is what we do behind the scenes when you do +deliver+
 
   Next, squash merge our feature branch
     git merge --squash nh-branch-name
-    
+
   Now, we'll apply a little magic so we have a great commit message by default. Your editor will open and you'll see a nice default for your commit message based on the pull request body.
 
   Once you've saved the commit, prompt the user to see if we should continue
@@ -404,7 +404,7 @@ http://reenhanced.com/images/reflow.png
 * If you make a new commit in your branch, you require another review.
 
 * Depending on the minimumApprovals that you specify in your ~/.gitconfig.reflow (created upon reflow setup), you can have the following:
-  
+
   "" : All participants in a pull request must approve the pull request.
   "0": 0 approvals required for you to merge PR.
   "1": You need a minimum of 1 LGTM and the last comment on your PR must be an LGTM.

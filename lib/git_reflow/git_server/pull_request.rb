@@ -185,7 +185,8 @@ module GitReflow
           message = commit_message_for_merge
 
           GitReflow.run_command_with_label "git checkout #{self.base_branch_name}"
-          GitReflow.run_command_with_label "git merge --squash #{self.feature_branch}"
+          GitReflow.run_command_with_label "git pull origin #{self.base_branch_name}"
+          GitReflow.run_command_with_label "git merge --squash #{self.feature_branch_name}"
 
           GitReflow.append_to_squashed_commit_message(message) if message.length > 0
 

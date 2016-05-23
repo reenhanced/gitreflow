@@ -79,9 +79,9 @@ module GithubHelpers
         to_return(:body => Fixture.new('pull_requests/pull_requests.json').to_s, :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
       # Stubbing pull request comments
       stub_get("/repos/#{user}/#{repo}/pulls/#{pull.number}/comments?").with(:query => {'access_token' => 'a1b2c3d4e5f6g7h8i9j0'}).
-        to_return(:body => Fixture.new('pull_requests/comments.json.erb', repo_owner: user, repo_name: repo, comments: [{author: user}], pull_request_number: pull.number).to_json.to_s, :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
+        to_return(:body => Fixture.new('pull_requests/comments.json.erb', repo_owner: user, repo_name: repo, comments: [{author: user}], pull_request_number: pull.number).to_json.to_s, :status => 201, :headers => {'Accept' => 'application/vnd.github.v3+json,application/vnd.github.beta+json;q=0.5,application/json;q=0.1', :content_type => "application/json; charset=utf-8"})
       stub_get("/repos/#{user}/pulls/#{pull.number}/comments?").with(:query => {'access_token' => 'a1b2c3d4e5f6g7h8i9j0'}).
-        to_return(:body => Fixture.new('pull_requests/comments.json.erb', repo_owner: user, repo_name: repo, comments: [{author: user}], pull_request_number: pull.number).to_s, :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})
+        to_return(:body => Fixture.new('pull_requests/comments.json.erb', repo_owner: user, repo_name: repo, comments: [{author: user}], pull_request_number: pull.number).to_s, :status => 201, :headers => {'Accept' => 'application/vnd.github.v3+json,application/vnd.github.beta+json;q=0.5,application/json;q=0.1', :content_type => "application/json; charset=utf-8"})
       # Stubbing issue comments
       stub_get("/repos/#{user}/issues/#{pull.number}/comments?").with(:query => {'access_token' => 'a1b2c3d4e5f6g7h8i9j0'}).
         to_return(:body => Fixture.new('issues/comments.json.erb', repo_owner: user, repo_name: repo, comments: [{author: user}], pull_request_number: pull.number).to_s, :status => 201, :headers => {:content_type => "application/json; charset=utf-8"})

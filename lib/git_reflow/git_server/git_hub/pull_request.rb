@@ -88,7 +88,6 @@ module GitReflow
               GitReflow.say "Merging pull request ##{self.number}: '#{self.title}', from '#{self.feature_branch_name}' into '#{self.base_branch_name}'", :notice
 
               unless options[:title] || options[:message]
-
                 # prompts user for commit_title and commit_message
                 squash_merge_message_file = "#{GitReflow.git_root_dir}/.git/SQUASH_MSG"
 
@@ -115,11 +114,7 @@ module GitReflow
                 GitReflow.say "Title:\n#{options[:title]}\n\n"
                 GitReflow.say "Body:\n#{options[:body]}\n"
                 GitReflow.say "--------\n"
-
-                create_pull_request = ask("Submit pull request? (Y)") =~ /y/i
               end
-
-              message = self.commit_message_for_merge
 
               merge_response = GitReflow::GitServer::GitHub.connection.pull_requests.merge(
                 "#{GitReflow.git_server.class.remote_user}",

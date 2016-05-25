@@ -94,7 +94,7 @@ describe GitReflow::GitServer::GitHub do
         end
 
         it "notifies the user of successful setup" do
-          expect { subject }.to have_said "\nYour GitHub account was successfully setup!", :success
+          expect { subject }.to have_said "Your GitHub account was successfully setup!", :success
         end
 
         it "creates a new GitHub oauth token" do
@@ -156,7 +156,7 @@ describe GitReflow::GitServer::GitHub do
         end
 
         it "notifies user of invalid login details" do
-          expect { subject }.to have_said "\nGithub Authentication Error: #{Github::Error::Unauthorized.new(unauthorized_error_response).inspect}", :error
+          expect { subject }.to have_said "Github Authentication Error: #{Github::Error::Unauthorized.new(unauthorized_error_response).inspect}", :error
         end
       end
     end

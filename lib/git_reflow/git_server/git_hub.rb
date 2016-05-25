@@ -115,15 +115,20 @@ module GitReflow
 
           rescue ::Github::Error::Unauthorized => e
             if e.inspect.to_s.include?('two-factor')
-              two_factor_code = ask("Please enter your two-factor authentication code: ")
-              self.authenticate options.merge({user: gh_user, password: gh_password, two_factor_auth_code: two_factor_code})
+              begin
+                # dummy request to trigger a 2FA SMS since a HTTP GET won't do it
+                @connection.oauth.create scopes: ['repo'], note: "thank Github for not making this straightforward"
+              ensure
+                two_factor_code = ask("Please enter your two-factor authentication code: ")
+                self.authenticate options.merge({user: gh_user, password: gh_password, two_factor_auth_code: two_factor_code})
+              end
             else
-              GitReflow.say "\nGithub Authentication Error: #{e.inspect}", :error
+              GitReflow.say "Github Authentication Error: #{e.inspect}", :error
             end
           rescue StandardError => e
-            GitReflow.say "\nInvalid username or password: #{e.inspect}", :error
+            GitReflow.say "Invalid username or password: #{e.inspect}", :error
           else
-            GitReflow.say "\nYour GitHub account was successfully setup!", :success
+            GitReflow.say "Your GitHub account was successfully setup!", :success
           end
         end
 

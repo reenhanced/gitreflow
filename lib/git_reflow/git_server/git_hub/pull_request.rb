@@ -95,7 +95,7 @@ module GitReflow
                   file.write("#{self.title}\n#{self.commit_message_for_merge}\n")
                 end
 
-                GitReflow.run("#{GitReflow::DEFAULT_EDITOR} #{squash_merge_message_file}", with_system: true)
+                GitReflow.run("#{GitReflow.git_editor_command} #{squash_merge_message_file}", with_system: true)
                 merge_message = File.read(squash_merge_message_file).split(/[\r\n]|\r\n/).map(&:strip)
 
                 title  = merge_message.shift

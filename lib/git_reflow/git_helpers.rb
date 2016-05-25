@@ -9,6 +9,10 @@ module GitReflow
       @git_root_dir ||= run('git rev-parse --show-toplevel', loud: false).strip
     end
 
+    def git_editor_command
+      @git_editor_comand ||= GitReflow::Config.get('core.editor')
+    end
+
     def remote_user
       return "" unless "#{GitReflow::Config.get('remote.origin.url')}".length > 0
       extract_remote_user_and_repo_from_remote_url(GitReflow::Config.get('remote.origin.url'))[:user]

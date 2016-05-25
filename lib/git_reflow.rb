@@ -56,14 +56,14 @@ module GitReflow
             file.write(options[:title] || GitReflow.current_branch)
           end
 
-          GitReflow.run("#{DEFAULT_EDITOR} #{pull_request_msg_file}", with_system: true)
+          GitReflow.run("#{GitReflow.git_editor_comand} #{pull_request_msg_file}", with_system: true)
 
           pr_msg = File.read(pull_request_msg_file).split(/[\r\n]|\r\n/).map(&:strip)
           title  = pr_msg.shift
 
           File.delete(pull_request_msg_file)
 
-          unless pr_msg.empty? 
+          unless pr_msg.empty?
             pr_msg.shift if pr_msg.first.empty?
           end
 

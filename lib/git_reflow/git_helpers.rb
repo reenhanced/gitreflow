@@ -10,7 +10,7 @@ module GitReflow
     end
 
     def git_editor_command
-      @git_editor_comand ||= GitReflow::Config.get('core.editor')
+      @git_editor_command ||= GitReflow::Config.get('core.editor')
     end
 
     def remote_user

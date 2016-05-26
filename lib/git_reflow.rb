@@ -56,7 +56,7 @@ module GitReflow
             file.write(options[:title] || GitReflow.current_branch)
           end
 
-          GitReflow.run("#{GitReflow.git_editor_comand} #{pull_request_msg_file}", with_system: true)
+          GitReflow.run("#{GitReflow.git_editor_command} #{pull_request_msg_file}", with_system: true)
 
           pr_msg = File.read(pull_request_msg_file).split(/[\r\n]|\r\n/).map(&:strip)
           title  = pr_msg.shift

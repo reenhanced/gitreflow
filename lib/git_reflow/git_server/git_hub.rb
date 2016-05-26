@@ -118,6 +118,7 @@ module GitReflow
               begin
                 # dummy request to trigger a 2FA SMS since a HTTP GET won't do it
                 @connection.oauth.create scopes: ['repo'], note: "thank Github for not making this straightforward"
+              rescue ::Github::Error::Unauthorized
               ensure
                 two_factor_code = ask("Please enter your two-factor authentication code: ")
                 self.authenticate options.merge({user: gh_user, password: gh_password, two_factor_auth_code: two_factor_code})

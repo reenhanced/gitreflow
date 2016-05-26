@@ -1,5 +1,32 @@
 # Change Log
 
+## [0.8.0](https://github.com/reenhanced/gitreflow/tree/v0.8.0) (2016-05-26)
+
+[Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.7.5...v0.8.0)
+
+**Implemented enhancements:**
+
+- Upgrade RSpec [\#162](https://github.com/reenhanced/gitreflow/issues/162)
+
+**Closed issues:**
+
+- Setup doesn't work with GH two-factor turned on [\#175](https://github.com/reenhanced/gitreflow/issues/175)
+- --base switch does not work? [\#174](https://github.com/reenhanced/gitreflow/issues/174)
+- Idea: git reflow promote \<promotion branch\> [\#168](https://github.com/reenhanced/gitreflow/issues/168)
+- add changelog support [\#100](https://github.com/reenhanced/gitreflow/issues/100)
+- Always have reflow start create a branch from master [\#66](https://github.com/reenhanced/gitreflow/issues/66)
+
+**Merged pull requests:**
+
+- Cleanup new Github merge for next release [\#172](https://github.com/reenhanced/gitreflow/pull/172) ([codenamev](https://github.com/codenamev))
+- Bug Fix for Merging "reenhanced:master" instead of "master" [\#171](https://github.com/reenhanced/gitreflow/pull/171) ([simonzhu24](https://github.com/simonzhu24))
+- Sz issue/149 fix commit message to merge instead of close [\#170](https://github.com/reenhanced/gitreflow/pull/170) ([simonzhu24](https://github.com/simonzhu24))
+- Fixing Refresh to take in parameter for "base" instead of "branch" [\#169](https://github.com/reenhanced/gitreflow/pull/169) ([simonzhu24](https://github.com/simonzhu24))
+- \[Issue \#66\] Always have reflow start create a branch from master [\#167](https://github.com/reenhanced/gitreflow/pull/167) ([simonzhu24](https://github.com/simonzhu24))
+- \[162\] Updating Rspec Version to 3.3.0 [\#165](https://github.com/reenhanced/gitreflow/pull/165) ([simonzhu24](https://github.com/simonzhu24))
+- \[Issue \#66 + \#74\] Implementing "Git Reflow Refresh" [\#164](https://github.com/reenhanced/gitreflow/pull/164) ([simonzhu24](https://github.com/simonzhu24))
+- \[issue: 162\] Updating Rspecs: Use "Allow" instead of "Stub" [\#163](https://github.com/reenhanced/gitreflow/pull/163) ([simonzhu24](https://github.com/simonzhu24))
+
 ## [v0.7.5](https://github.com/reenhanced/gitreflow/tree/v0.7.5) (2016-04-14)
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.7.4...v0.7.5)
 

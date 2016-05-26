@@ -1,7 +1,14 @@
 # Change Log
 
-## [0.8.0](https://github.com/reenhanced/gitreflow/tree/v0.8.0) (2016-05-26)
+## [v0.8.1](https://github.com/reenhanced/gitreflow/tree/v0.8.1)
 
+[Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.8.0...v0.8.1)
+
+**Closed issues:**
+
+- Unable to review with latest changes to editor handling [\#176](https://github.com/reenhanced/gitreflow/issues/176)
+
+## [v0.8.0](https://github.com/reenhanced/gitreflow/tree/v0.8.0) (2016-05-26)
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.7.5...v0.8.0)
 
 **Implemented enhancements:**

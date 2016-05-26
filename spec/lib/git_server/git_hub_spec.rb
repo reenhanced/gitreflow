@@ -73,7 +73,7 @@ describe GitReflow::GitServer::GitHub do
 
   describe '#authenticate' do
     let(:github)                { GitReflow::GitServer::GitHub.new({}) }
-    let!(:github_api)           { Github.new }
+    let!(:github_api)           { Github::Client.new }
     let(:github_authorizations) { Github::Client::Authorizations.new }
     subject                     { github.authenticate }
 
@@ -88,13 +88,13 @@ describe GitReflow::GitServer::GitHub do
       context 'with valid GitHub credentials' do
 
         before do
-          allow(Github).to receive(:new).and_return(github_api)
+          allow(Github::Client).to receive(:new).and_return(github_api)
           allow(github_authorizations).to receive(:authenticated?).and_return(true)
           allow(github_api.oauth).to receive(:create).with({ scopes: ['repo'], note: "git-reflow (#{hostname})" }).and_return(oauth_token_hash)
         end
 
         it "notifies the user of successful setup" do
-          expect { subject }.to have_output "\nYour GitHub account was successfully setup!"
+          expect { subject }.to have_said "Your GitHub account was successfully setup!", :success
         end
 
         it "creates a new GitHub oauth token" do
@@ -152,11 +152,11 @@ describe GitReflow::GitServer::GitHub do
         }}
 
         before do
-          expect(Github).to receive(:new).and_raise Github::Error::Unauthorized.new(unauthorized_error_response)
+          allow(Github::Client).to receive(:new).and_raise Github::Error::Unauthorized.new(unauthorized_error_response)
         end
 
         it "notifies user of invalid login details" do
-          expect { subject }.to have_output "\nGithub Authentication Error: #{Github::Error::Unauthorized.new(unauthorized_error_response).inspect}"
+          expect { subject }.to have_said "Github Authentication Error: #{Github::Error::Unauthorized.new(unauthorized_error_response).inspect}", :error
         end
       end
     end

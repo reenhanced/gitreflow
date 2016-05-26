@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe GitReflow do
   let(:git_server)       { GitReflow::GitServer::GitHub.new {} }
-  let(:github)           { Github.new basic_auth: "#{user}:#{password}" }
+  let!(:github)          { Github.new basic_auth: "#{user}:#{password}" }
   let(:user)             { 'reenhanced' }
   let(:password)         { 'shazam' }
   let(:oauth_token_hash) { Hashie::Mash.new({ token: 'a1b2c3d4e5f6g7h8i9j0', note: 'hostname.local git-reflow'}) }
@@ -29,7 +29,7 @@ describe GitReflow do
         "Please enter your GitHub password (we do NOT store this): "                               => password,
         "Please enter your Enterprise site URL (e.g. https://github.company.com):"                 => enterprise_site,
         "Please enter your Enterprise API endpoint (e.g. https://github.company.com/api/v3):"      => enterprise_api,
-        "Would you like to cleanup your feature branch? "                                          => 'yes',
+        "Would you like to push this branch to your remote repo and cleanup your feature branch? " => 'yes',
         "Would you like to open it in your browser?"                                               => 'n',
         "This is the current status of your Pull Request. Are you sure you want to deliver? "       => 'yes', 
         "Please enter your delivery commit title: (leaving blank will use default)"                => 'title',
@@ -48,7 +48,7 @@ describe GitReflow do
       allow(GitReflow).to receive(:current_branch).and_return(feature_branch)
       allow(GitReflow).to receive(:destination_branch).and_return(base_branch)
 
-      allow(Github).to receive(:new).and_return(github)
+      allow(Github::Client).to receive(:new).and_return(github)
       allow(GitReflow).to receive(:git_server).and_return(git_server)
       allow(git_server).to receive(:connection).and_return(github)
       allow(git_server).to receive(:get_build_status).and_return(Struct.new(:state, :description, :target_url).new())
@@ -56,20 +56,18 @@ describe GitReflow do
 
     context 'with no existing pull request' do
       before { allow(git_server).to receive(:find_open_pull_request).with({from: feature_branch, to: base_branch}).and_return(nil) }
-      it     { expect{ subject }.to have_output "\n[notice] No pull request exists for #{feature_branch} -> #{base_branch}" }
-      it     { expect{ subject }.to have_output "[notice] Run 'git reflow review #{base_branch}' to start the review process" }
+      it     { expect{ subject }.to have_said "\nNo pull request exists for #{feature_branch} -> #{base_branch}", :notice }
+      it     { expect{ subject }.to have_said "Run 'git reflow review #{base_branch}' to start the review process", :notice }
     end
 
     context 'with an existing pull request' do
       before do
         allow(git_server).to receive(:find_open_pull_request).with({from: feature_branch, to: base_branch}).and_return(existing_pull_request)
+        expect(existing_pull_request).to receive(:display_pull_request_summary)
       end
 
       it 'displays a summary of the pull request and asks to open it in the browser' do
-        expect(existing_pull_request).to receive(:display_pull_request_summary)
-        expect(GitReflow).to receive(:ask_to_open_in_browser).with(existing_pull_request.html_url)
-        subject
-        expect($output).to include "Here's the status of your review:"
+        expect{ subject }.to have_said "Here's the status of your review:"
       end
     end
   end
@@ -123,7 +121,7 @@ describe GitReflow do
       it "successfully creates a pull request if I do not provide one" do
         allow(existing_pull_request).to receive(:title).and_return(inputs[:title])
         expect(github).to receive(:create_pull_request).with(inputs.except(:state).symbolize_keys).and_return(existing_pull_request)
-        expect { subject }.to have_output "Successfully created pull request #1: #{inputs[:title]}\nPull Request URL: https://github.com/#{user}/#{repo}/pulls/1\n"
+        expect { subject }.to have_said "Successfully created pull request #1: #{inputs[:title]}\nPull Request URL: https://github.com/#{user}/#{repo}/pulls/1\n", :success
       end
 
       context "when providing only a title" do
@@ -134,7 +132,7 @@ describe GitReflow do
 
         it "successfully creates a pull request with only the provided title" do
           expect(github).to receive(:create_pull_request).with(inputs.except(:state).symbolize_keys).and_return(existing_pull_request)
-          expect { subject }.to have_output "Successfully created pull request #1: #{inputs[:title]}\nPull Request URL: https://github.com/#{user}/#{repo}/pulls/1\n"
+          expect { subject }.to have_said "Successfully created pull request #1: #{inputs[:title]}\nPull Request URL: https://github.com/#{user}/#{repo}/pulls/1\n", :success
         end
       end
 
@@ -148,7 +146,7 @@ describe GitReflow do
           expected_options = inputs.except(:state)
           expected_options[:title] = inputs[:body]
           expect(github).to receive(:create_pull_request).with(expected_options.symbolize_keys).and_return(existing_pull_request)
-          expect { subject }.to have_output "Successfully created pull request #1: #{expected_options[:title]}\nPull Request URL: https://github.com/#{user}/#{repo}/pulls/1\n"
+          expect { subject }.to have_said "Successfully created pull request #1: #{expected_options[:title]}\nPull Request URL: https://github.com/#{user}/#{repo}/pulls/1\n", :success
         end
       end
     end
@@ -165,11 +163,6 @@ describe GitReflow do
 
       it "displays a pull request summary for the existing pull request" do
         expect(existing_pull_request).to receive(:display_pull_request_summary)
-        subject
-      end
-
-      it "asks to open the pull request in the browser" do
-        expect(GitReflow).to receive(:ask_to_open_in_browser).with(existing_pull_request.html_url)
         subject
       end
     end
@@ -199,7 +192,6 @@ describe GitReflow do
     before do
       allow(GitReflow::GitServer::GitHub).to receive_message_chain(:connection, :pull_requests, :merge).and_return(merge_response)
       allow(merge_response).to receive(:success?).and_return(true)
-      allow_any_instance_of(Object).to receive(:strip).and_return("")
 
       module Kernel
         def system(cmd)
@@ -270,7 +262,7 @@ describe GitReflow do
 
           it "forces a merge" do
             expect { subject }.to have_said "Merging pull request ##{existing_pull_request.number}: '#{existing_pull_request.title}', from '#{existing_pull_request.head.label}' into '#{existing_pull_request.base.label}'", :notice
-            expect { subject }.to have_said "Pull Request successfully merged.", :success
+            expect { subject }.to have_said "Pull request ##{existing_pull_request.number} successfully merged.", :success
           end
         end
       end
@@ -287,7 +279,7 @@ describe GitReflow do
         end
 
         it "ignores build status when not setup" do
-          expect { subject }.to have_said "Pull Request successfully merged.", :success
+          expect { subject }.to have_said "Pull request ##{existing_pull_request.number} successfully merged.", :success
         end
       end
 
@@ -331,7 +323,7 @@ describe GitReflow do
               end
 
               it "commits the changes if the build status is nil but has comments/approvals and no pending response" do
-                expect{ subject }.to have_said 'Pull Request successfully merged.', :success
+                expect{ subject }.to have_said "Pull request ##{existing_pull_request.number} successfully merged.", :success
               end
             end
 
@@ -346,17 +338,12 @@ describe GitReflow do
               end
             end
 
-            it "doesn't always deliver" do
-              expect(GitReflow::Config).to receive(:get).with("reflow.always-deliver").and_return("false")
-              expect { subject }.to have_said "Merge aborted", :deliver_halted
-            end
-
             it "notifies user of the merge and performs it" do
               expect { subject }.to have_said "Merging pull request ##{existing_pull_request.number}: '#{existing_pull_request.title}', from '#{existing_pull_request.head.label}' into '#{existing_pull_request.base.label}'", :notice
             end
 
             it "commits the changes for the squash merge" do
-              expect{ subject }.to have_said 'Pull Request successfully merged.', :success
+              expect{ subject }.to have_said "Pull request ##{existing_pull_request.number} successfully merged.", :success
             end
 
             context "and cleaning up feature branch" do
@@ -367,7 +354,7 @@ describe GitReflow do
                     "Please enter your GitHub password (we do NOT store this): "                               => password,
                     "Please enter your Enterprise site URL (e.g. https://github.company.com):"                 => enterprise_site,
                     "Please enter your Enterprise API endpoint (e.g. https://github.company.com/api/v3):"      => enterprise_api,
-                    "Would you like to cleanup your feature branch? "                                          => 'yes',
+                    "Would you like to push this branch to your remote repo and cleanup your feature branch? " => 'yes',
                     "Would you like to open it in your browser?"                                               => 'no',
                     "This is the current status of your Pull Request. Are you sure you want to deliver? "      => 'y', 
                     "Please enter your delivery commit title: (leaving blank will use default)"                => 'title',
@@ -433,7 +420,7 @@ describe GitReflow do
                     "Please enter your GitHub password (we do NOT store this): "                               => password,
                     "Please enter your Enterprise site URL (e.g. https://github.company.com):"                 => enterprise_site,
                     "Please enter your Enterprise API endpoint (e.g. https://github.company.com/api/v3):"      => enterprise_api,
-                    "Would you like to cleanup your feature branch? "                                          => 'no',
+                    "Would you like to push this branch to your remote repo and cleanup your feature branch? " => 'no',
                     "Would you like to open it in your browser?"                                               => 'no',
                     "This is the current status of your Pull Request. Are you sure you want to deliver? "      => 'y', 
                     "Please enter your delivery commit title: (leaving blank will use default)"                => 'title',

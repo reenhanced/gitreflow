@@ -52,8 +52,8 @@ describe GitReflow::GitServer::BitBucket do
         allow(GitReflow::Config).to receive(:get).with('bitbucket.user', local: false).and_return(user)
         allow(GitReflow::Config).to receive(:get).with('bitbucket.api-key', reload: true, local: false).and_return(api_key)
         allow(GitReflow::Config).to receive(:get).with('reflow.local-projects', all: true).and_return('')
-        expect { subject }.to have_output "\nYour BitBucket account was already setup with:"
-        expect { subject }.to have_output "\tUser Name: #{user}"
+        expect { subject }.to have_said "\nYour BitBucket account was already setup with:"
+        expect { subject }.to have_said "\tUser Name: #{user}"
       end
     end
 
@@ -70,9 +70,9 @@ describe GitReflow::GitServer::BitBucket do
         end
 
         it "prompts me to setup an API key" do
-          expect { subject }.to have_output "\nIn order to connect your BitBucket account,"
-          expect { subject }.to have_output "you'll need to generate an API key for your team"
-          expect { subject }.to have_output "Visit https://bitbucket.org/account/user/reenhanced/api-key/, to generate it\n"
+          expect { subject }.to have_said "\nIn order to connect your BitBucket account,"
+          expect { subject }.to have_said "you'll need to generate an API key for your team"
+          expect { subject }.to have_said "Visit https://bitbucket.org/account/user/reenhanced/api-key/, to generate it\n"
         end
       end
     end

@@ -86,9 +86,9 @@ module GitReflow
       def authenticate(options = {silent: false})
         if connection and self.class.oauth_token.length > 0
           unless options[:silent]
-            puts "Your GitHub account was already setup with: "
-            puts "\tUser Name: #{self.class.user}"
-            puts "\tEndpoint: #{self.class.api_endpoint}"
+            GitReflow.say "Your GitHub account was already setup with: "
+            GitReflow.say "\tUser Name: #{self.class.user}"
+            GitReflow.say "\tEndpoint: #{self.class.api_endpoint}"
           end
         else
           begin
@@ -107,6 +107,9 @@ module GitReflow
             previous_authorizations = @connection.oauth.all.select {|auth| auth.note == "git-reflow (#{run('hostname', loud: false).strip})" }
             if previous_authorizations.any?
               authorization = previous_authorizations.last
+              GitReflow.say "You have previously setup git-reflow on this machine, but we can no longer find the stored token.", :error
+              GitReflow.say "Please visit https://github.com/settings/tokens and delete the token for: git-reflow (#{run('hostname', loud: false).strip})", :notice
+              raise "Setup could not be completed."
             else
               authorization = @connection.oauth.create scopes: ['repo'], note: "git-reflow (#{run('hostname', loud: false).strip})"
             end
@@ -115,15 +118,21 @@ module GitReflow
 
           rescue ::Github::Error::Unauthorized => e
             if e.inspect.to_s.include?('two-factor')
-              two_factor_code = ask("Please enter your two-factor authentication code: ")
-              self.authenticate options.merge({user: gh_user, password: gh_password, two_factor_auth_code: two_factor_code})
+              begin
+                # dummy request to trigger a 2FA SMS since a HTTP GET won't do it
+                @connection.oauth.create scopes: ['repo'], note: "thank Github for not making this straightforward"
+              rescue ::Github::Error::Unauthorized
+              ensure
+                two_factor_code = ask("Please enter your two-factor authentication code: ")
+                self.authenticate options.merge({user: gh_user, password: gh_password, two_factor_auth_code: two_factor_code})
+              end
             else
-              puts "\nGithub Authentication Error: #{e.inspect}"
+              GitReflow.say "Github Authentication Error: #{e.inspect}", :error
             end
           rescue StandardError => e
-            puts "\nInvalid username or password: #{e.inspect}"
+            raise "We were unable to authenticate with Github."
           else
-            puts "\nYour GitHub account was successfully setup!"
+            GitReflow.say "Your GitHub account was successfully setup!", :success
           end
         end
 

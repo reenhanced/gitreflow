@@ -7,7 +7,8 @@ module GitReflow
       error:          :red,
       deliver_halted: :red,
       review_halted:  :red,
-      success:        :green
+      success:        :green,
+      plain:          :white
     }
 
     def run(command, options = {})
@@ -32,23 +33,10 @@ module GitReflow
 
     def say(message, label_type = :plain)
       if COLOR_FOR_LABEL[label_type]
-        puts "[#{ label_type.to_s.gsub('_', ' ').colorize(COLOR_FOR_LABEL[label_type]) }] #{message}"
+        label = (label_type.to_s == "plain") ? "" : "[#{ label_type.to_s.gsub('_', ' ').colorize(COLOR_FOR_LABEL[label_type]) }] "
+        puts "#{label}#{message}"
       else
         puts message
-      end
-    end
-
-    # WARNING: this currently only supports OS X and UBUNTU
-    def ask_to_open_in_browser(url)
-      if OS.unix?
-        open_in_browser = ask "Would you like to open it in your browser? "
-        if open_in_browser =~ /^y/i
-          if OS.mac?
-            run "open #{url}"
-          else
-            run "xdg-open #{url}"
-          end
-        end
       end
     end
 

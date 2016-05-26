@@ -7,6 +7,6 @@ appraise "latest-github-api-release" do
 end
 
 appraise "current-reflow-locked-versions" do
-  gem "gli", "2.13.2"
-  gem "github_api", "0.12.4"
+  gem "gli", "2.14.0"
+  gem "github_api", "0.14.0"
 end

@@ -99,12 +99,12 @@ module GitReflow
           "url"         => self.html_url
         }
 
-        notices = ""
+        notices = []
         reviewed_by = []
 
         # check for CI build status
         if self.build_status
-          notices << "[notice] Your build status is not successful: #{self.build.url}.\n" unless self.build.state == "success"
+          notices << "Your build status is not successful: #{self.build.url}.\n" unless self.build.state == "success"
           summary_data.merge!( "Build status" => GitReflow.git_server.colorized_build_description(self.build.state, self.build.description) )
         end
 
@@ -117,9 +117,9 @@ module GitReflow
             reviewed_by.map! { |author| approvals.include?(author.uncolorize) ? author.colorize(:green) : author }
           end
 
-          notices << "[notice] You still need a LGTM from: #{reviewers_pending_response.join(', ')}\n" if reviewers_pending_response.any?
+          notices << "You still need a LGTM from: #{reviewers_pending_response.join(', ')}\n" if reviewers_pending_response.any?
         else
-          notices << "[notice] No one has reviewed your pull request.\n"
+          notices << "No one has reviewed your pull request.\n"
         end
 
         summary_data['reviewed by'] = reviewed_by.join(', ')
@@ -130,7 +130,9 @@ module GitReflow
           printf string_format, "#{name}:", summary_data[name]
         end
 
-        puts "\n#{notices}" unless notices.empty?
+        notices.each do |notice|
+          GitReflow.say notice, :notice
+        end
       end
 
       def method_missing(method_sym, *arguments, &block)
@@ -156,11 +158,11 @@ module GitReflow
           message << "\nLGTM given by: @#{lgtm_authors.join(', @')}\n"
         end
 
-        message
+        "#{message}\n"
       end
 
       def cleanup_feature_branch?
-        GitReflow::Config.get('reflow.always-cleanup') == "true" || (ask "Would you like to cleanup your feature branch? ") =~ /^y/i
+        GitReflow::Config.get('reflow.always-cleanup') == "true" || (ask "Would you like to push this branch to your remote repo and cleanup your feature branch? ") =~ /^y/i
       end
 
       def deliver?
@@ -168,12 +170,12 @@ module GitReflow
       end
 
       def cleanup_failure_message
-        GitReflow.say "Cleanup halted.  Local changes were not pushed to remote repo.".colorize(:red)
+        GitReflow.say "Cleanup halted.  Local changes were not pushed to remote repo.", :deliver_halted
         GitReflow.say "To reset and go back to your branch run \`git reset --hard origin/#{self.base_branch_name} && git checkout #{self.feature_branch_name}\`"
       end
 
       def merge!(options = {})
-        if deliver? 
+        if deliver?
 
           GitReflow.say "Merging pull request ##{self.number}: '#{self.title}', from '#{self.feature_branch_name}' into '#{self.base_branch_name}'", :notice
 
@@ -183,17 +185,16 @@ module GitReflow
           message = commit_message_for_merge
 
           GitReflow.run_command_with_label "git checkout #{self.base_branch_name}"
+          GitReflow.run_command_with_label "git pull origin #{self.base_branch_name}"
           GitReflow.run_command_with_label "git merge --squash #{self.feature_branch_name}"
 
           GitReflow.append_to_squashed_commit_message(message) if message.length > 0
 
           if GitReflow.run_command_with_label 'git commit', with_system: true
-            # Pulls merged changes from remote base_branch
-            GitReflow.run_command_with_label "git pull origin #{self.base_branch_name}"
-            GitReflow.run_command_with_label "git push origin #{self.base_branch_name}"
-            GitReflow.say "Pull Request successfully merged.", :success
+            GitReflow.say "Pull request ##{self.number} successfully merged.", :success
 
             if cleanup_feature_branch?
+              GitReflow.run_command_with_label "git push origin #{self.base_branch_name}"
               GitReflow.run_command_with_label "git push origin :#{self.feature_branch_name}"
               GitReflow.run_command_with_label "git branch -D #{self.feature_branch_name}"
               GitReflow.say "Nice job buddy."
@@ -205,7 +206,7 @@ module GitReflow
           end
         else
           GitReflow.say "Merge aborted", :deliver_halted
-        end  
+        end
       end
     end
   end

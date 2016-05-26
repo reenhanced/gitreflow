@@ -22,7 +22,12 @@ command :setup do |c|
       menu.choice('BitBucket (team-owned repos only)') { GitReflow::GitServer.connect reflow_options.merge({ provider: 'BitBucket', silent: false }) }
     end
 
-    GitReflow::Config.add "constants.minimumApprovals", ask("Set the minimum number of approvals (leaving blank will require approval from all commenters): "), local: reflow_options[:project_only]
-    GitReflow::Config.add "constants.approvalRegex", GitReflow::GitServer::PullRequest::DEFAULT_APPROVAL_REGEX, local: reflow_options[:project_only]
+    GitReflow::Config.set "constants.minimumApprovals", ask("Set the minimum number of approvals (leaving blank will require approval from all commenters): "), local: reflow_options[:project_only]
+    GitReflow::Config.set "constants.approvalRegex", GitReflow::GitServer::PullRequest::DEFAULT_APPROVAL_REGEX.to_s, local: reflow_options[:project_only]
+
+    if GitReflow::Config.get('core.editor').length <= 0
+      GitReflow::Config.set('core.editor', GitReflow::DEFAULT_EDITOR, local: reflow_options[:project_only])
+      GitReflow.say "Updated git's editor (via git config key 'core.editor') to: #{GitReflow::DEFAULT_EDITOR}.", :notice
+    end
   end
 end

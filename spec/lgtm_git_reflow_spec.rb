@@ -29,7 +29,7 @@ describe GitReflow do
         "Please enter your GitHub password (we do NOT store this): "                               => password,
         "Please enter your Enterprise site URL (e.g. https://github.company.com):"                 => enterprise_site,
         "Please enter your Enterprise API endpoint (e.g. https://github.company.com/api/v3):"      => enterprise_api,
-        "Would you like to cleanup your feature branch? "                                          => 'yes',
+        "Would you like to push this branch to your remote repo and cleanup your feature branch? " => 'yes',
         "Would you like to open it in your browser?"                                               => 'n',
         "This is the current status of your Pull Request. Are you sure you want to deliver? "      => 'y', 
         "Please enter your delivery commit title: (leaving blank will use default)"                => 'title',
@@ -63,7 +63,6 @@ describe GitReflow do
 
 
     before do
-      allow_any_instance_of(Object).to receive(:strip).and_return("")
       allow(GitReflow::GitServer::GitHub).to receive_message_chain(:connection, :pull_requests, :merge).and_return(merge_response)
       allow(merge_response).to receive(:success?).and_return(true)
 
@@ -138,7 +137,7 @@ describe GitReflow do
 
           it "forces a merge" do
             expect { subject }.to have_said "Merging pull request ##{existing_pull_request.number}: '#{existing_pull_request.title}', from '#{existing_pull_request.head.label}' into '#{existing_pull_request.base.label}'", :notice
-            expect { subject }.to have_said "Pull Request successfully merged.", :success
+            expect { subject }.to have_said "Pull request ##{existing_pull_request.number} successfully merged.", :success
           end
         end
       end
@@ -156,7 +155,7 @@ describe GitReflow do
         end
 
         it "ignores build status when not setup" do
-          expect { subject }.to have_said "Pull Request successfully merged.", :success
+          expect { subject }.to have_said "Pull request ##{existing_pull_request.number} successfully merged.", :success
         end
       end
 
@@ -207,7 +206,7 @@ describe GitReflow do
                     "Please enter your GitHub password (we do NOT store this): "                               => password,
                     "Please enter your Enterprise site URL (e.g. https://github.company.com):"                 => enterprise_site,
                     "Please enter your Enterprise API endpoint (e.g. https://github.company.com/api/v3):"      => enterprise_api,
-                    "Would you like to cleanup your feature branch?"                                           => 'yes',
+                    "Would you like to push this branch to your remote repo and cleanup your feature branch?"  => 'yes',
                     "Would you like to open it in your browser?"                                               => 'no',
                     "This is the current status of your Pull Request. Are you sure you want to deliver? "      => 'y', 
                     "Please enter your delivery commit title: (leaving blank will use default)"                => 'title',
@@ -273,7 +272,7 @@ describe GitReflow do
                     "Please enter your GitHub password (we do NOT store this): "                               => password,
                     "Please enter your Enterprise site URL (e.g. https://github.company.com):"                 => enterprise_site,
                     "Please enter your Enterprise API endpoint (e.g. https://github.company.com/api/v3):"      => enterprise_api,
-                    "Would you like to cleanup your feature branch? "                                          => 'no',
+                    "Would you like to push this branch to your remote repo and cleanup your feature branch? " => 'no',
                     "Would you like to open it in your browser?"                                               => 'no',
                     "This is the current status of your Pull Request. Are you sure you want to deliver? "      => 'y', 
                     "Please enter your delivery commit title: (leaving blank will use default)"                => 'title',
@@ -346,7 +345,7 @@ describe GitReflow do
               end
 
               it "commits the changes if the build status is nil but has comments/approvals and no pending response" do
-                expect{ subject }.to have_said 'Pull Request successfully merged.', :success
+                expect{ subject }.to have_said "Pull request ##{existing_pull_request.number} successfully merged.", :success
               end
             end
 
@@ -371,7 +370,7 @@ describe GitReflow do
             end
 
             it "commits the changes for the squash merge" do
-              expect{ subject }.to have_said 'Pull Request successfully merged.', :success
+              expect{ subject }.to have_said "Pull request ##{existing_pull_request.number} successfully merged.", :success
             end
 
             context "and cleaning up feature branch" do
@@ -382,7 +381,7 @@ describe GitReflow do
                     "Please enter your GitHub password (we do NOT store this): "                               => password,
                     "Please enter your Enterprise site URL (e.g. https://github.company.com):"                 => enterprise_site,
                     "Please enter your Enterprise API endpoint (e.g. https://github.company.com/api/v3):"      => enterprise_api,
-                    "Would you like to cleanup your feature branch? "                                          => 'yes',
+                    "Would you like to push this branch to your remote repo and cleanup your feature branch? " => 'yes',
                     "Would you like to open it in your browser?"                                               => 'no',
                     "This is the current status of your Pull Request. Are you sure you want to deliver? "      => 'y', 
                     "Please enter your delivery commit title: (leaving blank will use default)"                => 'title',
@@ -443,7 +442,7 @@ describe GitReflow do
                     "Please enter your GitHub password (we do NOT store this): "                               => password,
                     "Please enter your Enterprise site URL (e.g. https://github.company.com):"                 => enterprise_site,
                     "Please enter your Enterprise API endpoint (e.g. https://github.company.com/api/v3):"      => enterprise_api,
-                    "Would you like to cleanup your feature branch? "                                          => 'no',
+                    "Would you like to push this branch to your remote repo and cleanup your feature branch? " => 'no',
                     "Would you like to open it in your browser?"                                               => 'no',
                     "This is the current status of your Pull Request. Are you sure you want to deliver? "      => 'y', 
                     "Please enter your delivery commit title: (leaving blank will use default)"                => 'title',
@@ -491,7 +490,7 @@ describe GitReflow do
           end
 
           it "notifies the user to get their code reviewed" do
-            expect { subject }.to have_said "Pull Request successfully merged.", :success
+            expect { subject }.to have_said "Pull request ##{existing_pull_request.number} successfully merged.", :success
           end
         end
 

@@ -27,12 +27,11 @@ module GitReflow
     pull_request = git_server.find_open_pull_request( :from => current_branch, :to => destination_branch )
 
     if pull_request.nil?
-      puts "\n[notice] No pull request exists for #{current_branch} -> #{destination_branch}"
-      puts "[notice] Run 'git reflow review #{destination_branch}' to start the review process"
+      say "\nNo pull request exists for #{current_branch} -> #{destination_branch}", :notice
+      say "Run 'git reflow review #{destination_branch}' to start the review process", :notice
     else
-      puts "Here's the status of your review:"
+      say "Here's the status of your review:"
       pull_request.display_pull_request_summary
-      ask_to_open_in_browser(pull_request.html_url)
     end
   end
 
@@ -49,7 +48,6 @@ module GitReflow
       if existing_pull_request
         say "A pull request already exists for these branches:", :notice
         existing_pull_request.display_pull_request_summary
-        ask_to_open_in_browser(existing_pull_request.html_url)
       else
         unless options[:title] || options[:body]
           pull_request_msg_file = "#{GitReflow.git_root_dir}/.git/GIT_REFLOW_PR_MSG"
@@ -58,25 +56,25 @@ module GitReflow
             file.write(options[:title] || GitReflow.current_branch)
           end
 
-          GitReflow.run("#{DEFAULT_EDITOR} #{pull_request_msg_file}", with_system: true)
+          GitReflow.run("#{GitReflow.git_editor_comand} #{pull_request_msg_file}", with_system: true)
 
           pr_msg = File.read(pull_request_msg_file).split(/[\r\n]|\r\n/).map(&:strip)
           title  = pr_msg.shift
 
           File.delete(pull_request_msg_file)
 
-          unless pr_msg.empty? 
+          unless pr_msg.empty?
             pr_msg.shift if pr_msg.first.empty?
           end
 
           options[:title] = title
           options[:body]  = "#{pr_msg.join("\n")}\n"
 
-          puts "\nReview your PR:\n"
-          puts "--------\n"
-          puts "Title:\n#{options[:title]}\n\n"
-          puts "Body:\n#{options[:body]}\n"
-          puts "--------\n"
+          say "\nReview your PR:\n"
+          say "--------\n"
+          say "Title:\n#{options[:title]}\n\n"
+          say "Body:\n#{options[:body]}\n"
+          say "--------\n"
 
           create_pull_request = ask("Submit pull request? (Y)") =~ /y/i
         end
@@ -87,22 +85,20 @@ module GitReflow
                                                         head:  "#{remote_user}:#{current_branch}",
                                                         base:  options[:base])
 
-          puts "Successfully created pull request ##{pull_request.number}: #{pull_request.title}\nPull Request URL: #{pull_request.html_url}\n"
-          ask_to_open_in_browser(pull_request.html_url)
+          say "Successfully created pull request ##{pull_request.number}: #{pull_request.title}\nPull Request URL: #{pull_request.html_url}\n", :success
         else
           say "Review aborted.  No pull request has been created.", :review_halted
         end
       end
     rescue Github::Error::UnprocessableEntity => e
-      puts "Github Error: #{e.to_s}"
+      say "Github Error: #{e.to_s}", :error
     rescue StandardError => e
-      puts "\nError: #{e.inspect}"
+      say "\nError: #{e.inspect}", :error
     end
   end
 
   def deliver(options = {})
-    feature_branch    = current_branch
-    base_branch       = options[:base] || 'master'
+    base_branch = options[:base] || 'master'
 
     begin
       existing_pull_request = git_server.find_open_pull_request( :from => current_branch, :to => base_branch )
@@ -123,7 +119,7 @@ module GitReflow
     rescue Github::Error::UnprocessableEntity => e
       errors = JSON.parse(e.response_message[:body])
       error_messages = errors["errors"].collect {|error| "GitHub Error: #{error["message"].gsub(/^base\s/, '')}" unless error["message"].nil?}.compact.join("\n")
-      puts "Github Error: #{error_messages}"
+      say "Github Error: #{error_messages}", :error
     end
   end
 

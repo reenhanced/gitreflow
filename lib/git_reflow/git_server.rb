@@ -17,7 +17,7 @@ module GitReflow
         provider.authenticate(options.keep_if {|key, value| key == :silent })
         provider
       rescue ConnectionError => e
-        puts "Error connecting to #{provider_name}: #{e.message}"
+        GitReflow.say "Error connecting to #{provider_name}: #{e.message}", :error
       end
     end
 
@@ -32,11 +32,11 @@ module GitReflow
         begin
           provider_class_for(provider)
         rescue ConnectionError => e
-          puts e.message
+          GitReflow.say e.message, :error
           nil
         end
       else
-        puts "[notice] Reflow hasn't been setup yet.  Run 'git reflow setup' to continue"
+        GitReflow.say "Reflow hasn't been setup yet.  Run 'git reflow setup' to continue", :notice
         nil
       end
     end

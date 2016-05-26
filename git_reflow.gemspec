@@ -1,6 +1,6 @@
 # Ensure we require the local version and not one we might have installed already
 require File.join([File.dirname(__FILE__),'lib','git_reflow/version.rb'])
-spec = Gem::Specification.new do |s|
+Gem::Specification.new do |s|
   s.name             = 'git_reflow'
   s.version          = GitReflow::VERSION
   s.license          = 'MIT'
@@ -19,21 +19,21 @@ spec = Gem::Specification.new do |s|
   s.require_paths    = ["lib"]
   s.rdoc_options     << '--title' << 'git_reflow' << '--main' << 'README.rdoc' << '-ri'
 
-  s.add_development_dependency('appraisal', '1.0.3')
-  s.add_development_dependency('bundler', "~> 1.11")
+  s.add_development_dependency('appraisal', '2.1.0')
+  s.add_development_dependency('bundler', "~> 1.12")
   s.add_development_dependency('chronic')
   s.add_development_dependency('pry-byebug')
-  s.add_development_dependency('rake', "~> 10.0")
+  s.add_development_dependency('rake', "~> 11.0")
   s.add_development_dependency('rdoc')
-  s.add_development_dependency('rspec', "~> 3.3.0")
+  s.add_development_dependency('rspec', "~> 3.4.0")
   s.add_development_dependency('webmock')
-  s.add_development_dependency('wwtd', '0.7.0')
+  s.add_development_dependency('wwtd', '1.3.0')
 
   s.add_dependency('colorize', '>= 0.7.0')
-  s.add_dependency('gli', '2.13.2')
+  s.add_dependency('gli', '2.14.0')
   s.add_dependency('highline')
   s.add_dependency('httpclient')
-  s.add_dependency('github_api', '0.12.4')
+  s.add_dependency('github_api', '0.14.0')
   s.add_dependency('reenhanced_bitbucket_api', '0.3.2')
 
   s.post_install_message = "You need to setup your GitHub OAuth token\nPlease run 'git-reflow setup'"

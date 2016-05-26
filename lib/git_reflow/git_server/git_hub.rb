@@ -107,6 +107,9 @@ module GitReflow
             previous_authorizations = @connection.oauth.all.select {|auth| auth.note == "git-reflow (#{run('hostname', loud: false).strip})" }
             if previous_authorizations.any?
               authorization = previous_authorizations.last
+              GitReflow.say "You have previously setup git-reflow on this machine, but we can no longer find the stored token.", :error
+              GitReflow.say "Please visit https://github.com/settings/tokens and delete the token for: git-reflow (#{run('hostname', loud: false).strip})", :notice
+              raise "Setup could not be completed."
             else
               authorization = @connection.oauth.create scopes: ['repo'], note: "git-reflow (#{run('hostname', loud: false).strip})"
             end
@@ -127,7 +130,7 @@ module GitReflow
               GitReflow.say "Github Authentication Error: #{e.inspect}", :error
             end
           rescue StandardError => e
-            GitReflow.say "Invalid username or password: #{e.inspect}", :error
+            raise "We were unable to authenticate with Github."
           else
             GitReflow.say "Your GitHub account was successfully setup!", :success
           end

@@ -1,11 +1,7 @@
 = git-reflow (2015 Fukuoka Ruby Award Winner)
 
 {<img src="https://circleci.com/gh/reenhanced/gitreflow.svg?style=svg" alt="Circle CI" />}[https://circleci.com/gh/reenhanced/gitreflow]
-{<img src="https://img.shields.io/badge/git--reflow-v0.7.5-blue.svg?style=flat&link=https://github.com/reenhanced/gitreflow" alt="Git workflow powered by git-reflow" />}[https://github.com/reenhanced/gitreflow]
-{<img
-src="https://img.shields.io/badge/git--reflow-v0.7.5-blue.svg?style=flat&link=http://www.rubydoc.info/gems/git_reflow"
-alt="Git workflow powered by git-reflow"
-/>}[http://www.rubydoc.info/gems/git_reflow]
+{<img src="https://img.shields.io/badge/git--reflow-v0.8.0-blue.svg?style=flat&link=https://github.com/reenhanced/gitreflow" alt="Git workflow powered by git-reflow" />}[https://github.com/reenhanced/gitreflow]
 {<img src="http://inch-ci.org/github/reenhanced/gitreflow.svg?branch=master&style=shields" alt="Documentation" />}[http://inch-ci.org/github/reenhanced/gitreflow]
 
 {RDocs}[http://www.rubydoc.info/gems/git_reflow]

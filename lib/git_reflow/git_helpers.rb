@@ -27,6 +27,21 @@ module GitReflow
       run("git branch --no-color | grep '^\* ' | grep -v 'no branch' | sed 's/^* //g'", loud: false).strip
     end
 
+    def pull_request_template
+      filenames_to_try = %w( github/PULL_REQUEST_TEMPLATE.md
+                             github/PULL_REQUEST_TEMPLATE
+                             PULL_REQUEST_TEMPLATE.md
+                             PULL_REQUEST_TEMPLATE ).map do |file|
+        "#{git_root_dir}/#{file}"
+      end
+
+      filename = filenames_to_try.detect do |file|
+        File.exist? file
+      end
+
+      File.read filename if filename
+    end
+
     def get_first_commit_message
       run('git log --pretty=format:"%s" --no-merges -n 1', loud: false).strip
     end

@@ -445,6 +445,34 @@ http://reenhanced.com/images/reflow.png
 
 ---
 
+== Oh My ZSH Aliases
+If you are an OH MY ZSH user, you can use following aliases to speed things up. Put these in your `.zshrc` file or your alias file as per your workflow.
+
+```bash
+#
+# Git Reflow Aliases.
+#
+
+# Usage: grf start aa-feature
+alias grf="git reflow $@"
+
+# Usage: grfs aa-feature
+alias grfs="git reflow start $@"
+
+# Usage: grfr
+alias grfr="git reflow review"
+
+# Usage: grfd
+alias grfd="git reflow deliver"
+
+# Usage: grfrefresh
+alias grfd="git reflow refresh"
+
+# Usage: grfst
+alias grfd="git reflow status"
+```
+
+
 == Contributing
 Pull requests are welcome. Please fork and submit. We use this tool every single day and as long as what you want to add doesn't change our workflow, we are happy to accept your updates. Feel free to add your github username to the list below.
 

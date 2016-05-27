@@ -28,10 +28,12 @@ module GitReflow
     end
 
     def pull_request_template
-      filenames_to_try = %w( .github/PULL_REQUEST_TEMPLATE.md
-                             .github/PULL_REQUEST_TEMPLATE
+      filenames_to_try = %w( github/PULL_REQUEST_TEMPLATE.md
+                             github/PULL_REQUEST_TEMPLATE
                              PULL_REQUEST_TEMPLATE.md
-                             PULL_REQUEST_TEMPLATE )
+                             PULL_REQUEST_TEMPLATE ).map do |file|
+        "#{git_root_dir}/#{file}"
+      end
 
       filename = filenames_to_try.detect do |file|
         File.exist? file

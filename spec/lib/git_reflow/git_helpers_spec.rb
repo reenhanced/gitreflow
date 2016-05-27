@@ -56,6 +56,30 @@ describe GitReflow::GitHelpers do
     it      { expect{ subject }.to have_run_command_silently "git branch --no-color | grep '^\* ' | grep -v 'no branch' | sed 's/^* //g'" }
   end
 
+  describe ".pull_request_template" do
+    subject { Gitacular.pull_request_template }
+
+    context "template file exists" do
+      let(:root_dir) { "/some_repo" }
+      let(:template_content) { "Template content" }
+
+      before do
+        allow(Gitacular).to receive(:git_root_dir).and_return(root_dir)
+        allow(File).to receive(:exist?).with("#{root_dir}/github/PULL_REQUEST_TEMPLATE.md").and_return(true)
+        allow(File).to receive(:read).with("#{root_dir}/github/PULL_REQUEST_TEMPLATE.md").and_return(template_content)
+      end
+      it { is_expected.to eq template_content }
+    end
+
+    context "template file does not exist" do
+      before do
+        allow(File).to receive(:exist?).and_return(false)
+      end
+
+      it { is_expected.to be_nil }
+    end
+  end
+
   describe ".get_first_commit_message" do
     subject { Gitacular.get_first_commit_message }
     it      { expect{ subject }.to have_run_command_silently 'git log --pretty=format:"%s" --no-merges -n 1' }

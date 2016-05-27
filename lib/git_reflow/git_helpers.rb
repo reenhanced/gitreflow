@@ -37,7 +37,7 @@ module GitReflow
         File.exist? file
       end
 
-      File.read filename
+      File.read filename if filename
     end
 
     def get_first_commit_message

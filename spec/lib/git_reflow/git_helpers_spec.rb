@@ -22,7 +22,6 @@ describe GitReflow::GitHelpers do
   describe '.git_editor_command' do
     subject { Gitacular.git_editor_command }
     before { allow(ENV).to receive(:[]).with('EDITOR').and_return 'vim' }
-    before { allow(ENV).to receive(:[]).with('HOME').and_return '/home/timraasveld' }
 
     it 'defaults to GitReflow config' do
       allow(GitReflow::Config).to receive(:get).with('core.editor').and_return 'nano'

@@ -452,24 +452,29 @@ If you are an OH MY ZSH user, you can use following aliases to speed things up. 
 #
 # Git Reflow Aliases.
 #
+# @link https://github.com/reenhanced/gitreflow
+#
 
 # Usage: grf start aa-feature
 alias grf="git reflow $@"
 
+# 1. Start.
 # Usage: grfs aa-feature
 alias grfs="git reflow start $@"
 
+# 2. Review.
 # Usage: grfr
 alias grfr="git reflow review"
 
+# 3. Deliver.
 # Usage: grfd
 alias grfd="git reflow deliver"
 
 # Usage: grfrefresh
-alias grfd="git reflow refresh"
+alias grfrefresh="git reflow refresh"
 
 # Usage: grfst
-alias grfd="git reflow status"
+alias grfst="git reflow status"
 ```
 
 

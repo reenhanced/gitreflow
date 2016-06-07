@@ -21,7 +21,7 @@ describe GitReflow::GitHelpers do
 
   describe '.git_editor_command' do
     subject { Gitacular.git_editor_command }
-    before { ENV['editor'] = 'vim' }
+    before { ENV['EDITOR'] = 'vim' }
 
     it 'defaults to GitReflow config' do
       allow(GitReflow::Config).to receive(:get).with('core.editor').and_return 'nano'

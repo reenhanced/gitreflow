@@ -26,8 +26,8 @@ command :setup do |c|
     GitReflow::Config.set "constants.approvalRegex", GitReflow::GitServer::PullRequest::DEFAULT_APPROVAL_REGEX.to_s, local: reflow_options[:project_only]
 
     if GitReflow::Config.get('core.editor').length <= 0
-      GitReflow::Config.set('core.editor', GitReflow::DEFAULT_EDITOR, local: reflow_options[:project_only])
-      GitReflow.say "Updated git's editor (via git config key 'core.editor') to: #{GitReflow::DEFAULT_EDITOR}.", :notice
+      GitReflow::Config.set('core.editor', GitReflow.default_editor, local: reflow_options[:project_only])
+      GitReflow.say "Updated git's editor (via git config key 'core.editor') to: #{GitReflow.default_editor}.", :notice
     end
   end
 end

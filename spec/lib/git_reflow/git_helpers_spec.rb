@@ -19,6 +19,23 @@ describe GitReflow::GitHelpers do
     it      { expect{ subject }.to have_run_command_silently "git rev-parse --show-toplevel" }
   end
 
+  describe '.git_editor_command' do
+    subject { Gitacular.git_editor_command }
+    before { ENV['EDITOR'] = 'vim' }
+
+    it 'defaults to GitReflow config' do
+      allow(GitReflow::Config).to receive(:get).with('core.editor').and_return 'nano'
+
+      expect(subject).to eq 'nano'
+    end
+
+    it 'falls back to the environment variable $EDITOR' do
+      allow(GitReflow::Config).to receive(:get).with('core.editor').and_return nil
+
+      expect(subject).to eq 'vim'
+    end
+  end
+
   describe ".remote_user" do
     subject { Gitacular.remote_user }
 

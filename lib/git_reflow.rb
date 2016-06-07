@@ -21,7 +21,9 @@ module GitReflow
   include GitHelpers
   extend self
 
-  DEFAULT_EDITOR = "#{ENV['EDITOR']}".freeze || "vi".freeze
+  def default_editor
+    "#{ENV['EDITOR']}".freeze || "vi".freeze
+  end
 
   def status(destination_branch)
     pull_request = git_server.find_open_pull_request( :from => current_branch, :to => destination_branch )

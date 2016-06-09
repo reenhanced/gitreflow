@@ -6,7 +6,7 @@
                          author:              commit[:author],
                          repo_owner:          repo_owner,
                          repo_name:           repo_name,
-                         created_at:          commit[:created_at] || Chronic.parse("1.minute.ago")
+                         created_at:          commit[:created_at] || Chronic.parse("October 21, 2015 07:28:00")
                        ).to_s %>
   <% end %>
   <%= commits_json.join(", ") %>

@@ -1,13 +1,46 @@
 dependencies:
   pre:
-    - rvm install 2.1.10
-    - rvm install 2.2.5
-    - rvm install 2.3.1
+    - |
+      if [[ -e ~/rvm_binaries/ruby-2.1.10.tar.bz2 ]]
+      then
+        rvm mount ~/rvm_binaries/ruby-2.1.10.tar.bz2
+      else
+        mkdir ~/rvm_binaries || true
+        rvm install 2.1.10
+        gem install bundler
+        cd ~/rvm_binaries && rvm prepare 2.1.10
+        ls ~/rvm_binaries
+      fi
+    - |
+      if [[ -e ~/rvm_binaries/ruby-2.2.5.tar.bz2 ]]
+      then
+        rvm mount ~/rvm_binaries/ruby-2.2.5.tar.bz2
+      else
+        mkdir ~/rvm_binaries || true
+        rvm install 2.2.5
+        gem install bundler
+        cd ~/rvm_binaries && rvm prepare 2.2.5
+        ls ~/rvm_binaries
+      fi
+    - |
+      if [[ -e ~/rvm_binaries/ruby-2.3.1.tar.bz2 ]]
+      then
+        rvm mount ~/rvm_binaries/ruby-2.3.1.tar.bz2
+      else
+        mkdir ~/rvm_binaries || true
+        rvm install 2.3.1
+        gem install bundler
+        cd ~/rvm_binaries && rvm prepare 2.3.1
+        ls ~/rvm_binaries
+      fi
 
   override:
     - 'rvm-exec 2.1.10 bundle install'
     - 'rvm-exec 2.2.5 bundle install'
     - 'rvm-exec 2.3.1 bundle install'
+
+  cache_directories:
+    - ~/rvm_binaries
 
 test:
   override:

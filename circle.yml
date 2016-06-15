@@ -1,49 +1,24 @@
 dependencies:
-  pre:
-    - |
-      if [[ -e ~/rvm_binaries/ruby-2.1.10.tar.bz2 ]]
-      then
-        rvm mount ~/rvm_binaries/ruby-2.1.10.tar.bz2
-      else
-        mkdir ~/rvm_binaries || true
-        rvm install 2.1.10
-        gem install bundler
-        cd ~/rvm_binaries && rvm prepare 2.1.10
-        ls ~/rvm_binaries
-      fi
-    - |
-      if [[ -e ~/rvm_binaries/ruby-2.2.5.tar.bz2 ]]
-      then
-        rvm mount ~/rvm_binaries/ruby-2.2.5.tar.bz2
-      else
-        mkdir ~/rvm_binaries || true
-        rvm install 2.2.5
-        gem install bundler
-        cd ~/rvm_binaries && rvm prepare 2.2.5
-        ls ~/rvm_binaries
-      fi
-    - |
-      if [[ -e ~/rvm_binaries/ruby-2.3.1.tar.bz2 ]]
-      then
-        rvm mount ~/rvm_binaries/ruby-2.3.1.tar.bz2
-      else
-        mkdir ~/rvm_binaries || true
-        rvm install 2.3.1
-        gem install bundler
-        cd ~/rvm_binaries && rvm prepare 2.3.1
-        ls ~/rvm_binaries
-      fi
+  cache_directories:
+    - '~/.rvm/rubies'
+    - 'vendor'
 
   override:
-    - 'rvm-exec 2.1.10 bundle install'
-    - 'rvm-exec 2.2.5 bundle install'
-    - 'rvm-exec 2.3.1 bundle install'
-
-  cache_directories:
-    - ~/rvm_binaries
+    - >
+      case $CIRCLE_NODE_INDEX in
+       0)
+         rvm-exec 2.1.9 bash -c "bundle check --path=vendor/bundle_2.1 || bundle install --path=vendor/bundle_2.1"
+         ;;
+       1)
+         rvm-exec 2.2.5 bash -c "bundle check --path=vendor/bundle_2.2 || bundle install --path=vendor/bundle_2.2"
+         ;;
+       2)
+         rvm-exec ruby-head gem install bundler
+         rvm-exec ruby-head bash -c "bundle check --path=vendor/bundle_head || bundle install --path=vendor/bundle_head"
+         ;;
+      esac
 
 test:
   override:
-    - 'rvm-exec 2.1.10 bundle exec rake'
-    - 'rvm-exec 2.2.5 bundle exec rake'
-    - 'rvm-exec 2.3.1 bundle exec rake'
+    - case $CIRCLE_NODE_INDEX in 0) rvm-exec 2.1.9 bundle exec rake ;; 1) rvm-exec 2.2.5 bundle exec rake ;; 2) rvm-exec ruby-head bundle exec rake ;; esac:
+        parallel: true

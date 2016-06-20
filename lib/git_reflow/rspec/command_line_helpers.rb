@@ -1,59 +1,65 @@
-module CommandLineHelpers
-  def stub_command_line
-    $commands_ran     = []
-    $stubbed_commands = {}
-    $output           = []
-    $says             = []
+module GitReflow
+  module RSpec
+    module CommandLineHelpers
 
-    stub_run_for GitReflow
-    stub_run_for GitReflow::Sandbox
+      def stub_command_line
+        $commands_ran     = []
+        $stubbed_commands = {}
+        $output           = []
+        $says             = []
 
-    stub_output_for(GitReflow)
-    stub_output_for(GitReflow::Sandbox)
+        stub_run_for GitReflow
+        stub_run_for GitReflow::Sandbox
 
-    allow_any_instance_of(GitReflow::GitServer::PullRequest).to receive(:printf) do |format, *output|
-      $output << Array(output).join(" ")
-      output = ''
-    end.and_return("")
-  end
+        stub_output_for(GitReflow)
+        stub_output_for(GitReflow::Sandbox)
 
-  def stub_output_for(object_to_stub, method_to_stub = :puts)
-    allow_any_instance_of(object_to_stub).to receive(method_to_stub) do |output|
-      $output << output
-      output = ''
-    end
-  end
+        allow_any_instance_of(GitReflow::GitServer::PullRequest).to receive(:printf) do |format, *output|
+          $output << Array(output).join(" ")
+          output = ''
+        end.and_return("")
+      end
 
-  def stub_run_for(module_to_stub)
-    allow(module_to_stub).to receive(:run) do |command, options|
-      options ||= {}
-      $commands_ran << Hashie::Mash.new(command: command, options: options)
-      ret_value = $stubbed_commands[command] || ""
-      command = "" # we need this due to a bug in rspec that will keep this assignment on subsequent runs of the stub
-      ret_value
-    end
-    allow(module_to_stub).to receive(:say) do |output, type|
-      $says << {message: output, type: type}
-    end
-  end
+      def stub_output_for(object_to_stub, method_to_stub = :puts)
+        allow_any_instance_of(object_to_stub).to receive(method_to_stub) do |output|
+          $output << output
+          output = ''
+        end
+      end
 
-  def reset_stubbed_command_line
-    $commands_ran = []
-    $stubbed_commands = {}
-    $output = []
-    $says = []
-  end
+      def stub_run_for(module_to_stub)
+        allow(module_to_stub).to receive(:run) do |command, options|
+          options ||= {}
+          $commands_ran << Hashie::Mash.new(command: command, options: options)
+          ret_value = $stubbed_commands[command] || ""
+          command = "" # we need this due to a bug in rspec that will keep this assignment on subsequent runs of the stub
+          ret_value
+        end
+        allow(module_to_stub).to receive(:say) do |output, type|
+          $says << {message: output, type: type}
+        end
+      end
 
-  def stub_command(command, return_value)
-    $stubbed_commands[command] = return_value
-    allow(GitReflow::Sandbox).to receive(:run).with(command).and_return(return_value)
-  end
+      def reset_stubbed_command_line
+        $commands_ran = []
+        $stubbed_commands = {}
+        $output = []
+        $says = []
+      end
 
-  def stub_command_line_inputs(inputs)
-    allow_any_instance_of(HighLine).to receive(:ask) do |terminal, question|
-     return_value = inputs[question]
-     question = ""
-     return_value
+      def stub_command(command, return_value)
+        $stubbed_commands[command] = return_value
+        allow(GitReflow::Sandbox).to receive(:run).with(command).and_return(return_value)
+      end
+
+      def stub_command_line_inputs(inputs)
+        allow_any_instance_of(HighLine).to receive(:ask) do |terminal, question|
+        return_value = inputs[question]
+        question = ""
+        return_value
+        end
+      end
+
     end
   end
 end

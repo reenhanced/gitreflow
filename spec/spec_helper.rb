@@ -7,14 +7,15 @@ require 'pry'
 $LOAD_PATH << 'lib'
 require 'git_reflow'
 
+require 'git_reflow/rspec'
+
 Dir[File.expand_path('../support/**/*.rb', __FILE__)].each {|f| require f}
 
 RSpec.configure do |config|
-  config.include GithubHelpers
   config.include WebMock::API
-  config.include CommandLineHelpers
+  config.include GitReflow::RSpec::CommandLineHelpers
   config.include GithubHelpers
-  config.include RspecStubHelpers
+  config.include GitReflow::RSpec::StubHelpers
 
   config.expect_with :rspec do |c|
     c.syntax = [:should, :expect]

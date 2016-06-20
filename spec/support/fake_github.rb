@@ -8,7 +8,7 @@ class FakeGitHub
   attr_accessor :repo_owner, :repo_name
 
   DEFAULT_COMMIT_AUTHOR = "reenhanced".freeze
-  DEFAULT_COMMIT_TIME   = "1 minute ago".freeze
+  DEFAULT_COMMIT_TIME   = "October 21, 2015 07:28:00".freeze
 
   # EXAMPLE:
   #
@@ -75,7 +75,7 @@ class FakeGitHub
                                          comments:            object_data[:comments],
                                          pull_request_number: object_data[:number] || 1,
                                          body:                object_data[:body] || 'Hammer time',
-                                         created_at:          object_data[:created_at] || Chronic.parse("1.minute ago")).to_s,
+                                         created_at:          object_data[:created_at] || Chronic.parse(DEFAULT_COMMIT_TIME)).to_s,
                     status: 201,
                     headers: {content_type: "application/json; charset=utf-8"})
       else
@@ -113,7 +113,7 @@ class FakeGitHub
                                       repo_name:           self.repo_name,
                                       comments:            object_data[:comments],
                                       pull_request_number: object_data[:number] || 1,
-                                      created_at:          object_data[:created_at] || Time.parse('1pm')).to_s,
+                                      created_at:          object_data[:created_at] || Chronic.parse(DEFAULT_COMMIT_TIME)).to_s,
                     status: 201,
                     headers: {content_type: "application/json; charset=utf-8"})
       end

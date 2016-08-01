@@ -1,12 +1,45 @@
 # Change Log
 
-## [v0.8.1](https://github.com/reenhanced/gitreflow/tree/v0.8.1)
+## [v0.8.2](https://github.com/reenhanced/gitreflow/tree/v0.8.2) (2016-08-01)
 
+[Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.8.1...v0.8.2)
+
+**Fixed bugs:**
+
+- git-reflow setup not working on Windows [\#187](https://github.com/reenhanced/gitreflow/issues/187)
+
+**Closed issues:**
+
+- GitHub authentication issues [\#193](https://github.com/reenhanced/gitreflow/issues/193)
+- non-master base branch does not work for the deliver command [\#192](https://github.com/reenhanced/gitreflow/issues/192)
+- git-reflow fork command [\#188](https://github.com/reenhanced/gitreflow/issues/188)
+- Bitbucket setup not working [\#186](https://github.com/reenhanced/gitreflow/issues/186)
+- Default approval regex not respecting :+1: [\#182](https://github.com/reenhanced/gitreflow/issues/182)
+- \[SOLVED\] Unable To Install the GEM \(install nokogiri manually to solve the issue\) [\#178](https://github.com/reenhanced/gitreflow/issues/178)
+- Can we switch off LGTM reviews? [\#177](https://github.com/reenhanced/gitreflow/issues/177)
+- gitreflow does not cache github token? [\#173](https://github.com/reenhanced/gitreflow/issues/173)
+- message below the fold in review [\#105](https://github.com/reenhanced/gitreflow/issues/105)
+
+**Merged pull requests:**
+
+- \[\#187\] Update git-reflow config file path to use $HOME for windows support [\#195](https://github.com/reenhanced/gitreflow/pull/195) ([codenamev](https://github.com/codenamev))
+- \[192\] Allow delivery to custom base branch [\#194](https://github.com/reenhanced/gitreflow/pull/194) ([codenamev](https://github.com/codenamev))
+- Refactor tests to allow for use of reflow test helpers in third-party gems [\#189](https://github.com/reenhanced/gitreflow/pull/189) ([codenamev](https://github.com/codenamev))
+- \[Issue \#182\] Fix LGTM Expression [\#185](https://github.com/reenhanced/gitreflow/pull/185) ([simonzhu24](https://github.com/simonzhu24))
+- Use $EDITOR as text editor fallback [\#184](https://github.com/reenhanced/gitreflow/pull/184) ([timraasveld](https://github.com/timraasveld))
+- Respect GitHub pull request template [\#179](https://github.com/reenhanced/gitreflow/pull/179) ([timraasveld](https://github.com/timraasveld))
+
+## [v0.8.1](https://github.com/reenhanced/gitreflow/tree/v0.8.1) (2016-05-26)
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.8.0...v0.8.1)
 
 **Closed issues:**
 
-- Unable to review with latest changes to editor handling [\#176](https://github.com/reenhanced/gitreflow/issues/176)
+- undefined method `git\_editor\_comand' for GitReflow:Module [\#176](https://github.com/reenhanced/gitreflow/issues/176)
+- github PR ends up "closed" instead of "merged" [\#149](https://github.com/reenhanced/gitreflow/issues/149)
+- Update README to mention how to update an in-progress feature branch from origin/master [\#125](https://github.com/reenhanced/gitreflow/issues/125)
+- Option to silence the offer to open the PR in my browser? [\#117](https://github.com/reenhanced/gitreflow/issues/117)
+- command for merging updates from base branch [\#74](https://github.com/reenhanced/gitreflow/issues/74)
+- Support for non-master branch [\#73](https://github.com/reenhanced/gitreflow/issues/73)
 
 ## [v0.8.0](https://github.com/reenhanced/gitreflow/tree/v0.8.0) (2016-05-26)
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.7.5...v0.8.0)
@@ -221,10 +254,6 @@
 
 ## [v0.4.0](https://github.com/reenhanced/gitreflow/tree/v0.4.0) (2014-10-16)
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.3.5...v0.4.0)
-
-**Closed issues:**
-
-- f has already been specified as a switch in the command deliver \(ArgumentError\) [\#59](https://github.com/reenhanced/gitreflow/issues/59)
 
 **Merged pull requests:**
 

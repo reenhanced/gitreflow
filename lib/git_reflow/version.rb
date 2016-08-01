@@ -1,3 +1,3 @@
 module GitReflow
-  VERSION = "0.8.1"
+  VERSION = "0.8.2"
 end

@@ -29,7 +29,7 @@ describe GitReflow::Config do
 
   describe ".set(key)" do
     subject { GitReflow::Config.set('chucknorris.roundhouse', 'to the face') }
-    it      { expect{ subject }.to have_run_command_silently 'git config -f ~/.gitconfig.reflow --replace-all chucknorris.roundhouse "to the face"' }
+    it      { expect{ subject }.to have_run_command_silently 'git config -f $HOME/.gitconfig.reflow --replace-all chucknorris.roundhouse "to the face"' }
 
     context "for current project only" do
       subject { GitReflow::Config.set('chucknorris.roundhouse', 'to the face', local: true) }
@@ -39,11 +39,11 @@ describe GitReflow::Config do
 
   describe ".unset(key)" do
     subject { GitReflow::Config.unset('chucknorris.roundhouse') }
-    it      { expect{ subject }.to have_run_command_silently 'git config -f ~/.gitconfig.reflow --unset-all chucknorris.roundhouse ' }
+    it      { expect{ subject }.to have_run_command_silently 'git config -f $HOME/.gitconfig.reflow --unset-all chucknorris.roundhouse ' }
 
     context "for multi-value keys" do
       subject { GitReflow::Config.unset('chucknorris.roundhouse', value: 'to the face') }
-      it      { expect{ subject }.to have_run_command_silently 'git config -f ~/.gitconfig.reflow --unset-all chucknorris.roundhouse "to the face"' }
+      it      { expect{ subject }.to have_run_command_silently 'git config -f $HOME/.gitconfig.reflow --unset-all chucknorris.roundhouse "to the face"' }
     end
 
     context "for current project only" do

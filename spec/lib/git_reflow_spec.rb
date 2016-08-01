@@ -207,6 +207,14 @@ describe GitReflow do
       subject
     end
 
+    context "and a base branch is provided" do
+      let(:inputs) { { title: "new-feature", message: "message", head: "reenhanced:new-feature", base: 'live'}}
+      it "looks for a pull request with the custom base branch" do
+        expect(github).to receive(:find_open_pull_request).with(from: branch, to: inputs[:base])
+        subject
+      end
+    end
+
     context "and pull request exists for the feature branch to the destination branch" do
       before do
         allow(github).to receive(:build_status).and_return(build_status)

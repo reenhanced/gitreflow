@@ -7,9 +7,11 @@ dependencies:
     - >
       case $CIRCLE_NODE_INDEX in
        0)
+         rvm-exec 2.1.9 gem install bundler
          rvm-exec 2.1.9 bash -c "bundle check --path=vendor/bundle_2.1 || bundle install --path=vendor/bundle_2.1"
          ;;
        1)
+         rvm-exec 2.2.5 gem install bundler
          rvm-exec 2.2.5 bash -c "bundle check --path=vendor/bundle_2.2 || bundle install --path=vendor/bundle_2.2"
          ;;
        2)

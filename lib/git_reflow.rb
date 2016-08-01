@@ -100,10 +100,10 @@ module GitReflow
   end
 
   def deliver(options = {})
-    base_branch = options[:base] || 'master'
+    options[:base] ||= 'master'
 
     begin
-      existing_pull_request = git_server.find_open_pull_request( :from => current_branch, :to => base_branch )
+      existing_pull_request = git_server.find_open_pull_request( from: current_branch, to: options[:base] )
 
       if existing_pull_request.nil?
         say "No pull request exists for #{remote_user}:#{current_branch}\nPlease submit your branch for review first with \`git reflow review\`", :deliver_halted
@@ -111,7 +111,7 @@ module GitReflow
 
         if existing_pull_request.good_to_merge?(force: options[:skip_lgtm])
           # displays current status and prompts user for confirmation
-          self.status base_branch
+          self.status options[:base]
           existing_pull_request.merge!(options)
         else
           say existing_pull_request.rejection_message, :deliver_halted

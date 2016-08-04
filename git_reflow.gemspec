@@ -34,6 +34,10 @@ Gem::Specification.new do |s|
   s.add_dependency('highline')
   s.add_dependency('httpclient')
   s.add_dependency('github_api', '0.14.0')
+  # rack is a dependency of oauth2, which is a dependency of github_api
+  # The latest rack only supports ruby > 2.2.2, so we lock this down until
+  # support for ruby 2.1.x is dropped
+  s.add_dependency('rack', ['>= 1.2', '< 2'])
   s.add_dependency('reenhanced_bitbucket_api', '0.3.2')
 
   s.post_install_message = "You need to setup your GitHub OAuth token\nPlease run 'git-reflow setup'"

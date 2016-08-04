@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    git_reflow (0.8.2)
+    git_reflow (0.8.3)
       colorize (>= 0.7.0)
       github_api (= 0.14.0)
       gli (= 2.14.0)

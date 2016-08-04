@@ -30,7 +30,7 @@ describe GitReflow::GitHelpers do
     end
 
     it 'falls back to the environment variable $EDITOR' do
-      allow(GitReflow::Config).to receive(:get).with('core.editor').and_return nil
+      allow(GitReflow::Config).to receive(:get).with('core.editor').and_return ''
 
       expect(subject).to eq 'vim'
     end

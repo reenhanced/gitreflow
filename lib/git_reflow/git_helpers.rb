@@ -6,11 +6,17 @@ module GitReflow
     include Sandbox
 
     def git_root_dir
-      @git_root_dir ||= run('git rev-parse --show-toplevel', loud: false).strip
+      return @git_root_dir if "#{@git_root_dir}".length > 0
+      @git_root_dir = run('git rev-parse --show-toplevel', loud: false).strip
     end
 
     def git_editor_command
-      GitReflow::Config.get('core.editor') || GitReflow.default_editor
+      git_editor = "#{GitReflow::Config.get('core.editor')}"
+      if git_editor.length > 0
+        git_editor
+      else
+        GitReflow.default_editor
+      end
     end
 
     def remote_user

@@ -11,17 +11,12 @@ arg_name '[new-feature-branch-name] - name of the new feature branch'
 command :start do |c|
   c.flag [:b,:base], default_value: 'master'
   c.action do |global_options, options, args|
+
     if args.empty?
       raise "usage: git-reflow start [new-branch-name]"
     else
-      # base_branch is the branch that you want to base your feature branch off of
-      # This command allows you to 'git reflow start' off your base branch
-      base_branch = options[:base]
-
-      GitReflow.run_command_with_label "git checkout #{base_branch}"
-      GitReflow.run_command_with_label "git pull origin #{base_branch}"
-      GitReflow.run_command_with_label "git push origin #{GitReflow.current_branch}:refs/heads/#{args[0]}"
-      GitReflow.run_command_with_label "git checkout --track -b #{args[0]} origin/#{args[0]}"
+      GitReflow.start feature_branch: args[0], base: options[:base]
     end
+
   end
 end

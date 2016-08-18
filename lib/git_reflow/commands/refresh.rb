@@ -13,11 +13,8 @@ command :refresh do |c|
   c.flag [:r,:remote], default_value: 'origin'
   c.flag [:b,:base], default_value: 'master'
   c.action do |global_options, options, args|
-    refresh_options = {
-      :remote => options[:remote],
-      :base => options[:base]
-    }
 
-    GitReflow.update_feature_branch(refresh_options)
+    GitReflow.refresh base: options[:base], remote: options[:remote]
+
   end
 end

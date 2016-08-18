@@ -19,7 +19,7 @@ module GitReflow
     end
 
     def set(key, value, local: false)
-      value = value.strip
+      value = "#{value}".strip
       if local
         GitReflow::Sandbox.run "git config --replace-all #{key} \"#{value}\"", loud: false
       else

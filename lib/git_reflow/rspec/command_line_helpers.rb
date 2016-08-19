@@ -1,3 +1,5 @@
+require "highline"
+
 module GitReflow
   module RSpec
     module CommandLineHelpers
@@ -10,9 +12,12 @@ module GitReflow
 
         stub_run_for GitReflow
         stub_run_for GitReflow::Sandbox
+        stub_run_for GitReflow::Workflow
+        stub_run_for GitReflow::Workflows::Core if defined? GitReflow::Workflows
 
         stub_output_for(GitReflow)
         stub_output_for(GitReflow::Sandbox)
+        stub_output_for(GitReflow::Workflow)
 
         allow_any_instance_of(GitReflow::GitServer::PullRequest).to receive(:printf) do |format, *output|
           $output << Array(output).join(" ")

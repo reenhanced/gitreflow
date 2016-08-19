@@ -6,16 +6,8 @@ command :review do |c|
   c.flag [:t, :title]
   c.flag [:m, :message]
   c.action do |global_options,options,args|
-    if options[:title] || options[:message]
-      review_options = {
-        :base => args[0],
-        :title => options[:title],
-        :body =>  options[:message]
-      }
-    else
-      review_options = { :base => args[0] }
-    end
 
-    GitReflow.review(review_options)
+    GitReflow.review base: args[0], title: options[:title], body: options[:message]
+
   end
 end

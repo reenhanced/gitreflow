@@ -1,7 +1,22 @@
 # Change Log
 
-## [v0.8.2](https://github.com/reenhanced/gitreflow/tree/v0.8.2) (2016-08-01)
+## [Unreleased](https://github.com/reenhanced/gitreflow/tree/v0.8.4)
 
+[Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.8.3...v0.8.4)
+
+**Closed issues:**
+
+- Introduce the idea of "Workflows" to customize steps [\#53](https://github.com/reenhanced/gitreflow/issues/53)
+- undefined method for strip during setup [\#197](https://github.com/reenhanced/gitreflow/issues/197)
+
+**Merged pull requests:**
+
+- \[53\] Create core workflow module to consolidate commands [\#198](https://github.com/reenhanced/gitreflow/pull/198) ([codenamev](https://github.com/codenamev))
+
+## [v0.8.3](https://github.com/reenhanced/gitreflow/tree/v0.8.3) (2016-08-04)
+[Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.8.2...v0.8.3)
+
+## [v0.8.2](https://github.com/reenhanced/gitreflow/tree/v0.8.2) (2016-08-01)
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.8.1...v0.8.2)
 
 **Fixed bugs:**

@@ -35,5 +35,26 @@ describe GitReflow do
         expect( subject.respond_to?(command.to_sym) ).to be_truthy
       end
     end
+
+    context "when a workflow is set" do
+
+      it "calls the defined workflow methods instead of the default core" do
+        workflow_path = File.join(File.expand_path("../../fixtures", __FILE__), "/awesome_workflow.rb")
+        allow(GitReflow::Config).to receive(:get).with("reflow.workflow").and_return(workflow_path)
+
+        expect(GitReflow.workflow).to eql(GitReflow::Workflow::AwesomeWorkflow)
+        expect{ subject.start }.to have_said "Awesome."
+      end
+
+      it "the workflow can call super" do
+        workflow_path = File.join(File.expand_path("../../fixtures", __FILE__), "/workflow_with_super.rb")
+        allow(GitReflow::Config).to receive(:get).with("reflow.workflow").and_return(workflow_path)
+
+        expect(GitReflow.workflow).to eql(GitReflow::Workflow::WorkflowWithSuper)
+        expect{ subject.start }.to have_said "Super."
+        expect{ subject.start }.to have_said "usage: git-reflow start [new-branch-name]", :error
+      end
+    end
+
   end
 end

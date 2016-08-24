@@ -9,7 +9,12 @@ module GitReflow
 
     # @nodoc
     def self.current
-      GitReflow::Workflows::Core
+      workflow_file = GitReflow::Config.get('reflow.workflow')
+      if workflow_file.length > 0 and File.exists?(workflow_file)
+        eval(File.read(workflow_file))
+      else
+        GitReflow::Workflows::Core
+      end
     end
 
     module ClassMethods

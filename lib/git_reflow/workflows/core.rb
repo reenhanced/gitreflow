@@ -5,10 +5,8 @@ module GitReflow
   module Workflows
     # This class contains the core workflow for git-reflow. Going forward, this
     # will act as the base class for customizing and extending git-reflow.
-    module Core
+    class Core
       include GitReflow::Workflow
-
-      extend self
 
       # Sets up the required git configurations that git-reflow depends on.
       #

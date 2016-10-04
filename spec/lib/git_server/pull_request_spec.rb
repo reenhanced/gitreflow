@@ -10,8 +10,20 @@ describe GitReflow::GitServer::PullRequest do
   let(:enterprise_site)  { 'https://github.reenhanced.com' }
   let(:enterprise_api)   { 'https://github.reenhanced.com' }
 
+  describe ".minimum_approvals" do
+  end
+
+  describe ".approval_regex" do
+  end
+
+  %w{commit_author comments last_comment reviewers approvals}.each do |method_name|
+    describe "##{method_name}" do
+      specify { expect( GitReflow::GitServer::PullRequest.new({}).send(method_name.to_sym) ).to raise_error("PullRequest##{method_name} method must be implemented") }
+    end
+  end
+
   describe "#good_to_merge?(options)" do
-    subject            { GitReflow::GitServer::GitHub::PullRequest.new(pull_request) }
+    subject { GitReflow::GitServer::GitHub::PullRequest.new(pull_request) }
 
     before do
       FakeGitHub.new(
@@ -25,7 +37,7 @@ describe GitReflow::GitServer::PullRequest do
       # setup initial valid state
       allow_any_instance_of(GitReflow::GitServer::GitHub::PullRequest).to receive(:build).and_return(Struct.new(:state, :description, :url).new)
       allow(GitReflow.git_server).to receive(:find_open_pull_request).with({from: 'new-feature', to: 'master'}).and_return(pull_request)
-      
+
       # stubs approvals and last_comment conditions to default to true
       allow(pull_request).to receive(:approvals).and_return(["Simon", "John"])
       allow(pull_request).to receive_message_chain(:last_comment, :match).and_return(true)
@@ -395,10 +407,10 @@ describe GitReflow::GitServer::PullRequest do
   end
 
   context ".merge!" do
-    subject            { GitReflow::GitServer::GitHub::PullRequest.new(pull_request) }
+    let(:pull_request) { GitReflow::GitServer::GitHub::PullRequest.new(pull_request) }
 
     let(:inputs) {
-      { 
+      {
         :base => "base_branch",
         :title => "title",
         :message => "message"
@@ -411,6 +423,15 @@ describe GitReflow::GitServer::PullRequest do
 
     let(:merge_response) { { :message => "Failure_Message" } }
 
+    subject { pull_request.merge! inputs }
+
+
+    context "and always deliver is set" do
+      before { allow(GitReflow::Config).to receive(:get).with('reflow.always-deliver').and_return('true') }
+      it "doesn't ask to confirm deliver" do
+      end
+    end
+
     context "finds pull request but merge response fails" do
       before do
         allow(GitReflow).to receive(:git_server).and_return(git_server)
@@ -419,13 +440,13 @@ describe GitReflow::GitServer::PullRequest do
         allow(GitReflow::GitServer::GitHub).to receive_message_chain(:connection, :pull_requests, :merge).and_return(merge_response)
         allow(merge_response).to receive(:success?).and_return(false)
         allow_any_instance_of(GitReflow::GitServer::GitHub::PullRequest).to receive(:approvals).and_return(lgtm_comment_authors)
-        allow(subject).to receive(:deliver?).and_return(true)
+        allow(pull_request).to receive(:deliver?).and_return(true)
         allow(merge_response).to receive(:to_s).and_return("Merge failed")
       end
 
       it "throws an error" do
-        expect { subject.merge! inputs }.to have_said "Merge failed", :deliver_halted
-        expect { subject.merge! inputs }.to have_said "There were problems commiting your feature... please check the errors above and try again.", :error
+        expect { subject }.to have_said "Merge failed", :deliver_halted
+        expect { subject }.to have_said "There were problems commiting your feature... please check the errors above and try again.", :error
       end
     end
   end

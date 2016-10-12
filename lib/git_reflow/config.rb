@@ -2,7 +2,7 @@ module GitReflow
   module Config
     extend self
 
-    CONFIG_FILE_PATH = "$HOME/.gitconfig.reflow".freeze
+    CONFIG_FILE_PATH = "#{ENV['HOME']}/.gitconfig.reflow".freeze
 
     def get(key, reload: false, all: false, local: false)
       if reload == false and cached_key_value = instance_variable_get(:"@#{key.tr('.-', '_')}")

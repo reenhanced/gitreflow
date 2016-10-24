@@ -21,7 +21,7 @@ describe 'RebaseFlatMerge' do
     context "with more than a single commit of changes" do
       before { allow(GitReflow).to receive(:current_branch_commit_count).with(base: 'master').and_return(2) }
 
-      it "Rebases off of the base branch if there are more than 1 commit" do
+      it "rebases off of the base branch if there is more than 1 commit" do
         expect { subject }.to have_said "Rebasing to cleanup your commit history for this branch.", :notice
         expect { subject }.to have_said "Once you have completed your rebase, re-run git-reflow deliver.", :notice
         expect { subject }.to have_run_commands_in_order [

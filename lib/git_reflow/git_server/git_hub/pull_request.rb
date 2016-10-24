@@ -11,7 +11,7 @@ module GitReflow
           self.feature_branch_name = attributes.head.label[/[^:]+$/]
           self.base_branch_name    = attributes.base.label[/[^:]+$/]
           self.source_object       = attributes
-          self.build_status        = build.state
+          self.build               = Build.new(state: build.state, description: build.description, url: build.url)
         end
 
         def self.create(options = {})
@@ -153,15 +153,14 @@ module GitReflow
 
         def build
           github_build_status = GitReflow.git_server.get_build_status(self.head.sha)
-          build_status_object = Struct.new(:state, :description, :url)
           if github_build_status
-            build_status_object.new(
-              github_build_status.state,
-              github_build_status.description,
-              github_build_status.target_url
+            Build.new(
+              state:       github_build_status.state,
+              description: github_build_status.description,
+              url:         github_build_status.target_url
             )
           else
-            build_status_object.new
+            Build.new
           end
         end
 

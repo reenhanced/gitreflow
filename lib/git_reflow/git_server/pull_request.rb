@@ -1,9 +1,19 @@
 module GitReflow
   module GitServer
     class PullRequest
-      attr_accessor :description, :html_url, :feature_branch_name, :base_branch_name, :build_status, :source_object, :number
+      attr_accessor :description, :html_url, :feature_branch_name, :base_branch_name, :build, :source_object, :number
 
       DEFAULT_APPROVAL_REGEX = /(?i-mx:lgtm|looks good to me|:\+1:|:thumbsup:|:shipit:)/
+
+      class Build
+        attr_accessor :state, :description, :url
+
+        def initialize(state: nil, description: nil, url: nil)
+          self.state       = state
+          self.description = description
+          self.url         = url
+        end
+      end
 
       def self.minimum_approvals
         "#{GitReflow::Config.get('constants.minimumApprovals')}"
@@ -63,6 +73,10 @@ module GitReflow
         end
       end
 
+      def build_status
+        build.nil? ? nil : build.state
+      end
+
       def rejection_message
         if !build_status.nil? and build_status != "success"
           "#{build.description}: #{build.url}"
@@ -83,7 +97,7 @@ module GitReflow
       end
 
       def all_comments_addressed?
-        self.class.minimum_approvals.length <= 0 or last_comment.match(self.class.approval_regex)
+        self.class.minimum_approvals.length <= 0 or !last_comment.match(self.class.approval_regex).nil?
       end
 
       def good_to_merge?(force: false)

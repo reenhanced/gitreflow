@@ -1,5 +1,23 @@
 require 'spec_helper'
 
+class MockPullRequest < GitReflow::GitServer::PullRequest
+  DESCRIPTION         = "Bingo! Unity."
+  HTML_URL            = "https://github.com/reenhanced/gitreflow/pulls/0"
+  FEATURE_BRANCH_NAME = "feature_branch"
+  BASE_BRANCH_NAME    = "base"
+  NUMBER              = 0
+
+  def initialize(attributes)
+    self.description         = attributes.description || DESCRIPTION
+    self.html_url            = attributes.html_url || HTML_URL
+    self.feature_branch_name = attributes.feature_branch_name || FEATURE_BRANCH_NAME
+    self.base_branch_name    = attributes.base_branch_name || BASE_BRANCH_NAME
+    self.build               = Build.new
+    self.number              = attributes.number || NUMBER
+    self.source_object       = attributes
+  end
+end
+
 describe GitReflow::GitServer::PullRequest do
   let(:pull_request) { Fixture.new('pull_requests/external_pull_request.json').to_json_hashie }
   let(:github)      { stub_github_with({ user: 'reenhanced', repo: 'repo', pull: pull_request }) }
@@ -11,9 +29,18 @@ describe GitReflow::GitServer::PullRequest do
   let(:enterprise_api)   { 'https://github.reenhanced.com' }
 
   describe ".minimum_approvals" do
+    before { allow(GitReflow::Config).to receive(:get).with('constants.minimumApprovals').and_return('2') }
+    it     { should eql '2' }
   end
 
   describe ".approval_regex" do
+    before { allow(GitReflow::Config).to receive(:get).with('constants.minimumApprovals').and_return('2') }
+    it     { should eql '2' }
+
+    context "with custom approval regex set" do
+      before { allow(GitReflow::Config).to receive(:get).with('constants.approvalRegex').and_return('/dude/') }
+      it     { should eql Regex.new('/dude/') }
+    end
   end
 
   %w{commit_author comments last_comment reviewers approvals}.each do |method_name|
@@ -23,28 +50,8 @@ describe GitReflow::GitServer::PullRequest do
   end
 
   describe "#good_to_merge?(options)" do
-    subject { GitReflow::GitServer::GitHub::PullRequest.new(pull_request) }
+    subject { MockPullRequest.new(pull_request) }
 
-    before do
-      FakeGitHub.new(
-        repo_owner:   'reenhanced',
-        repo_name:    'repo',
-        pull_request: {
-          number:   pull_request.number,
-          owner:    pull_request.head.user.login,
-          comments: [{author: 'tito', body: 'lgtm'}, {author: 'ringo', body: ':+1:'}]
-        })
-      # setup initial valid state
-      allow_any_instance_of(GitReflow::GitServer::GitHub::PullRequest).to receive(:build).and_return(Struct.new(:state, :description, :url).new)
-      allow(GitReflow.git_server).to receive(:find_open_pull_request).with({from: 'new-feature', to: 'master'}).and_return(pull_request)
-
-      # stubs approvals and last_comment conditions to default to true
-      allow(pull_request).to receive(:approvals).and_return(["Simon", "John"])
-      allow(pull_request).to receive_message_chain(:last_comment, :match).and_return(true)
-      allow(GitReflow::GitServer::PullRequest).to receive(:minimum_approvals).and_return("2")
-      allow(GitReflow::GitServer::PullRequest).to receive(:approval_regex).and_return(/(?i-mx:lgtm|looks good to me|:\+1:|:thumbsup:|:shipit:)/)
-
-    end
     context "with no status" do
       specify { expect(subject.good_to_merge?).to eq(true) }
     end
@@ -52,362 +59,274 @@ describe GitReflow::GitServer::PullRequest do
     context "with build status" do
       context "of 'success'" do
         before  { allow(subject).to receive(:build_status).and_return('success') }
-        specify { expect(subject.good_to_merge?).to eq(true) }
+
+        context "and approved" do
+          before { allow(subject).to receive(:approved?).and_return(true) }
+          specify { expect(subject.good_to_merge?).to eq(true) }
+        end
+
+        context "but not approved" do
+          before { allow(subject).to receive(:approved?).and_return(false) }
+          specify { expect(subject.good_to_merge?).to eq(false) }
+        end
       end
 
       context "NOT of 'success'" do
         before { allow(subject).to receive(:build_status).and_return('failure') }
-        specify { expect(subject.good_to_merge?).to eq(false) }
-      end
-    end
 
-    # Need at least 1 comment for you to merge
-    context "with no comments" do
-      before {
-        allow(subject).to receive(:has_comments?).and_return(false)
-        allow(subject).to receive(:build_status).and_return('success')
-        allow(subject).to receive(:approvals).and_return(["Simon", "John"])
-      }
-      specify { expect(subject.good_to_merge?).to eq(true) }
-      context "and no approvals" do
-        before { allow(subject).to receive(:approvals).and_return([]) }
-        specify { expect(subject.good_to_merge?).to eq(false) }
-      end
-    end
+        context "and approved" do
+          before { allow(subject).to receive(:approved?).and_return(true) }
+          specify { expect(subject.good_to_merge?).to eq(false) }
+        end
 
-    context "with 1 approval" do
-      before do
-        allow(subject).to receive(:reviewers).and_return(['bob'])
-        allow(subject).to receive(:approvals).and_return(['joe'])
+        context "and not approved" do
+          before { allow(subject).to receive(:approved?).and_return(false) }
+          specify { expect(subject.good_to_merge?).to eq(false) }
+        end
       end
-      specify { expect(subject.good_to_merge?).to eq(false) }
-    end
-
-    context "with 2 approvals" do
-      before do
-        allow(subject).to receive(:reviewers).and_return(['bob'])
-        allow(subject).to receive(:approvals).and_return(['joe', 'bob'])
-        allow(subject).to receive(:last_comment).and_return('hi')
-        allow(subject).to receive(:build_status).and_return('success')
-      end
-      specify { expect(subject.good_to_merge?).to eq(false) }
-    end
-
-    context "with 2 approvals and last comment LGTM" do
-      before do
-        allow(subject).to receive(:reviewers).and_return(['bob'])
-        allow(subject).to receive(:approvals).and_return(['joe', 'bob'])
-        allow(subject).to receive(:last_comment).and_return('LGTM')
-      end
-      specify { expect(subject.good_to_merge?).to eq(true) }
-    end
-
-    context "with comments" do
-      before do
-        allow(subject).to receive(:reviewers).and_return(['bob'])
-        allow(subject).to receive(:approvals).and_return([])
-      end
-      specify { expect(subject.good_to_merge?).to eq(false) }
     end
 
     context "force merge?" do
-      context "with pending comments" do
-        before { allow(subject).to receive(:approvals).and_return([]) }
+      context "with no successful build" do
+        before { allow(subject).to receive(:build_status).and_return(nil) }
         specify { expect(subject.good_to_merge?(force: true)).to eq(true) }
       end
 
-      context "with build failure" do
-        before { allow(subject).to receive(:build_status).and_return('failure') }
+      context "with no approval" do
+        before { allow(subject).to receive(:approved?).and_return(false) }
+        specify { expect(subject.good_to_merge?(force: true)).to eq(true) }
+      end
+
+      context "with neither build success or approval" do
+        before do
+          allow(subject).to receive(:build_status).and_return(nil)
+          allow(subject).to receive(:approved?).and_return(false)
+        end
         specify { expect(subject.good_to_merge?(force: true)).to eq(true) }
       end
     end
   end
 
   describe "#approved?" do
-    subject            { GitReflow::GitServer::GitHub::PullRequest.new(pull_request) }
+    subject { MockPullRequest.new(pull_request) }
 
-    context "no approvals and build success" do
+    context "no approvals required" do
       before do
-        FakeGitHub.new(
-        repo_owner:   'reenhanced',
-        repo_name:    'repo',
-          pull_request: {
-            number: pull_request.number,
-            owner: pull_request.head.user.login,
-            comments: []
-          })
-        allow(GitReflow.git_server).to receive(:get_build_status).and_return(Struct.new(:state, :description, :target_url).new())
-        allow(GitReflow::GitServer::GitHub::PullRequest).to receive(:minimum_approvals).and_return("0")
+        allow(subject).to receive(:has_comments?).and_return(false)
+        allow(subject).to receive(:approvals?).and_return([])
       end
       specify { expect(subject.approved?).to be_truthy }
     end
 
-    context "all commenters must approve and minimum_approvals is nil" do
-      before do
-        FakeGitHub.new(
-        repo_owner:   'reenhanced',
-        repo_name:    'repo',
-          pull_request: {
-            number: pull_request.number,
-            owner: pull_request.head.user.login,
-            comments: []
-          })
-        allow(GitReflow.git_server).to receive(:get_build_status).and_return(Struct.new(:state, :description, :target_url).new())
-        allow(GitReflow::GitServer::GitHub::PullRequest).to receive(:minimum_approvals).and_return(nil)
-        allow(subject).to receive(:approvals).and_return(["Simon"])
-        allow(subject).to receive(:has_comments?).and_return(true)
-        allow(subject).to receive(:reviewers_pending_response).and_return([])
+    context "all commenters must approve" do
+      before { allow(MockPullRequest).to receive(:minimum_approvals).and_return(nil) }
+
+      context "and there are comments" do
+        before { allow(subject).to receive(:comments).and_return(['Cool.', 'This is nice.']) }
+        context "and there are no reviewers pending a resposne" do
+          before { allow(subject).to receive(:reviewers_pending_response).and_return([]) }
+          specify { expect(subject.approved?).to be_truthy }
+        end
+        context "but there are reviewers pending a resposne" do
+          before { allow(subject).to receive(:reviewers_pending_response).and_return(['octocat']) }
+          specify { expect(subject.approved?).to be_falsy }
+        end
       end
-      specify { expect(subject.approved?).to be_truthy }
+
+      context "and there are no comments" do
+        before { allow(subject).to receive(:comments).and_return(['Cool.', 'This is nice.']) }
+        context "and there are approvals" do
+          before { allow(subject).to receive(:approvals).and_return(['Sally']) }
+          specify { expect(subject.approved?).to be_truthy }
+        end
+        context "and there are no approvals" do
+          before { allow(subject).to receive(:approvals).and_return([]) }
+          specify { expect(subject.approved?).to be_falsy }
+        end
+      end
     end
 
-    context "all commenters must approve but we have no pending reviewers" do
-      before do
-        FakeGitHub.new(
-          repo_owner:   'reenhanced',
-          repo_name:    'repo',
-          pull_request: {
-            number: pull_request.number,
-            owner: pull_request.head.user.login,
-            comments: []
-          })
-        allow(GitReflow.git_server).to receive(:get_build_status).and_return(Struct.new(:state, :description, :target_url).new())
-        allow(GitReflow::GitServer::GitHub::PullRequest).to receive(:minimum_approvals).and_return("")
-        allow(subject).to receive(:has_comments?).and_return(true)
-        allow(subject).to receive(:approvals).and_return(["Simon"])
-        allow(subject).to receive(:reviewers_pending_response).and_return([])
+    context "custom minimum approval set" do
+      before { allow(MockPullRequest).to receive(:minimum_approvals).and_return('2') }
+
+      context "and approvals is greater than minimum" do
+        before { allow(subject).to receive(:approvals).and_return(['Sally', 'Joey', 'Randy']) }
+        it     { should be_truthy }
       end
-      specify { expect(subject.approved?).to be_truthy }
+
+      context "and approvals is equal to minimum" do
+        before { allow(subject).to receive(:approvals).and_return(['Sally', 'Joey']) }
+        it     { should be_truthy }
+      end
+
+      context "but approvals is less than minimum" do
+        before { allow(subject).to receive(:approvals).and_return(['Sally']) }
+        it     { should be_falsy }
+      end
     end
 
-    context "all commenters must approve but we have 1 pending reviewer" do
-      before do
-        FakeGitHub.new(
-          repo_owner:   'reenhanced',
-          repo_name:    'repo',
-          pull_request: {
-            number: pull_request.number,
-            owner: pull_request.head.user.login,
-            comments: []
-          })
-        allow(GitReflow.git_server).to receive(:get_build_status).and_return(Struct.new(:state, :description, :target_url).new())
-        allow(GitReflow::GitServer::GitHub::PullRequest).to receive(:minimum_approvals).and_return("")
-        allow(subject).to receive(:has_comments?).and_return(true)
-        allow(subject).to receive(:approvals).and_return(["Simon"])
-        allow(subject).to receive(:reviewers_pending_response).and_return(["Simon"])
-      end
-      specify { expect(subject.approved?).to be_falsy }
-    end
-
-    context "2 approvals required but we only have 1 approval" do
-      before do
-        FakeGitHub.new(
-          repo_owner:   'reenhanced',
-          repo_name:    'repo',
-          pull_request: {
-            number: pull_request.number,
-            owner: pull_request.head.user.login,
-            comments: []
-          })
-        allow(GitReflow.git_server).to receive(:get_build_status).and_return(Struct.new(:state, :description, :target_url).new())
-        allow(GitReflow::GitServer::GitHub::PullRequest).to receive(:minimum_approvals).and_return("2")
-        allow(subject).to receive(:approvals).and_return(["Simon"])
-        allow(subject).to receive(:last_comment).and_return("LGTM")
-      end
-      specify { expect(subject.approved?).to be_falsy }
-    end
-
-    context "2 approvals required and we have 2 approvals but last comment is not approval" do
-      before do
-        FakeGitHub.new(
-          repo_owner:   'reenhanced',
-          repo_name:    'repo',
-          pull_request: {
-            number: pull_request.number,
-            owner: pull_request.head.user.login,
-            comments: []
-          })
-        allow(GitReflow.git_server).to receive(:get_build_status).and_return(Struct.new(:state, :description, :target_url).new())
-        allow(GitReflow::GitServer::GitHub::PullRequest).to receive(:minimum_approvals).and_return("2")
-        allow(subject).to receive(:approvals).and_return(["Simon", "Peter"])
-        allow(subject).to receive(:last_comment).and_return("Boo")
-      end
-      specify { expect(subject.approved?).to be_falsy }
-    end
-
-    context "2 approvals required and we have 2 approvals and last comment is approval" do
-      before do
-        FakeGitHub.new(
-          repo_owner:   'reenhanced',
-          repo_name:    'repo',
-          pull_request: {
-            number: pull_request.number,
-            owner: pull_request.head.user.login,
-            comments: []
-          })
-        allow(GitReflow.git_server).to receive(:get_build_status).and_return(Struct.new(:state, :description, :target_url).new())
-        allow(GitReflow::GitServer::GitHub::PullRequest).to receive(:minimum_approvals).and_return("2")
-        allow(subject).to receive(:approvals).and_return(["Simon", "Peter"])
-        allow(subject).to receive(:last_comment).and_return("LGTM")
-      end
-      specify { expect(subject.approved?).to be_truthy }
-    end
   end
 
   describe "#rejection_message" do
-    subject            { GitReflow::GitServer::GitHub::PullRequest.new(pull_request) }
+    subject { MockPullRequest.new(pull_request) }
 
-    before do
-      allow(GitReflow.git_server).to receive(:get_build_status).and_return(Struct.new(:state, :description, :target_url).new())
-    end
-
-    context "Testing a Failure Build Status" do
+    context "and the build is not successful" do
       before do
         allow(subject).to receive(:build_status).and_return('failure')
+        allow(subject).to receive(:build).and_return(MockPullRequest::Build.new(state: 'failure', description: 'no dice', url: 'https://example.com'))
+        allow(subject).to receive(:reviewers).and_return([])
+        allow(subject).to receive(:approvals).and_return([])
       end
 
-      specify { expect(subject.rejection_message).to eq(": ") }
+      specify { expect(subject.rejection_message).to eq("no dice: https://example.com") }
+
+      context "but it is blank" do
+        before { allow(subject).to receive(:build_status).and_return(nil) }
+        specify { expect(subject.rejection_message).to_not eq("no dice: https://example.com") }
+      end
     end
 
-    context "Testing Minimum Approvals Failure" do
-      before do
-        allow(subject).to receive(:build_status).and_return('success')
-        allow(subject).to receive(:approval_minimums_reached?).and_return(false)
-        allow(GitReflow::GitServer::PullRequest).to receive(:minimum_approvals).and_return("2")
+    context "and the build is successful" do
+      context "but approval minimums haven't been reached" do
+        before do
+          allow(subject).to receive(:approval_minimums_reached?).and_return(false)
+          allow(MockPullRequest).to receive(:minimum_approvals).and_return('3')
+        end
+        specify { expect(subject.rejection_message).to eq("You need approval from at least 3 users!") }
       end
-      specify { expect(subject.rejection_message).to eq("You need approval from at least 2 users!") }
+
+      context "and approval minimums have been reached" do
+        before { allow(subject).to receive(:approval_minimums_reached?).and_return(true) }
+
+        context "but all comments haven't been addressed" do
+          before  do
+            allow(subject).to receive(:all_comments_addressed?).and_return(false)
+            allow(subject).to receive(:last_comment).and_return("nope")
+          end
+          specify { expect(subject.rejection_message).to eq("The last comment is holding up approval:\nnope") }
+        end
+
+        context "and all comments have been addressed" do
+          before { allow(subject).to receive(:all_comments_addressed?).and_return(true) }
+
+          context "but there are still pending reviews" do
+            before  { allow(subject).to receive(:reviewers_pending_response).and_return(['sally', 'bog']) }
+            specify { expect(subject.rejection_message).to eq("You still need a LGTM from: sally, bog") }
+          end
+
+          context "and there are no pending reviews" do
+            before  { allow(subject).to receive(:reviewers_pending_response).and_return([]) }
+            specify { expect(subject.rejection_message).to eq("Your code has not been reviewed yet.") }
+          end
+        end
+      end
+    end
+  end
+
+  describe "#approval_minimums_reached?" do
+    subject { MockPullRequest.new(pull_request) }
+
+    before { allow(subject).to receive(:approvals).and_return(['sally', 'bog']) }
+
+    context "minimum approvals not set" do
+      before  { allow(MockPullRequest).to receive(:minimum_approvals).and_return('') }
+      specify { expect(subject.approval_minimums_reached?).to eql true }
     end
 
-    context "Testing Minimum Approvals Reached" do
-      before do
-        allow(subject).to receive(:build_status).and_return(nil)
-        allow(subject).to receive(:all_comments_addressed?).and_return(false)
-        allow(subject).to receive(:last_comment).and_return("Hello")
-      end
-      specify { expect(subject.rejection_message).to eq("The last comment is holding up approval:\nHello") }
+    context "minimum approvals not met" do
+      before  { allow(MockPullRequest).to receive(:minimum_approvals).and_return('3') }
+      specify { expect(subject.approval_minimums_reached?).to eql false }
     end
 
-    context "Testing All Comments Addressed" do
-      before do
-        allow(subject).to receive(:build_status).and_return('success')
-        allow(subject).to receive(:all_comments_addressed?).and_return(false)
-        allow(subject).to receive(:last_comment).and_return("Hello")
-      end
-      specify { expect(subject.rejection_message).to eq("The last comment is holding up approval:\nHello") }
-    end
-
-    context "Testing All Comments Addressed" do
-      before do
-        allow(subject).to receive(:reviewers_pending_response).and_return(['Simon'])
-        allow(subject).to receive(:build?).and_return('success')
-        allow(subject).to receive(:all_comments_addressed?).and_return(true)
-        allow(subject).to receive(:approval_minimums_reached?).and_return(true)
-      end
-      specify { expect(subject.rejection_message).to eq( "You still need a LGTM from: Simon") }
-    end
-
-    context "Testing Last Case" do
-      before do
-        allow(subject).to receive(:reviewers_pending_response).and_return([])
-        allow(subject).to receive(:build?).and_return('success')
-        allow(subject).to receive(:all_comments_addressed?).and_return(true)
-        allow(subject).to receive(:approval_minimums_reached?).and_return(true)
-      end
-      specify { expect(subject.rejection_message).to eq("Your code has not been reviewed yet.") }
+    context "minimum approvals met" do
+      before  { allow(MockPullRequest).to receive(:minimum_approvals).and_return('2') }
+      specify { expect(subject.approval_minimums_reached?).to eql true }
     end
   end
 
   describe "#all_comments_addressed" do
-    subject            { GitReflow::GitServer::GitHub::PullRequest.new(pull_request) }
+    subject { MockPullRequest.new(pull_request) }
+    before  { allow(subject).to receive(:approvals).and_return(['sally', 'bog']) }
 
-    before do
-      allow(GitReflow.git_server).to receive(:get_build_status).and_return(Struct.new(:state, :description, :target_url).new())
+    context "minimum approvals not set" do
+      before  do
+        allow(MockPullRequest).to receive(:minimum_approvals).and_return('')
+        allow(subject).to receive(:last_comment).and_return('nope')
+      end
+      specify { expect(subject.all_comments_addressed?).to eql true }
     end
 
-    context "Testing a Failure Case" do
-      before do
-        allow(subject).to receive(:minimum_approvals).and_return('2')
-        allow(subject).to receive(:approvals).and_return(['Simon'])
+    context "minimum approvals set" do
+      before { allow(MockPullRequest).to receive(:minimum_approvals).and_return('2') }
+      context "last comment approved" do
+        before  { allow(subject).to receive(:last_comment).and_return('lgtm') }
+        specify { expect(subject.all_comments_addressed?).to eql true }
       end
-      specify { expect(subject.approval_minimums_reached?).to eq(true) }
-    end
 
-    context "Testing a Success Case" do
-      before do
-        allow(subject).to receive(:minimum_approvals).and_return('2')
-        allow(subject).to receive(:approvals).and_return(['Simon', 'John'])
+      context "last comment not approved" do
+        before  { allow(subject).to receive(:last_comment).and_return('nope') }
+        specify { expect(subject.all_comments_addressed?).to eql false }
       end
-      specify { expect(subject.approval_minimums_reached?).to eq(true) }
-    end
-
-    context "Testing Case with no minimum_approval" do
-      before do
-        allow(subject).to receive(:minimum_approvals).and_return('')
-        allow(subject).to receive(:approvals).and_return([])
-      end
-      specify { expect(subject.approval_minimums_reached?).to eq(true) }
     end
   end
 
   describe "#display_pull_request_summary" do
-    subject            { GitReflow::GitServer::GitHub::PullRequest.new(pull_request).display_pull_request_summary }
+    let(:pr) { MockPullRequest.new(pull_request) }
+    subject  { pr.display_pull_request_summary }
 
-    context "Testing Pull Request Properties" do
-      before do
-        FakeGitHub.new(
-          repo_owner:   'reenhanced',
-          repo_name:    'repo',
-          pull_request: {
-            number:   pull_request.number,
-            owner:    pull_request.head.user.login,
-            comments: [{author: 'tito', body: 'lgtm'}, {author: 'ringo', body: ':+1:'}]
-          })
-        allow_any_instance_of(GitReflow::GitServer::GitHub::PullRequest).to receive(:build).and_return(Struct.new(:state, :description, :url).new)
-        allow(GitReflow.git_server).to receive(:find_open_pull_request).with({from: 'new-external-feature', to: 'master'}).and_return(pull_request)
-      end
+    before do
+      allow(pr).to receive(:reviewers).and_return([])
+      allow(pr).to receive(:approvals).and_return([])
+      allow(pr).to receive(:reviewers_pending_response).and_return([])
+    end
 
-      it "displays relavent information about the pull request" do
-        expect{ subject }.to have_output("branches: new-external-feature -> master")
-        expect{ subject }.to have_output("number: #{pull_request.number}")
-        expect{ subject }.to have_output("url: #{pull_request.html_url}")
-        expect{ subject }.to have_output("reviewed by: #{"tito".colorize(:green)}, #{"ringo".colorize(:green)}")
-        expect{ subject }.to have_output("Last comment: \":+1:\"")
+    it "displays relavent information about the pull request" do
+      expect{ subject }.to have_output("branches: #{pr.feature_branch_name} -> #{pr.base_branch_name}")
+      expect{ subject }.to have_output("number: #{pr.number}")
+      expect{ subject }.to have_output("url: #{pr.html_url}")
+      expect{ subject }.to have_said("No one has reviewed your pull request.\n", :notice)
+    end
+
+    context "with build status" do
+      let(:build) { MockPullRequest::Build.new(state: "failure", description: "no dice", url: "https://example.com") }
+      before      { allow(pr).to receive(:build).and_return(build) }
+      specify     { expect{ subject }.to have_said("Your build status is not successful: #{build.url}.\n", :notice) }
+      context "and build status is 'success'" do
+        before  { allow(build).to receive(:state).and_return('success') }
+        specify { expect{ subject }.to_not have_output("Your build status is not successful") }
       end
     end
 
-    context "Testing Different LGTM Regex Expressions " do
+    context "with reviewers" do
       before do
-        FakeGitHub.new(
-          repo_owner:   'reenhanced',
-          repo_name:    'repo',
-          pull_request: {
-            number:   pull_request.number,
-            owner:    pull_request.head.user.login,
-            comments: [
-              {author: 'tito', body: 'lgtm'}, 
-              {author: 'ringo', body: ':+1:'}, 
-              {author: 'Simon', body: ':shipit:'}, 
-              {author: 'Peter', body: 'looks good to me'},
-              {author: 'Johnny', body: 'LgTm'},
-              {author: 'Jacob', body: 'LOOKS GOOD TO ME'}
-            ]
-          })
-        allow_any_instance_of(GitReflow::GitServer::GitHub::PullRequest).to receive(:build).and_return(Struct.new(:state, :description, :url).new)
-        allow(GitReflow.git_server).to receive(:find_open_pull_request).with({from: 'new-external-feature', to: 'master'}).and_return(pull_request)
+        allow(pr).to receive(:reviewers).and_return(['tito', 'ringo'])
+        allow(pr).to receive(:last_comment).and_return('nope')
       end
 
-      it "displays relavent information about the pull request" do
-        expect{ subject }.to have_output("branches: new-external-feature -> master")
-        expect{ subject }.to have_output("number: #{pull_request.number}")
-        expect{ subject }.to have_output("url: #{pull_request.html_url}")
-        expect{ subject }.to have_output("reviewed by: #{"tito".colorize(:green)}, #{"ringo".colorize(:green)}, #{"Simon".colorize(:green)}, #{"Peter".colorize(:green)}, #{"Johnny".colorize(:green)}, #{"Jacob".colorize(:green)}")
-        expect{ subject }.to have_output("Last comment: \"LOOKS GOOD TO ME\"")
+      specify { expect{ subject }.to have_output("reviewed by: #{"tito".colorize(:red)}, #{"ringo".colorize(:red)}") }
+      specify { expect{ subject }.to have_output("Last comment: nope") }
+
+      context "and approvals" do
+        before { allow(pr).to receive(:approvals).and_return(['tito']) }
+        specify { expect{ subject }.to have_output  'tito'.colorize(:green) }
+        specify { expect{ subject }.to have_output  'ringo'.colorize(:red) }
+      end
+
+      context "and pending approvals" do
+        before  { allow(pr).to receive(:reviewers_pending_response).and_return(['tito', 'ringo']) }
+        specify { expect{ subject }.to_not have_output "You still need a LGTM from: tito, ringo" }
+      end
+
+      context "and no pending approvals" do
+        before  { allow(pr).to receive(:reviewers_pending_response).and_return([]) }
+        specify { expect{ subject }.to_not have_output "You still need a LGTM from" }
       end
     end
   end
 
-  context ".merge!" do
-    let(:pull_request) { GitReflow::GitServer::GitHub::PullRequest.new(pull_request) }
+  context "#merge!" do
+    let(:pr) { MockPullRequest.new(pull_request) }
+    let(:commit_message_for_merge) { "This changes everything!" }
 
     let(:inputs) {
       {
@@ -423,54 +342,86 @@ describe GitReflow::GitServer::PullRequest do
 
     let(:merge_response) { { :message => "Failure_Message" } }
 
-    subject { pull_request.merge! inputs }
+    subject { pr.merge! inputs }
 
+    before do
+      allow(GitReflow).to receive(:append_to_squashed_commit_message)
+      allow(pr).to receive(:commit_message_for_merge).and_return(commit_message_for_merge)
+    end
 
-    context "and always deliver is set" do
-      before { allow(GitReflow::Config).to receive(:get).with('reflow.always-deliver').and_return('true') }
-      it "doesn't ask to confirm deliver" do
+    context "and can deliver" do
+      before { allow(pr).to receive(:deliver?).and_return(true) }
+
+      specify { expect{ subject }.to have_said "Merging pull request ##{pr.number}: '#{pr.title}', from '#{pr.feature_branch_name}' into '#{pr.base_branch_name}'", :notice }
+
+      it "updates both feature and destination branch and squash-merges feature into base branch" do
+        expect(GitReflow).to receive(:update_current_branch)
+        expect(GitReflow).to receive(:fetch_destination).with(pr.base_branch_name)
+        expect(GitReflow).to receive(:append_to_squashed_commit_message).with(pr.commit_message_for_merge)
+        expect { subject }.to have_run_commands_in_order [
+          "git checkout #{pr.base_branch_name}",
+          "git pull origin #{pr.base_branch_name}",
+          "git merge --squash #{pr.feature_branch_name}"
+        ]
+      end
+
+      context "and successfully commits merge" do
+        specify { expect{ subject }.to have_said "Pull request ##{pr.number} successfully merged.", :success }
+
+        context "and cleaning up feature branch" do
+          before { allow(pr).to receive(:cleanup_feature_branch?).and_return(true) }
+          specify { expect{ subject }.to have_said "Nice job buddy." }
+          it "pushes the base branch and removes the feature branch locally and remotely" do
+            expect { subject }.to have_run_commands_in_order [
+              "git push origin #{pr.base_branch_name}",
+              "git push origin :#{pr.feature_branch_name}",
+              "git branch -D #{pr.feature_branch_name}"
+            ]
+          end
+        end
+
+        context "but not cleaning up feature branch" do
+          before { allow(pr).to receive(:cleanup_feature_branch?).and_return(false) }
+          specify { expect{ subject }.to_not have_run_command "git push origin #{pr.base_branch_name}" }
+          specify { expect{ subject }.to_not have_run_command "git push origin :#{pr.feature_branch_name}" }
+          specify { expect{ subject }.to_not have_run_command "git branch -D #{pr.feature_branch_name}" }
+          specify { expect{ subject }.to have_said "Cleanup halted.  Local changes were not pushed to remote repo.", :deliver_halted }
+          specify { expect{ subject }.to have_said "To reset and go back to your branch run \`git reset --hard origin/#{pr.base_branch_name} && git checkout #{pr.feature_branch_name}\`" }
+        end
+      end
+
+      context "but has an issue commiting the merge" do
+        before do
+          allow(GitReflow).to receive(:run_command_with_label)
+          allow(GitReflow).to receive(:run_command_with_label).with('git commit', with_system: true).and_return(false)
+        end
+        specify { expect{ subject }.to have_said "There were problems commiting your feature... please check the errors above and try again.", :error }
       end
     end
 
-    context "finds pull request but merge response fails" do
-      before do
-        allow(GitReflow).to receive(:git_server).and_return(git_server)
-        allow(git_server).to receive(:connection).and_return(github)
-        allow(git_server).to receive(:get_build_status).and_return(Struct.new(:state, :description, :target_url).new())
-        allow(GitReflow::GitServer::GitHub).to receive_message_chain(:connection, :pull_requests, :merge).and_return(merge_response)
-        allow(merge_response).to receive(:success?).and_return(false)
-        allow_any_instance_of(GitReflow::GitServer::GitHub::PullRequest).to receive(:approvals).and_return(lgtm_comment_authors)
-        allow(pull_request).to receive(:deliver?).and_return(true)
-        allow(merge_response).to receive(:to_s).and_return("Merge failed")
-      end
-
-      it "throws an error" do
-        expect { subject }.to have_said "Merge failed", :deliver_halted
-        expect { subject }.to have_said "There were problems commiting your feature... please check the errors above and try again.", :error
-      end
+    context "but cannot deliver" do
+      before  { allow(pr).to receive(:deliver?).and_return(false) }
+      specify { expect{ subject }.to have_said "Merge aborted", :deliver_halted }
     end
   end
 
-  context ".commit_message_for_merge" do
-    subject            { GitReflow::GitServer::GitHub::PullRequest.new(pull_request) }
+  context "#commit_message_for_merge" do
+    subject { MockPullRequest.new(pull_request) }
 
     let(:lgtm_comment_authors) {
       ["simonzhu24", "reenhanced"]
     }
-
     let(:output) { lgtm_comment_authors.join(', @') }
+    let(:first_commit_message) { "Awesome commit here." }
 
-    context "checks commit message generated is correct" do
-      before do
-        allow_any_instance_of(GitReflow::GitServer::GitHub::PullRequest).to receive(:build).and_return(Struct.new(:state, :description, :url).new)
-        allow_any_instance_of(GitReflow::GitServer::GitHub::PullRequest).to receive(:description).and_return("Description")
-        allow_any_instance_of(GitReflow::GitServer::GitHub::PullRequest).to receive(:number).and_return(1)
-        allow_any_instance_of(GitReflow::GitServer::GitHub::PullRequest).to receive(:approvals).and_return(lgtm_comment_authors)
-      end
+    before { allow(GitReflow).to receive(:get_first_commit_message).and_return(first_commit_message) }
 
-      it "throws an exception without message" do
-        expect(subject.commit_message_for_merge).to eq("Description\nMerges #1\n\nLGTM given by: @simonzhu24, @reenhanced\n\n")
-      end
+    context "with description" do
+      pending "Adds description to message"
+    end
+
+    context "with approvals" do
+      pending "Adds list of approvers"
     end
   end
 

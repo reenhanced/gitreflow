@@ -101,20 +101,20 @@ end
 RSpec::Matchers.define :have_run_commands_in_order do |commands|
   match do |block|
     block.call
-    command_count = commands.count
-    command_start_index = $commands_ran.reverse.find_index {|c| c.command == commands.first }
+    remaining_commands  = commands
+    command_start_index = $commands_ran.find_index {|c| c.command == commands.first }
     return false unless command_start_index
 
-    $commands_ran.reverse.each_with_index do |command_ran, index|
-      next unless command_start_index
-      if command_count >= 1
-        current_command = commands[command_count - 1]
-        expect(current_command).to eq(command_ran.command)
-        command_count -= 1
+    $commands_ran.each_with_index do |command_ran, index|
+      # seek to starting point of first command to match
+      next unless index >= command_start_index
+      if remaining_commands.size > 0
+        expect(remaining_commands[0]).to eq(command_ran.command)
+        remaining_commands.shift
       end
     end
 
-    return command_count == 0
+    return remaining_commands.count == 0
   end
 
   supports_block_expectations

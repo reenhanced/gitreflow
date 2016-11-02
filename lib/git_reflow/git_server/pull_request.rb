@@ -44,7 +44,7 @@ module GitReflow
       end
 
       def last_comment
-        raise "#{self.class.to_s}#last_comment_for method must be implemented"
+        raise "#{self.class.to_s}#last_comment method must be implemented"
       end
 
       def reviewers

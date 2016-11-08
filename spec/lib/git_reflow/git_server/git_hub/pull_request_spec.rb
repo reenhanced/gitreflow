@@ -31,7 +31,7 @@ describe GitReflow::GitServer::GitHub::PullRequest do
                 comments: [{author: comment_author}],
                 pull_request_number: existing_pull_request.number).to_json_hashie }
 
-  subject { GitReflow::GitServer::GitHub::PullRequest.new(existing_pull_request) }
+  let(:pr) { GitReflow::GitServer::GitHub::PullRequest.new(existing_pull_request) }
 
 
   before do
@@ -48,25 +48,29 @@ describe GitReflow::GitServer::GitHub::PullRequest do
   end
 
   describe '#initialize(options)' do
-    specify { expect(subject.number).to eql(existing_pull_request.number) }
-    specify { expect(subject.description).to eql(existing_pull_request.body) }
-    specify { expect(subject.html_url).to eql(existing_pull_request.html_url) }
-    specify { expect(subject.feature_branch_name).to eql(feature_branch_name) }
-    specify { expect(subject.base_branch_name).to eql(base_branch_name) }
-    specify { expect(subject.build_status).to eql('success') }
-    specify { expect(subject.source_object).to eql(existing_pull_request) }
+    specify { expect(pr.number).to eql(existing_pull_request.number) }
+    specify { expect(pr.description).to eql(existing_pull_request.body) }
+    specify { expect(pr.html_url).to eql(existing_pull_request.html_url) }
+    specify { expect(pr.feature_branch_name).to eql(feature_branch_name) }
+    specify { expect(pr.base_branch_name).to eql(base_branch_name) }
+    specify { expect(pr.build_status).to eql('success') }
+    specify { expect(pr.source_object).to eql(existing_pull_request) }
   end
 
   describe '#commit_author' do
+    subject { pr.commit_author }
+
     before do
       stub_request(:get, %r{#{GitReflow.git_server.class.api_endpoint}/repos/#{user}/#{repo}/pulls/#{existing_pull_request.number}/commits}).
         with(query: {"access_token" => "a1b2c3d4e5f6g7h8i9j0"}).
         to_return(:body => Fixture.new("pull_requests/commits.json").to_s, status: 201, headers: {content_type: "application/json; charset=utf-8"})
     end
-    specify { expect(subject.commit_author).to eql("#{existing_pull_commits.first.commit.author.name} <#{existing_pull_commits.first.commit.author.email}>") }
+    specify { expect(subject).to eql("#{existing_pull_commits.first.commit.author.name} <#{existing_pull_commits.first.commit.author.email}>") }
   end
 
   describe '#comments' do
+    subject { pr.comments }
+
     context "Testing Appending of Comments" do
       before do
         FakeGitHub.new(
@@ -81,7 +85,7 @@ describe GitReflow::GitServer::GitHub::PullRequest do
             comments: [{author: comment_author}]
           })
       end
-      specify { expect(subject.comments).to eql(existing_pull_comments.to_a + existing_issue_comments.to_a) }
+      specify { expect(subject).to eql(existing_pull_comments.to_a + existing_issue_comments.to_a) }
     end
 
     context "Testing Nil Comments" do
@@ -102,11 +106,13 @@ describe GitReflow::GitServer::GitHub::PullRequest do
             comments: nil
           })
       end
-      specify { expect(subject.comments).to eql([]) }
+      specify { expect(subject).to eql([]) }
     end
   end
 
   describe '#reviewers' do
+    subject { pr.reviewers }
+
     before do
       allow(existing_pull_request.user).to receive(:login).and_return('ringo')
 
@@ -124,11 +130,12 @@ describe GitReflow::GitServer::GitHub::PullRequest do
         })
     end
 
-    specify { expect(subject.reviewers).to eq(['tito', 'bobby', 'randy']) }
+    specify { expect(subject).to eq(['tito', 'bobby', 'randy']) }
   end
 
 
   describe "#approved?" do
+    subject { pr.approved? }
 
     context "no approvals and build success" do
       before do
@@ -142,7 +149,7 @@ describe GitReflow::GitServer::GitHub::PullRequest do
           })
         allow(GitReflow::GitServer::GitHub::PullRequest).to receive(:minimum_approvals).and_return("0")
       end
-      specify { expect(subject.approved?).to be_truthy }
+      specify { expect(subject).to be_truthy }
     end
 
     context "all commenters must approve and minimum_approvals is nil" do
@@ -156,11 +163,11 @@ describe GitReflow::GitServer::GitHub::PullRequest do
             comments: []
           })
         allow(GitReflow::GitServer::GitHub::PullRequest).to receive(:minimum_approvals).and_return(nil)
-        allow(subject).to receive(:has_comments?).and_return(true)
-        allow(subject).to receive(:approvals).and_return(["Simon"])
-        allow(subject).to receive(:reviewers_pending_response).and_return([])
+        allow(pr).to receive(:has_comments?).and_return(true)
+        allow(pr).to receive(:approvals).and_return(["Simon"])
+        allow(pr).to receive(:reviewers_pending_response).and_return([])
       end
-      specify { expect(subject.approved?).to be_truthy }
+      specify { expect(subject).to be_truthy }
     end
 
     context "all commenters must approve but we have no pending reviewers" do
@@ -174,11 +181,11 @@ describe GitReflow::GitServer::GitHub::PullRequest do
             comments: []
           })
         allow(GitReflow::GitServer::GitHub::PullRequest).to receive(:minimum_approvals).and_return("")
-        allow(subject).to receive(:has_comments?).and_return(true)
-        allow(subject).to receive(:approvals).and_return(["Simon"])
-        allow(subject).to receive(:reviewers_pending_response).and_return([])
+        allow(pr).to receive(:has_comments?).and_return(true)
+        allow(pr).to receive(:approvals).and_return(["Simon"])
+        allow(pr).to receive(:reviewers_pending_response).and_return([])
       end
-      specify { expect(subject.approved?).to be_truthy }
+      specify { expect(subject).to be_truthy }
     end
 
     context "all commenters must approve but we have 1 pending reviewer" do
@@ -192,11 +199,11 @@ describe GitReflow::GitServer::GitHub::PullRequest do
             comments: []
           })
         allow(GitReflow::GitServer::GitHub::PullRequest).to receive(:minimum_approvals).and_return("")
-        allow(subject).to receive(:has_comments?).and_return(true)
-        allow(subject).to receive(:approvals).and_return(["Simon"])
-        allow(subject).to receive(:reviewers_pending_response).and_return(["Simon"])
+        allow(pr).to receive(:has_comments?).and_return(true)
+        allow(pr).to receive(:approvals).and_return(["Simon"])
+        allow(pr).to receive(:reviewers_pending_response).and_return(["Simon"])
       end
-      specify { expect(subject.approved?).to be_falsy }
+      specify { expect(subject).to be_falsy }
     end
 
     context "2 approvals required but we only have 1 approval" do
@@ -210,10 +217,10 @@ describe GitReflow::GitServer::GitHub::PullRequest do
             comments: []
           })
         allow(GitReflow::GitServer::GitHub::PullRequest).to receive(:minimum_approvals).and_return("2")
-        allow(subject).to receive(:approvals).and_return(["Simon"])
-        allow(subject).to receive(:last_comment).and_return("LGTM")
+        allow(pr).to receive(:approvals).and_return(["Simon"])
+        allow(pr).to receive(:last_comment).and_return("LGTM")
       end
-      specify { expect(subject.approved?).to be_falsy }
+      specify { expect(subject).to be_falsy }
     end
 
     context "2 approvals required and we have 2 approvals but last comment is not approval" do
@@ -227,10 +234,10 @@ describe GitReflow::GitServer::GitHub::PullRequest do
             comments: []
           })
         allow(GitReflow::GitServer::GitHub::PullRequest).to receive(:minimum_approvals).and_return("2")
-        allow(subject).to receive(:approvals).and_return(["Simon", "Peter"])
-        allow(subject).to receive(:last_comment).and_return("Boo")
+        allow(pr).to receive(:approvals).and_return(["Simon", "Peter"])
+        allow(pr).to receive(:last_comment).and_return("Boo")
       end
-      specify { expect(subject.approved?).to be_falsy }
+      specify { expect(subject).to be_falsy }
     end
 
     context "2 approvals required and we have 2 approvals and last comment is approval" do
@@ -244,14 +251,16 @@ describe GitReflow::GitServer::GitHub::PullRequest do
             comments: []
           })
         allow(GitReflow::GitServer::GitHub::PullRequest).to receive(:minimum_approvals).and_return("2")
-        allow(subject).to receive(:approvals).and_return(["Simon", "Peter"])
-        allow(subject).to receive(:last_comment).and_return("LGTM")
+        allow(pr).to receive(:approvals).and_return(["Simon", "Peter"])
+        allow(pr).to receive(:last_comment).and_return("LGTM")
       end
-      specify { expect(subject.approved?).to be_truthy }
+      specify { expect(subject).to be_truthy }
     end
   end
 
   describe '#approvals' do
+    subject { pr.approvals }
+
     context "no comments" do
       before do
         FakeGitHub.new(
@@ -264,7 +273,7 @@ describe GitReflow::GitServer::GitHub::PullRequest do
           })
       end
 
-      specify { expect(subject.approvals).to eq([]) }
+      specify { expect(subject).to eq([]) }
     end
 
     context "single reviewer without approval" do
@@ -279,7 +288,7 @@ describe GitReflow::GitServer::GitHub::PullRequest do
           })
       end
 
-      specify { expect(subject.approvals).to eq([]) }
+      specify { expect(subject).to eq([]) }
     end
 
     context "single reviewer with approval" do
@@ -294,7 +303,7 @@ describe GitReflow::GitServer::GitHub::PullRequest do
           })
       end
 
-      specify { expect(subject.approvals).to eq(['tito']) }
+      specify { expect(subject).to eq(['tito']) }
 
       context "but a new commit has been introduced" do
         before do
@@ -315,7 +324,7 @@ describe GitReflow::GitServer::GitHub::PullRequest do
             })
         end
 
-        specify { expect(subject.approvals).to eq([]) }
+        specify { expect(subject).to eq([]) }
       end
     end
 
@@ -331,7 +340,7 @@ describe GitReflow::GitServer::GitHub::PullRequest do
           })
       end
 
-      specify { expect(subject.approvals).to eq(['tito']) }
+      specify { expect(subject).to eq(['tito']) }
     end
 
     context "multiple reviewers with all approvals" do
@@ -349,7 +358,7 @@ describe GitReflow::GitServer::GitHub::PullRequest do
       end
 
       context "2 approvals" do
-        specify { expect(subject.approvals).to eq(['tito', 'ringo']) }
+        specify { expect(subject).to eq(['tito', 'ringo']) }
       end
 
       context "but a new commit has been introduced" do
@@ -371,41 +380,45 @@ describe GitReflow::GitServer::GitHub::PullRequest do
             })
         end
 
-        specify { expect(subject.approvals).to eq([]) }
+        specify { expect(subject).to eq([]) }
       end
     end
 
   end
 
   describe '#last_comment' do
-      before do
-        FakeGitHub.new(
-          repo_owner:   user,
-          repo_name:    repo,
-          pull_request: {
-            number:   existing_pull_request.number,
-            owner:    existing_pull_request.head.user.login,
-            comments: [{author: 'tito', body: 'lgtm'}, {author: 'ringo', body: 'Cha cha cha'}]
-          })
-      end
+    subject { pr.last_comment }
 
-      specify { expect(subject.last_comment).to eq('"Cha cha cha"') }
+    before do
+      FakeGitHub.new(
+        repo_owner:   user,
+        repo_name:    repo,
+        pull_request: {
+          number:   existing_pull_request.number,
+          owner:    existing_pull_request.head.user.login,
+          comments: [{author: 'tito', body: 'lgtm'}, {author: 'ringo', body: 'Cha cha cha'}]
+        })
+    end
+
+    specify { expect(subject).to eq('"Cha cha cha"') }
   end
 
   describe '#build' do
     let(:build) { Fixture.new('repositories/statuses.json').to_json_hashie.first }
 
+    subject { pr.build }
+
     context "with an existing build" do
-      specify { expect(subject.build.state).to eq(build.state) }
-      specify { expect(subject.build.description).to eq(build.description) }
-      specify { expect(subject.build.url).to eq(build.target_url) }
+      specify { expect(subject.state).to eq(build.state) }
+      specify { expect(subject.description).to eq(build.description) }
+      specify { expect(subject.url).to eq(build.target_url) }
     end
 
     context "no build found" do
       before  { allow(GitReflow.git_server).to receive(:get_build_status).and_return(nil) }
-      specify { expect(subject.build.state).to eq(nil) }
-      specify { expect(subject.build.description).to eq(nil) }
-      specify { expect(subject.build.url).to eq(nil) }
+      specify { expect(subject.state).to eq(nil) }
+      specify { expect(subject.description).to eq(nil) }
+      specify { expect(subject.url).to eq(nil) }
     end
   end
 
@@ -424,7 +437,7 @@ describe GitReflow::GitServer::GitHub::PullRequest do
 
     let(:merge_response) { { :message => "Failure_Message" } }
 
-    subject { pull_request.merge! inputs }
+    subject { pr.merge! inputs }
 
     context "and force-merging" do
       it "falls back on manual squash merge" do
@@ -439,13 +452,13 @@ describe GitReflow::GitServer::GitHub::PullRequest do
 
     context "finds pull request but merge response fails" do
       before do
-        allow(GitReflow).to receive(:git_server).and_return(git_server)
-        allow(git_server).to receive(:connection).and_return(github)
-        allow(git_server).to receive(:get_build_status).and_return(Struct.new(:state, :description, :target_url).new())
+        allow(GitReflow).to receive(:git_server).and_return(github)
+        allow(GitReflow.git_server).to receive(:connection).and_return(github_api)
+        allow(GitReflow.git_server).to receive(:get_build_status).and_return(Struct.new(:state, :description, :target_url).new())
         allow(GitReflow::GitServer::GitHub).to receive_message_chain(:connection, :pull_requests, :merge).and_return(merge_response)
         allow(merge_response).to receive(:success?).and_return(false)
         allow_any_instance_of(GitReflow::GitServer::GitHub::PullRequest).to receive(:approvals).and_return(lgtm_comment_authors)
-        allow(pull_request).to receive(:deliver?).and_return(true)
+        allow(pr).to receive(:deliver?).and_return(true)
         allow(merge_response).to receive(:to_s).and_return("Merge failed")
       end
 

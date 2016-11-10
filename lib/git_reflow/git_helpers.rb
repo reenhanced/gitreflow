@@ -33,10 +33,6 @@ module GitReflow
       run("git branch --no-color | grep '^\* ' | grep -v 'no branch' | sed 's/^* //g'", loud: false).strip
     end
 
-    def current_branch_commit_count(base: 'master')
-      run("git log #{base}..#{current_branch} --pretty=oneline | wc -l").strip.to_i
-    end
-
     def pull_request_template
       filenames_to_try = %w( github/PULL_REQUEST_TEMPLATE.md
                              github/PULL_REQUEST_TEMPLATE

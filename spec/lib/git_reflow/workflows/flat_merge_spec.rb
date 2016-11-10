@@ -24,9 +24,6 @@ describe 'FlatMerge' do
       let(:github)      { stub_github_with }
       let!(:github_api) { github.connection }
 
-      it "overrides squash merge in favor of flat merge" do
-      end
-
       before do
         allow_any_instance_of(GitReflow::GitServer::PullRequest).to receive(:deliver?).and_return(false)
         allow(GitReflow::GitServer::GitHub::PullRequest).to receive(:find_open).and_return(pr)
@@ -34,7 +31,7 @@ describe 'FlatMerge' do
         allow(GitReflow::Workflows::Core).to receive(:status)
       end
 
-      it "doesn't ask Github to squash merge" do
+      it "overrides squash merge in favor of flat merge" do
         expect(pr).to receive(:merge!).with(base: 'master', squash: false)
         subject
       end

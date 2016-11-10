@@ -303,7 +303,7 @@ describe GitReflow::GitServer::PullRequest do
       allow(pr).to receive(:reviewers_pending_response).and_return([])
     end
 
-    it "displays relavent information about the pull request" do
+    it "displays relevant information about the pull request" do
       expect{ subject }.to have_output("branches: #{pr.feature_branch_name} -> #{pr.base_branch_name}")
       expect{ subject }.to have_output("number: #{pr.number}")
       expect{ subject }.to have_output("url: #{pr.html_url}")

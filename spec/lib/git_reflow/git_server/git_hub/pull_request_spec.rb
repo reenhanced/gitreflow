@@ -423,13 +423,13 @@ describe GitReflow::GitServer::GitHub::PullRequest do
   end
 
   describe '#merge!' do
-    let(:inputs) {
+    let(:inputs) do
       {
         :base => "base_branch",
         :title => "title",
         :message => "message"
       }
-    }
+    end
 
     let(:lgtm_comment_authors) {
       ["simonzhu24", "reenhanced"]
@@ -439,22 +439,78 @@ describe GitReflow::GitServer::GitHub::PullRequest do
 
     subject { pr.merge! inputs }
 
+    before do
+      allow(GitReflow).to receive(:git_server).and_return(github)
+      allow(GitReflow::Config).to receive(:get)
+      allow(GitReflow.git_server).to receive(:connection).and_return(github_api)
+      allow(GitReflow.git_server).to receive(:get_build_status).and_return(Struct.new(:state, :description, :target_url).new())
+      allow_any_instance_of(GitReflow::GitServer::PullRequest).to receive(:commit_message_for_merge).and_return('Bingo')
+      allow_any_instance_of(GitReflow).to receive(:append_to_squashed_commit_message).and_return(true)
+    end
+
     context "and force-merging" do
+      let(:inputs) do
+        {
+          base:      "base_branch",
+          title:     "title",
+          message:   "message",
+          skip_lgtm: true
+        }
+      end
+
+      before { allow_any_instance_of(GitReflow::GitServer::PullRequest).to receive(:deliver?).and_return(true) }
+
       it "falls back on manual squash merge" do
+        expect { subject }.to have_run_command "git merge --squash #{feature_branch_name}"
       end
     end
 
     context "and always deliver is set" do
-      before { allow(GitReflow::Config).to receive(:get).with('reflow.always-deliver').and_return('true') }
+      before do
+        allow(GitReflow::Config).to receive(:get).with('reflow.always-deliver').and_return('true')
+        allow(github_api).to receive_message_chain(:pull_requests, :merge).and_return(double(success?: true))
+      end
+
       it "doesn't ask to confirm deliver" do
+        expect(pr).to_not receive(:ask).with('This is the current status of your Pull Request. Are you sure you want to deliver? ')
+        subject
+      end
+    end
+
+    context "and not suqash merging" do
+      let(:inputs) do
+        {
+          base:    "base_branch",
+          title:   "title",
+          message: "message",
+          squash:  false
+        }
+      end
+
+      before do
+        allow_any_instance_of(GitReflow::GitServer::PullRequest).to receive(:deliver?).and_return(true)
+        allow(github_api).to receive_message_chain(:pull_requests, :merge).and_return(double(success?: true))
+      end
+
+      it "doesn't ask Github to squash merge" do
+        expect(github_api).to receive_message_chain(:pull_requests, :merge).with(
+          user,
+          repo,
+          pr.number.to_s,
+          {
+            "commit_title"   => "#{inputs[:title]}",
+            "commit_message" => "#{inputs[:message]}\n",
+            "sha"            => pr.head.sha,
+            "squash"         => false
+          }
+        )
+
+        subject
       end
     end
 
     context "finds pull request but merge response fails" do
       before do
-        allow(GitReflow).to receive(:git_server).and_return(github)
-        allow(GitReflow.git_server).to receive(:connection).and_return(github_api)
-        allow(GitReflow.git_server).to receive(:get_build_status).and_return(Struct.new(:state, :description, :target_url).new())
         allow(GitReflow::GitServer::GitHub).to receive_message_chain(:connection, :pull_requests, :merge).and_return(merge_response)
         allow(merge_response).to receive(:success?).and_return(false)
         allow_any_instance_of(GitReflow::GitServer::GitHub::PullRequest).to receive(:approvals).and_return(lgtm_comment_authors)

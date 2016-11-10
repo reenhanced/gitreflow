@@ -1,23 +1,5 @@
 require 'spec_helper'
 
-class MockPullRequest < GitReflow::GitServer::PullRequest
-  DESCRIPTION         = "Bingo! Unity."
-  HTML_URL            = "https://github.com/reenhanced/gitreflow/pulls/0"
-  FEATURE_BRANCH_NAME = "feature_branch"
-  BASE_BRANCH_NAME    = "base"
-  NUMBER              = 0
-
-  def initialize(attributes = Struct.new(:description, :html_url, :feature_branch_name, :base_branch_name, :number).new)
-    self.description         = attributes.description || DESCRIPTION
-    self.html_url            = attributes.html_url || HTML_URL
-    self.feature_branch_name = attributes.feature_branch_name || FEATURE_BRANCH_NAME
-    self.base_branch_name    = attributes.base_branch_name || BASE_BRANCH_NAME
-    self.build               = Build.new
-    self.number              = attributes.number || NUMBER
-    self.source_object       = attributes
-  end
-end
-
 describe GitReflow::GitServer::PullRequest do
   let(:pr_response)     { Fixture.new('pull_requests/external_pull_request.json').to_json_hashie }
   let(:pr)              { MockPullRequest.new(pr_response) }
@@ -424,6 +406,20 @@ describe GitReflow::GitServer::PullRequest do
           specify { expect{ subject }.to_not have_run_command "git branch -D #{pr.feature_branch_name}" }
           specify { expect{ subject }.to have_said "Cleanup halted.  Local changes were not pushed to remote repo.", :deliver_halted }
           specify { expect{ subject }.to have_said "To reset and go back to your branch run \`git reset --hard origin/#{pr.base_branch_name} && git checkout #{pr.feature_branch_name}\`" }
+        end
+
+        context "and NOT squash merging" do
+          let(:inputs) do
+            {
+              base:    "base_branch",
+              title:   "title",
+              message: "message",
+              squash:  false
+            }
+          end
+
+          specify { expect{ subject }.to have_run_command "git merge #{pr.feature_branch_name}" }
+          specify { expect{ subject }.to_not have_run_command "git merge --squash #{pr.feature_branch_name}" }
         end
       end
 

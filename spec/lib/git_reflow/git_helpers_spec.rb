@@ -82,8 +82,8 @@ describe GitReflow::GitHelpers do
 
       before do
         allow(Gitacular).to receive(:git_root_dir).and_return(root_dir)
-        allow(File).to receive(:exist?).with("#{root_dir}/github/PULL_REQUEST_TEMPLATE.md").and_return(true)
-        allow(File).to receive(:read).with("#{root_dir}/github/PULL_REQUEST_TEMPLATE.md").and_return(template_content)
+        allow(File).to receive(:exist?).with("#{root_dir}/.github/PULL_REQUEST_TEMPLATE.md").and_return(true)
+        allow(File).to receive(:read).with("#{root_dir}/.github/PULL_REQUEST_TEMPLATE.md").and_return(template_content)
       end
       it { is_expected.to eq template_content }
     end

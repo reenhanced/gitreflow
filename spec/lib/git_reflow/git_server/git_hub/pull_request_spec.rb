@@ -91,7 +91,7 @@ describe GitReflow::GitServer::GitHub::PullRequest do
     context "Testing Nil Comments" do
       before do
         stub_request(:get, "https://api.github.com/repos/reenhanced/repo/pulls/2/comments?access_token=a1b2c3d4e5f6g7h8i9j0").
-         with(:headers => {'Accept'=>'application/vnd.github.v3+json,application/vnd.github.beta+json;q=0.5,application/json;q=0.1', 'Accept-Charset'=>'utf-8', 'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3', 'Authorization'=>'token a1b2c3d4e5f6g7h8i9j0', 'User-Agent'=>'Github API Ruby Gem 0.14.0'}).
+         with(:headers => {'Accept'=>'application/vnd.github.v3+json,application/vnd.github.beta+json;q=0.5,application/json;q=0.1', 'Accept-Charset'=>'utf-8', 'Accept-Encoding'=>'gzip;q=1.0,deflate;q=0.6,identity;q=0.3', 'Authorization'=>'token a1b2c3d4e5f6g7h8i9j0', 'User-Agent'=>'Github API Ruby Gem 0.15.0'}).
          to_return(:status => 200, :body => "", :headers => {})
 
         FakeGitHub.new(

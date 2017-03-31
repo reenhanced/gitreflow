@@ -3,6 +3,9 @@ require 'spec_helper'
 describe GitReflow do
 
   describe ".logger" do
+    # Ignore memoization for tests
+    before { GitReflow.instance_variable_set("@logger", nil) }
+
     it "initializes a new logger" do
       expect(GitReflow::Logger).to receive(:new)
       described_class.logger

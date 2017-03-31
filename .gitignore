@@ -4,3 +4,4 @@ pkg/*
 gemfiles
 *.gem
 .byebug_history
+*.log

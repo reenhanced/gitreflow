@@ -14,6 +14,8 @@ module GitReflow
     def run(command, options = {})
       options = { loud: true }.merge(options)
 
+      GitReflow.logger.debug "Running... #{command}"
+
       if options[:with_system] == true
         system(command)
       elsif options[:loud] == true

@@ -2,6 +2,18 @@ require 'spec_helper'
 
 describe GitReflow do
 
+  describe ".logger" do
+    it "initializes a new logger" do
+      expect(GitReflow::Logger).to receive(:new)
+      described_class.logger
+    end
+
+    it "allows for custom loggers" do
+      logger = described_class.logger("kenny-loggins.log")
+      expect(logger.instance_variable_get("@logdev").dev.path).to eq "kenny-loggins.log"
+    end
+  end
+
   describe ".default_editor" do
     subject { GitReflow.default_editor }
 

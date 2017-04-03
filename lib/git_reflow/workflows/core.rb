@@ -6,8 +6,6 @@ module GitReflow
     # This class contains the core workflow for git-reflow. Going forward, this
     # will act as the base class for customizing and extending git-reflow.
     class Core < Thor
-      include Thor::Actions
-      include Thor::Shell::Color
       include GitReflow::Workflow
 
       # Sets up the required git configurations that git-reflow depends on.
@@ -25,7 +23,7 @@ module GitReflow
           say "We'll walk you through setting up git-reflow's defaults for all your projects."
           say "In the future, you can run \`git-reflow setup\` from the root of any project you want to setup differently."
           say "To adjust these settings globally, you can run \`git-reflow setup --global\`."
-          GitReflow.run "touch #{GitReflow::Config::CONFIG_FILE_PATH}"
+          run "touch #{GitReflow::Config::CONFIG_FILE_PATH}"
           say_status :info, "Created #{GitReflow::Config::CONFIG_FILE_PATH} for git-reflow specific configurations.", :yellow
           GitReflow::Config.add "include.path", GitReflow::Config::CONFIG_FILE_PATH, global: true
           say_status :info, "Added #{GitReflow::Config::CONFIG_FILE_PATH} to include.path in $HOME/.gitconfig.", :yellow
@@ -54,12 +52,13 @@ module GitReflow
       #
       # @param feature_branch [String] the name of the branch to create your feature on
       # @option base [String] the name of the base branch you want to checkout your feature from
-      command(:start, defaults: {base: 'master'}) do |**params|
-        base_branch    = params[:base]
-        feature_branch = params[:feature_branch]
+      desc "start FEATURE_BRANCH", "Creates a new feature branch and setup remote tracking"
+      method_option :base, aliases: "-b", type: :string, default: "master", required: true
+      def start(feature_branch)
+        base_branch = options[:base]
 
         if feature_branch.nil? or feature_branch.length <= 0
-          GitReflow.say "usage: git-reflow start [new-branch-name]", :error
+          say_status :error, "usage: git-reflow start [new-branch-name]", :red
         else
           GitReflow.run_command_with_label "git checkout #{base_branch}"
           GitReflow.run_command_with_label "git pull origin #{base_branch}"

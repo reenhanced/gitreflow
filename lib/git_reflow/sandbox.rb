@@ -1,43 +1,15 @@
+require "thor/actions"
+require "thor/shell/color"
+
 module GitReflow
   module Sandbox
+    include Thor::Actions
+    include Thor::Shell::Color
     extend self
 
-    COLOR_FOR_LABEL = {
-      notice:         :yellow,
-      error:          :red,
-      deliver_halted: :red,
-      review_halted:  :red,
-      success:        :green,
-      plain:          :white
-    }
-
-    def run(command, options = {})
-      options = { loud: true }.merge(options)
-
-      if options[:with_system] == true
-        system(command)
-      elsif options[:loud] == true
-        output = %x{#{command}}
-        puts output
-        output
-      else
-        %x{#{command}}
-      end
-    end
-
     def run_command_with_label(command, options = {})
-      label_color = options.delete(:color) || :green
-      puts command.colorize(label_color)
-      run(command, options)
-    end
-
-    def say(message, label_type = :plain)
-      if COLOR_FOR_LABEL[label_type]
-        label = (label_type.to_s == "plain") ? "" : "[#{ label_type.to_s.gsub('_', ' ').colorize(COLOR_FOR_LABEL[label_type]) }] "
-        puts "#{label}#{message}"
-      else
-        puts message
-      end
+      say_status :info, command, (options.delete(:color) || :green)
+      run command, options
     end
 
   end

@@ -18,6 +18,7 @@ module GitReflow
     end
 
     module ClassMethods
+      include GitReflow::Sandbox
       include GitReflow::GitHelpers
     end
   end

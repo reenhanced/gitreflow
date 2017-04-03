@@ -20,6 +20,7 @@ Gem::Specification.new do |s|
   s.rdoc_options     << '--title' << 'git_reflow' << '--main' << 'README.rdoc' << '-ri'
 
   s.add_development_dependency('appraisal', '2.1.0')
+  s.add_development_dependency('aruba')
   s.add_development_dependency('bundler', "~> 1.12")
   s.add_development_dependency('chronic')
   s.add_development_dependency('pry-byebug')
@@ -30,8 +31,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency('wwtd', '1.3.0')
 
   s.add_dependency('colorize', '>= 0.7.0')
-  s.add_dependency('gli', '2.14.0')
-  s.add_dependency('highline')
+  s.add_dependency('thor', '0.19.4')
   s.add_dependency('httpclient')
   s.add_dependency('github_api', '0.15.0')
   # rack is a dependency of oauth2, which is a dependency of github_api

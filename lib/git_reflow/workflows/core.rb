@@ -5,33 +5,40 @@ module GitReflow
   module Workflows
     # This class contains the core workflow for git-reflow. Going forward, this
     # will act as the base class for customizing and extending git-reflow.
-    class Core
+    class Core < Thor
+      include Thor::Actions
+      include Thor::Shell::Color
       include GitReflow::Workflow
 
       # Sets up the required git configurations that git-reflow depends on.
       #
-      # @param local [Boolean] whether to configure git-reflow specific to the current project
-      # @param enterprise [Boolean] whether to configure git-reflow for use with Github Enterprise
-      command(:setup, defaults: {local: false, enterprise: false}) do |**params|
-        reflow_options             = { project_only: params[:local], enterprise: params[:enterprise] }
+      # @option local [Boolean] whether to configure git-reflow specific to the current project
+      # @option enterprise [Boolean] whether to configure git-reflow for use with Github Enterprise
+      desc "sets up your api token with GitHub"
+      method_option :local,      aliases: "-l", type: :boolean, default: false, desc: "setup GitReflow for the current project only"
+      method_option :enterprise, aliases: "-e", type: :boolean, default: false, desc: "setup GitReflow with a Github Enterprise account"
+      def setup
+        reflow_options             = { project_only: options[:local], enterprise: options[:enterprise] }
         existing_git_include_paths = GitReflow::Config.get('include.path', all: true).split("\n")
 
         unless File.exist?(GitReflow::Config::CONFIG_FILE_PATH) or existing_git_include_paths.include?(GitReflow::Config::CONFIG_FILE_PATH)
-          GitReflow.say "We'll walk you through setting up git-reflow's defaults for all your projects.", :notice
-          GitReflow.say "In the future, you can run \`git-reflow setup\` from the root of any project you want to setup differently.", :notice
-          GitReflow.say "To adjust these settings globally, you can run \`git-reflow setup --global\`.", :notice
+          say "We'll walk you through setting up git-reflow's defaults for all your projects."
+          say "In the future, you can run \`git-reflow setup\` from the root of any project you want to setup differently."
+          say "To adjust these settings globally, you can run \`git-reflow setup --global\`."
           GitReflow.run "touch #{GitReflow::Config::CONFIG_FILE_PATH}"
-          GitReflow.say "Created #{GitReflow::Config::CONFIG_FILE_PATH} for git-reflow specific configurations.", :notice
+          say_status :info, "Created #{GitReflow::Config::CONFIG_FILE_PATH} for git-reflow specific configurations.", :yellow
           GitReflow::Config.add "include.path", GitReflow::Config::CONFIG_FILE_PATH, global: true
-          GitReflow.say "Added #{GitReflow::Config::CONFIG_FILE_PATH} to include.path in $HOME/.gitconfig.", :notice
+          say_status :info, "Added #{GitReflow::Config::CONFIG_FILE_PATH} to include.path in $HOME/.gitconfig.", :yellow
         end
 
-        choose do |menu|
-          menu.header = "Available remote Git Server services"
-          menu.prompt = "Which service would you like to use for this project?  "
+        say "Available remote Git Server services"
+        selected_server = ask("Which service would you like to use for this project?", limited_to: ["github", "bitbucket"])
 
-          menu.choice('GitHub')    { GitReflow::GitServer.connect reflow_options.merge({ provider: 'GitHub', silent: false }) }
-          menu.choice('BitBucket (team-owned repos only)') { GitReflow::GitServer.connect reflow_options.merge({ provider: 'BitBucket', silent: false }) }
+        case selected_server
+        when /github/i
+          GitReflow::GitServer.connect reflow_options.merge({ provider: 'GitHub', silent: false })
+        when /bitbucket/i
+          GitReflow::GitServer.connect reflow_options.merge({ provider: 'BitBucket', silent: false })
         end
 
         GitReflow::Config.set "constants.minimumApprovals", ask("Set the minimum number of approvals (leaving blank will require approval from all commenters): "), local: reflow_options[:project_only]
@@ -39,7 +46,7 @@ module GitReflow
 
         if GitReflow::Config.get('core.editor').length <= 0
           GitReflow::Config.set('core.editor', GitReflow.default_editor, local: reflow_options[:project_only])
-          GitReflow.say "Updated git's editor (via git config key 'core.editor') to: #{GitReflow.default_editor}.", :notice
+          say_status :info, "Updated git's editor (via git config key 'core.editor') to: #{GitReflow.default_editor}.", :yellow
         end
       end
 

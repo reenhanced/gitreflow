@@ -152,13 +152,13 @@ module GitReflow
         end
       end
 
-      command(:deploy) do |**params|
-        destination_server = params[:destination_server] || 'default'
-        deploy_command = GitReflow::Config.get("reflow.deploy-to-#{destination_server}-command", local: true)
+      desc "deploy ENVIRONMENT", "deploy the current branch to a given environment"
+      def deploy(environment = 'default')
+        deploy_command = GitReflow::Config.get("reflow.deploy-to-#{environment}-command", local: true)
 
         # first check is to allow for automated setup
         if deploy_command.empty?
-          deploy_command = GitReflow.shell.ask("Enter the command you use to deploy to #{destination_server} (leaving blank will skip deployment)")
+          deploy_command = GitReflow.shell.ask("Enter the command you use to deploy to #{environment} (leaving blank will skip deployment)")
         end
 
         # second check is to see if the user wants to skip
@@ -166,13 +166,14 @@ module GitReflow
           GitReflow.shell.say "Skipping deployment..."
           false
         else
-          GitReflow::Config.set("reflow.deploy-to-#{destination_server}-command", deploy_command, local: true)
+          GitReflow::Config.set("reflow.deploy-to-#{environment}-command", deploy_command, local: true)
           GitReflow.run_command_with_label(deploy_command, with_system: true)
         end
       end
 
       # Merge and deploy a feature branch to a staging branch
-      command(:stage) do |**params|
+      desc "stage", "deploy the current branch to a staging server"
+      def stage
         feature_branch_name = GitReflow.current_branch
         staging_branch_name = GitReflow::Config.get('reflow.staging-branch', local: true)
 
@@ -188,7 +189,7 @@ module GitReflow
         if GitReflow.run_command_with_label "git merge #{feature_branch_name}", with_system: true
           GitReflow.run_command_with_label "git push origin #{staging_branch_name}"
 
-          staged = self.deploy(destination_server: :staging)
+          staged = deploy(:staging)
 
           if staged
             GitReflow.shell.say_status :info, "Deployed to Staging.", :green

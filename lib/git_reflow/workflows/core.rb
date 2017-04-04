@@ -205,20 +205,22 @@ module GitReflow
       #
       # @option base [String] base branch to merge your feature branch into
       # @option force [Boolean] whether to force-deliver the feature branch, ignoring any QA checks
-      command(:deliver, defaults: {base: 'master'}) do |**params|
+      desc "deliver BASE_BRANCH", "merge your feature branch down to your base branch, and cleanup your feature branch"
+      method_option :force, aliases: "-f", type: :boolean, default: false
+      def deliver(base = "master")
         begin
-          existing_pull_request = GitReflow.git_server.find_open_pull_request( from: GitReflow.current_branch, to: params[:base] )
+          existing_pull_request = GitReflow.git_server.find_open_pull_request( from: GitReflow.current_branch, to: base )
 
           if existing_pull_request.nil?
             GitReflow.shell.say_status :info, "No pull request exists for #{GitReflow.remote_user}:#{GitReflow.current_branch}\nPlease submit your branch for review first with \`git reflow review\`", :red
           else
 
-            if existing_pull_request.good_to_merge?(force: params[:force])
+            if existing_pull_request.good_to_merge?(force: options[:force])
               # displays current status and prompts user for confirmation
-              self.status destination_branch: params[:base]
+              self.status destination_branch: options[:base]
               # TODO: change name of this in the merge! method
-              params[:skip_lgtm] = params[:force] if params[:force]
-              existing_pull_request.merge!(params)
+              options[:skip_lgtm] = options[:force] if options[:force]
+              existing_pull_request.merge!(options)
             else
               GitReflow.shell.say_status :info, existing_pull_request.rejection_message, :red
             end

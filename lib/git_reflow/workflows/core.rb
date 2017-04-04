@@ -72,8 +72,11 @@ module GitReflow
       # @option base [String] the name of the base branch you want to merge your feature into
       # @option title [String] the title of your pull request
       # @option body [String] the body of your pull request
-      command(:review, defaults: {base: 'master'}) do |**params|
-        base_branch         = params[:base]
+      desc "review BASE_BRANCH", "push your latest feature branch changes to your remote repo and create a pull request against the BASE_BRANCH"
+      method_option :title, aliases: "-t", type: :string
+      method_option :message, aliases: "-m", type: :string
+      def review(base = "master")
+        base_branch         = options[:base]
         create_pull_request = true
 
         GitReflow.fetch_destination base_branch
@@ -85,11 +88,11 @@ module GitReflow
             GitReflow.shell.say_status :info, "A pull request already exists for these branches:", :yellow
             existing_pull_request.display_pull_request_summary
           else
-            unless params[:title] || params[:body]
+            unless options[:title] || options[:body]
               pull_request_msg_file = "#{GitReflow.git_root_dir}/.git/GIT_REFLOW_PR_MSG"
 
               File.open(pull_request_msg_file, 'w') do |file|
-                file.write(params[:title] || GitReflow.pull_request_template || GitReflow.current_branch)
+                file.write(options[:title] || GitReflow.pull_request_template || GitReflow.current_branch)
               end
 
               GitReflow.run("#{GitReflow.git_editor_command} #{pull_request_msg_file}", with_system: true)
@@ -103,23 +106,23 @@ module GitReflow
                 pr_msg.shift if pr_msg.first.empty?
               end
 
-              params[:title] = title
-              params[:body]  = "#{pr_msg.join("\n")}\n"
+              options[:title] = title
+              options[:body]  = "#{pr_msg.join("\n")}\n"
 
               GitReflow.shell.say "\nReview your PR:\n"
               GitReflow.shell.say "--------\n"
-              GitReflow.shell.say "Title:\n#{params[:title]}\n\n"
-              GitReflow.shell.say "Body:\n#{params[:body]}\n"
+              GitReflow.shell.say "Title:\n#{options[:title]}\n\n"
+              GitReflow.shell.say "Body:\n#{options[:body]}\n"
               GitReflow.shell.say "--------\n"
 
               create_pull_request = GitReflow.shell.ask("Submit pull request? (Y)") =~ /y/i
             end
 
             if create_pull_request
-              pull_request = GitReflow.git_server.create_pull_request(title: params[:title] || params[:body],
-                                                            body:  params[:body],
+              pull_request = GitReflow.git_server.create_pull_request(title: options[:title] || options[:body],
+                                                            body:  options[:body],
                                                             head:  "#{GitReflow.remote_user}:#{GitReflow.current_branch}",
-                                                            base:  params[:base])
+                                                            base:  options[:base])
 
               GitReflow.shell.say_status :info, "Successfully created pull request ##{pull_request.number}: #{pull_request.title}\nPull Request URL: #{pull_request.html_url}\n", :green
             else

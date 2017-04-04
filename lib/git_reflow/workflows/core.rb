@@ -139,12 +139,13 @@ module GitReflow
       # Checks the status of an existing pull request
       #
       # @option destination_branch [String] the branch you're merging your feature into ('master' is default)
-      command(:status, defaults: {destination_branch: 'master'}) do |**params|
-        pull_request = GitReflow.git_server.find_open_pull_request( :from => GitReflow.current_branch, :to => params[:destination_branch] )
+      desc "status BASE_BRANCH", "display information about the status of your feature branch against the BASE_BRANCH"
+      def review(base = "master")
+        pull_request = GitReflow.git_server.find_open_pull_request( :from => GitReflow.current_branch, :to => options[:base] )
 
         if pull_request.nil?
-          GitReflow.shell.say_status :info, "No pull request exists for #{GitReflow.current_branch} -> #{params[:destination_branch]}", :yellow
-          GitReflow.shell.say_status :info, "Run 'git reflow review #{params[:destination_branch]}' to start the review process", :yellow
+          GitReflow.shell.say_status :info, "No pull request exists for #{GitReflow.current_branch} -> #{options[:base]}", :yellow
+          GitReflow.shell.say_status :info, "Run 'git reflow review #{options[:base]}' to start the review process", :yellow
         else
           GitReflow.shell.say "Here's the status of your review:"
           pull_request.display_pull_request_summary

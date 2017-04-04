@@ -234,7 +234,7 @@ module GitReflow
 
 
       # Updates and synchronizes your base branch and feature branch.
-      # 
+      #
       # Performs the following:
       #   $ git checkout <base_branch>
       #   $ git pull <remote_location> <base_branch>
@@ -243,8 +243,11 @@ module GitReflow
       #   $ git merge <base_branch>
       # @param remote [String] the name of the remote repository to fetch updates from (origin by default)
       # @param base [String] the branch that you want to fetch updates from (master by default)
-      command(:refresh, defaults: {remote: 'origin', base: 'master'}) do |**params|
-        GitReflow.update_feature_branch(params)
+      desc "refresh", "Updates and synchronizes your base branch and feature branch."
+      method_option :remote, aliases: "-r", type: :string, default: "origin"
+      method_option :base, aliases: "-b", type: :string, default: "master"
+      def refresh
+        GitReflow.update_feature_branch(options)
       end
     end
   end

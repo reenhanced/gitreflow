@@ -3,11 +3,9 @@ require 'git_reflow/sandbox'
 
 module GitReflow
   module GitHelpers
-    include Sandbox
-
     def git_root_dir
       return @git_root_dir if "#{@git_root_dir}".length > 0
-      @git_root_dir = run('git rev-parse --show-toplevel', loud: false).strip
+      @git_root_dir = GitReflow.run('git rev-parse --show-toplevel', capture: true).strip
     end
 
     def git_editor_command
@@ -30,7 +28,7 @@ module GitReflow
     end
 
     def current_branch
-      run("git branch --no-color | grep '^\* ' | grep -v 'no branch' | sed 's/^* //g'", loud: false).strip
+      GitReflow.run("git branch --no-color | grep '^\* ' | grep -v 'no branch' | sed 's/^* //g'", capture: true).strip
     end
 
     def pull_request_template
@@ -49,30 +47,30 @@ module GitReflow
     end
 
     def get_first_commit_message
-      run('git log --pretty=format:"%s" --no-merges -n 1', loud: false).strip
+      GitReflow.run('git log --pretty=format:"%s" --no-merges -n 1', capture: true).strip
     end
 
     def push_current_branch(options = {})
       remote = options[:remote] || "origin"
-      run_command_with_label "git push #{remote} #{current_branch}"
+      GitReflow.run_command_with_label "git push #{remote} #{current_branch}"
     end
 
     def update_current_branch(options = {})
       remote = options[:remote] || "origin"
-      run_command_with_label "git pull #{remote} #{current_branch}"
+      GitReflow.run_command_with_label "git pull #{remote} #{current_branch}"
       push_current_branch(options)
     end
 
     def fetch_destination(destination_branch)
-      run_command_with_label "git fetch origin #{destination_branch}"
+      GitReflow.run_command_with_label "git fetch origin #{destination_branch}"
     end
 
     def update_destination(destination_branch, options = {})
       origin_branch = current_branch
       remote = options[:remote] || 'origin'
-      run_command_with_label "git checkout #{destination_branch}"
-      run_command_with_label "git pull #{remote} #{destination_branch}"
-      run_command_with_label "git checkout #{origin_branch}"
+      GitReflow.run_command_with_label "git checkout #{destination_branch}"
+      GitReflow.run_command_with_label "git pull #{remote} #{destination_branch}"
+      GitReflow.run_command_with_label "git checkout #{origin_branch}"
     end
 
     def update_feature_branch(options = {})
@@ -81,9 +79,9 @@ module GitReflow
       update_destination(base_branch, options) 
 
       # update feature branch in case there are multiple authors and remote changes
-      run_command_with_label "git pull origin #{current_branch}"
+      GitReflow.run_command_with_label "git pull origin #{current_branch}"
       # rebase on base branch
-      run_command_with_label "git merge #{base_branch}"
+      GitReflow.run_command_with_label "git merge #{base_branch}"
     end
 
     def append_to_squashed_commit_message(message = '')
@@ -98,7 +96,7 @@ module GitReflow
         end
       end
 
-      run "mv #{tmp_squash_message_path} #{squash_message_path}"
+      GitReflow.run "mv #{tmp_squash_message_path} #{squash_message_path}"
     end
 
     private

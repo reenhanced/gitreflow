@@ -126,7 +126,7 @@ PLATFORMS
 
 DEPENDENCIES
   appraisal (= 2.1.0)
-  aruba
+  aruba (~> 0.14.2)
   bundler (~> 1.12)
   chronic
   git_reflow!

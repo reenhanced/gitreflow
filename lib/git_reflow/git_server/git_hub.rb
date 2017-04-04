@@ -19,8 +19,8 @@ module GitReflow
         gh_api_endpoint = self.class.api_endpoint
 
         if using_enterprise
-          gh_site_url     = ask("Please enter your Enterprise site URL (e.g. https://github.company.com):")
-          gh_api_endpoint = ask("Please enter your Enterprise API endpoint (e.g. https://github.company.com/api/v3):")
+          gh_site_url     = GitReflow.shell.ask("Please enter your Enterprise site URL (e.g. https://github.company.com):")
+          gh_api_endpoint = GitReflow.shell.ask("Please enter your Enterprise API endpoint (e.g. https://github.company.com/api/v3):")
         end
 
         self.class.site_url     = gh_site_url
@@ -86,14 +86,14 @@ module GitReflow
       def authenticate(options = {silent: false})
         if connection and self.class.oauth_token.length > 0
           unless options[:silent]
-            GitReflow.say "Your GitHub account was already setup with: "
-            GitReflow.say "\tUser Name: #{self.class.user}"
-            GitReflow.say "\tEndpoint: #{self.class.api_endpoint}"
+            GitReflow.shell.say "Your GitHub account was already setup with: "
+            GitReflow.shell.say "\tUser Name: #{self.class.user}"
+            GitReflow.shell.say "\tEndpoint: #{self.class.api_endpoint}"
           end
         else
           begin
-            gh_user     = options[:user] || ask("Please enter your GitHub username: ")
-            gh_password = options[:password] || ask("Please enter your GitHub password (we do NOT store this): ") { |q| q.echo = false }
+            gh_user     = options[:user] || GitReflow.shell.ask("Please enter your GitHub username:")
+            gh_password = options[:password] || GitReflow.shell.ask("Please enter your GitHub password (we do NOT store this):", echo: false)
 
             @connection = ::Github.new do |config|
               config.basic_auth = "#{gh_user}:#{gh_password}"
@@ -104,14 +104,14 @@ module GitReflow
 
             @connection.connection_options = {headers: {"X-GitHub-OTP" => options[:two_factor_auth_code]}} if options[:two_factor_auth_code]
 
-            previous_authorizations = @connection.oauth.all.select {|auth| auth.note == "git-reflow (#{run('hostname', loud: false).strip})" }
+            previous_authorizations = @connection.oauth.all.select {|auth| auth.note == "git-reflow (#{GitReflow.run('hostname', capture: true).strip})" }
             if previous_authorizations.any?
               authorization = previous_authorizations.last
-              GitReflow.say "You have previously setup git-reflow on this machine, but we can no longer find the stored token.", :error
-              GitReflow.say "Please visit https://github.com/settings/tokens and delete the token for: git-reflow (#{run('hostname', loud: false).strip})", :notice
+              GitReflow.shell.say_status :error, "You have previously setup git-reflow on this machine, but we can no longer find the stored token.", :red
+              GitReflow.shell.say_status :info, "Please visit https://github.com/settings/tokens and delete the token for: git-reflow (#{GitReflow.run('hostname', capture: true).strip})", :yellow
               raise "Setup could not be completed."
             else
-              authorization = @connection.oauth.create scopes: ['repo'], note: "git-reflow (#{run('hostname', loud: false).strip})"
+              authorization = @connection.oauth.create scopes: ['repo'], note: "git-reflow (#{GitReflow.run('hostname', capture: true).strip})"
             end
 
             self.class.oauth_token = authorization.token
@@ -123,16 +123,16 @@ module GitReflow
                 @connection.oauth.create scopes: ['repo'], note: "thank Github for not making this straightforward"
               rescue ::Github::Error::Unauthorized
               ensure
-                two_factor_code = ask("Please enter your two-factor authentication code: ")
+                two_factor_code = GitReflow.shell.ask("Please enter your two-factor authentication code:")
                 self.authenticate options.merge({user: gh_user, password: gh_password, two_factor_auth_code: two_factor_code})
               end
             else
-              GitReflow.say "Github Authentication Error: #{e.inspect}", :error
+              GitReflow.shell.say_status :error, "Github Authentication Error: #{e.inspect}", :red
             end
           rescue StandardError => e
             raise "We were unable to authenticate with Github."
           else
-            GitReflow.say "Your GitHub account was successfully setup!", :success
+            GitReflow.shell.say_status :info, "Your GitHub account was successfully setup!", :green
           end
         end
 

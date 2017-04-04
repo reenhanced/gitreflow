@@ -41,9 +41,9 @@ module GitReflow
               self.new matching_pull
             end
           rescue ::BitBucket::Error::NotFound => e
-            GitReflow.git_server.say "No BitBucket repo found for #{GitReflow.git_server.class.remote_user}/#{GitReflow.git_server.class.remote_repo_name}", :error
+            GitReflow.shell.say_status :error, "No BitBucket repo found for #{GitReflow.git_server.class.remote_user}/#{GitReflow.git_server.class.remote_repo_name}", :red
           rescue ::BitBucket::Error::Forbidden => e
-            GitReflow.git_server.say "You don't have API access to this repo", :error
+            GitReflow.shell.say_satus :error, "You don't have API access to this repo", :red
           end
         end
 

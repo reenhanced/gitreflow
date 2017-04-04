@@ -56,21 +56,21 @@ module GitReflow
         begin
           if connection and self.class.api_key_setup?
             unless options[:silent]
-              GitReflow.say "\nYour BitBucket account was already setup with:"
-              GitReflow.say "\tUser Name: #{self.class.user}"
+              GitReflow.shell.say "\nYour BitBucket account was already setup with:"
+              GitReflow.shell.say "\tUser Name: #{self.class.user}"
             end
           else
-            self.class.user = options[:user] || ask("Please enter your BitBucket username: ")
-            GitReflow.say "\nIn order to connect your BitBucket account,"
-            GitReflow.say "you'll need to generate an API key for your team"
-            GitReflow.say "Visit #{self.class.site_url}/account/user/#{self.class.remote_user}/api-key/, to generate it\n"
-            self.class.api_key = ask("Please enter your team's API key: ")
+            self.class.user = options[:user] || GitReflow.shell.ask("Please enter your BitBucket username:")
+            GitReflow.shell.say "\nIn order to connect your BitBucket account,"
+            GitReflow.shell.say "you'll need to generate an API key for your team"
+            GitReflow.shell.say "Visit #{self.class.site_url}/account/user/#{self.class.remote_user}/api-key/, to generate it\n"
+            self.class.api_key = GitReflow.shell.ask("Please enter your team's API key:")
             connection.repos.all(self.class.remote_user).count
-            GitReflow.say "Connected to BitBucket\!", :success
+            GitReflow.shell.say_status :info, "Connected to BitBucket\!", :green
           end
         rescue ::BitBucket::Error::Unauthorized => e
           GitReflow::Config.unset('bitbucket.api-key', local: self.class.project_only?)
-          GitReflow.say "Invalid API key for team #{self.class.remote_user}.", :error
+          GitReflow.shell.say_status :error, "Invalid API key for team #{self.class.remote_user}.", :red
         end
       end
 

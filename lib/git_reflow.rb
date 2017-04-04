@@ -1,7 +1,6 @@
 require 'rubygems'
 require 'open-uri'
 require 'github_api'
-require "highline/import"
 require 'httpclient'
 require 'json'
 require 'colorize'

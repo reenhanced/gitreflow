@@ -145,7 +145,7 @@ module GitReflow
         end
 
         notices.each do |notice|
-          GitReflow.say notice, :notice
+          GitReflow.shell.say_status :info, notice, :yellow
         end
       end
 
@@ -176,22 +176,22 @@ module GitReflow
       end
 
       def cleanup_feature_branch?
-        GitReflow::Config.get('reflow.always-cleanup') == "true" || (ask "Would you like to push this branch to your remote repo and cleanup your feature branch? ") =~ /^y/i
+        GitReflow::Config.get('reflow.always-cleanup') == "true" || GitReflow.shell.ask("Would you like to push this branch to your remote repo and cleanup your feature branch? ") =~ /^y/i
       end
 
       def deliver?
-        GitReflow::Config.get('reflow.always-deliver') == "true" || (ask "This is the current status of your Pull Request. Are you sure you want to deliver? ") =~ /^y/i
+        GitReflow::Config.get('reflow.always-deliver') == "true" || GitReflow.shell.ask("This is the current status of your Pull Request. Are you sure you want to deliver? ") =~ /^y/i
       end
 
       def cleanup_failure_message
-        GitReflow.say "Cleanup halted.  Local changes were not pushed to remote repo.", :deliver_halted
-        GitReflow.say "To reset and go back to your branch run \`git reset --hard origin/#{self.base_branch_name} && git checkout #{self.feature_branch_name}\`"
+        GitReflow.shell.say_status :info, "Cleanup halted.  Local changes were not pushed to remote repo.", :red
+        GitReflow.shell.say "To reset and go back to your branch run \`git reset --hard origin/#{self.base_branch_name} && git checkout #{self.feature_branch_name}\`"
       end
 
       def merge!(options = {})
         if deliver?
 
-          GitReflow.say "Merging pull request ##{self.number}: '#{self.title}', from '#{self.feature_branch_name}' into '#{self.base_branch_name}'", :notice
+          GitReflow.shell.say_status :info, "Merging pull request ##{self.number}: '#{self.title}', from '#{self.feature_branch_name}' into '#{self.base_branch_name}'", :yellow
 
           GitReflow.update_current_branch
           GitReflow.fetch_destination(self.base_branch_name)
@@ -205,21 +205,21 @@ module GitReflow
           GitReflow.append_to_squashed_commit_message(message) if message.length > 0
 
           if GitReflow.run_command_with_label 'git commit', with_system: true
-            GitReflow.say "Pull request ##{self.number} successfully merged.", :success
+            GitReflow.shell.say_status :info, "Pull request ##{self.number} successfully merged.", :green
 
             if cleanup_feature_branch?
               GitReflow.run_command_with_label "git push origin #{self.base_branch_name}"
               GitReflow.run_command_with_label "git push origin :#{self.feature_branch_name}"
               GitReflow.run_command_with_label "git branch -D #{self.feature_branch_name}"
-              GitReflow.say "Nice job buddy."
+              GitReflow.shell.say "Nice job buddy."
             else
               cleanup_failure_message
             end
           else
-            GitReflow.say "There were problems commiting your feature... please check the errors above and try again.", :error
+            GitReflow.shell.say_status :error, "There were problems commiting your feature... please check the errors above and try again.", :red
           end
         else
-          GitReflow.say "Merge aborted", :deliver_halted
+          GitReflow.shell.say_status :info, "Merge aborted", :red
         end
       end
     end

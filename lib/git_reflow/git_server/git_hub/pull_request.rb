@@ -85,7 +85,7 @@ module GitReflow
             super options
           else
             if deliver?
-              GitReflow.say "Merging pull request ##{self.number}: '#{self.title}', from '#{self.feature_branch_name}' into '#{self.base_branch_name}'", :notice
+              GitReflow.shell.say_status :info, "Merging pull request ##{self.number}: '#{self.title}', from '#{self.feature_branch_name}' into '#{self.base_branch_name}'", :yellow
 
               unless options[:title] || options[:message]
                 # prompts user for commit_title and commit_message
@@ -95,7 +95,7 @@ module GitReflow
                   file.write("#{self.title}\n#{self.commit_message_for_merge}\n")
                 end
 
-                GitReflow.run("#{GitReflow.git_editor_command} #{squash_merge_message_file}", with_system: true)
+                GitReflow.run("#{GitReflow.git_editor_command} #{squash_merge_message_file}")
                 merge_message = File.read(squash_merge_message_file).split(/[\r\n]|\r\n/).map(&:strip)
 
                 title  = merge_message.shift
@@ -109,11 +109,11 @@ module GitReflow
                 options[:title] = title
                 options[:body]  = "#{merge_message.join("\n")}\n"
 
-                GitReflow.say "\nReview your merge commit message:\n"
-                GitReflow.say "--------\n"
-                GitReflow.say "Title:\n#{options[:title]}\n\n"
-                GitReflow.say "Body:\n#{options[:body]}\n"
-                GitReflow.say "--------\n"
+                GitReflow.shell.say "\nReview your merge commit message:\n"
+                GitReflow.shell.say "--------\n"
+                GitReflow.shell.say "Title:\n#{options[:title]}\n\n"
+                GitReflow.shell.say "Body:\n#{options[:body]}\n"
+                GitReflow.shell.say "--------\n"
               end
 
               options[:body] = "#{options[:message]}\n" if options[:body].nil? and "#{options[:message]}".length > 0
@@ -134,21 +134,21 @@ module GitReflow
                 GitReflow.run_command_with_label "git checkout #{self.base_branch_name}"
                 # Pulls merged changes from remote base_branch
                 GitReflow.run_command_with_label "git pull origin #{self.base_branch_name}"
-                GitReflow.say "Pull request ##{self.number} successfully merged.", :success
+                GitReflow.shell.say_status :info, "Pull request ##{self.number} successfully merged.", :green
 
                 if cleanup_feature_branch?
                   GitReflow.run_command_with_label "git push origin :#{self.feature_branch_name}"
                   GitReflow.run_command_with_label "git branch -D #{self.feature_branch_name}"
-                  GitReflow.say "Nice job buddy."
+                  GitReflow.shell.say "Nice job buddy."
                 else
                   cleanup_failure_message
                 end
               else
-                GitReflow.say merge_response.to_s, :deliver_halted
-                GitReflow.say "There were problems commiting your feature... please check the errors above and try again.", :error
+                GitReflow.shell.say_status :error, merge_response.to_s, :red
+                GitReflow.shell.say_status :error, "There were problems commiting your feature... please check the errors above and try again.", :red
               end
             else
-              GitReflow.say "Merge aborted", :deliver_halted
+              GitReflow.shell.say_status :error, "Merge aborted", :red
             end
           end
         end

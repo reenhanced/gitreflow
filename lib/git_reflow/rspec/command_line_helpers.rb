@@ -1,5 +1,3 @@
-require "highline"
-
 module GitReflow
   module RSpec
     module CommandLineHelpers
@@ -17,7 +15,7 @@ module GitReflow
 
         stub_output_for(GitReflow)
         stub_output_for(GitReflow::Sandbox)
-        stub_output_for(GitReflow::Workflow)
+        #stub_output_for(GitReflow::Workflow)
 
         allow_any_instance_of(GitReflow::GitServer::PullRequest).to receive(:printf) do |format, *output|
           $output << Array(output).join(" ")
@@ -26,7 +24,12 @@ module GitReflow
       end
 
       def stub_output_for(object_to_stub, method_to_stub = :puts)
-        allow_any_instance_of(object_to_stub).to receive(method_to_stub) do |output|
+        allow_any_instance_of(object_to_stub).to receive(:say) do |output|
+          $output << output
+          output = ''
+        end
+
+        allow_any_instance_of(object_to_stub).to receive(:say_status) do |log_level, output, color|
           $output << output
           output = ''
         end
@@ -40,8 +43,13 @@ module GitReflow
           command = "" # we need this due to a bug in rspec that will keep this assignment on subsequent runs of the stub
           ret_value
         end
-        allow(module_to_stub).to receive(:say) do |output, type|
-          $says << {message: output, type: type}
+        allow(GitReflow.shell).to receive(:say) do |output|
+          $says << {message: output, type: nil, color: nil}
+          $output << output
+        end
+        allow(GitReflow.shell).to receive(:say_status) do |type, output, color|
+          $says << {message: output, type: type, color: color}
+          $output << output
         end
       end
 
@@ -58,10 +66,8 @@ module GitReflow
       end
 
       def stub_command_line_inputs(inputs)
-        allow_any_instance_of(HighLine).to receive(:ask) do |terminal, question|
-        return_value = inputs[question]
-        question = ""
-        return_value
+        allow(GitReflow.shell).to receive(:ask) do |question|
+          inputs[question]
         end
       end
 
@@ -88,7 +94,7 @@ end
 RSpec::Matchers.define :have_run_command_silently do |command|
   match do |block|
     block.call
-    $commands_ran.include? Hashie::Mash.new(command: command, options: { loud: false })
+    $commands_ran.include? Hashie::Mash.new(command: command, options: { capture: true })
   end
 
   supports_block_expectations
@@ -124,16 +130,16 @@ RSpec::Matchers.define :have_run_commands_in_order do |commands|
   end
 end
 
-RSpec::Matchers.define :have_said do |expected_message, expected_type|
+RSpec::Matchers.define :have_said do |expected_message, expected_type, expected_color|
   match do |block|
     block.call
-    $says.include?({message: expected_message, type: expected_type})
+    $says.include?({message: expected_message, type: expected_type, color: expected_color})
   end
 
   supports_block_expectations
 
   failure_message do |block|
-    "expected GitReflow to have said #{expected_message} with #{expected_type.inspect} but didn't: \n\t#{$says.inspect}"
+    "expected GitReflow to have said #{expected_message} with #{expected_type.inspect} of color #{expected_color}but didn't: \n\t#{$says.inspect}"
   end
 end
 
@@ -147,5 +153,9 @@ RSpec::Matchers.define :have_output do |expected_output|
 
   failure_message do |block|
     "expected STDOUT to include #{expected_output} but didn't: \n\t#{$output.inspect}"
+  end
+
+  failure_message_when_negated do |block|
+    "expected STDOUT not to include #{expected_output} but did: \n\t#{$output.inspect}"
   end
 end

@@ -1,8 +1,11 @@
-require 'git_reflow/sandbox'
-require 'git_reflow/git_helpers'
+require "git_reflow/sandbox"
+require "git_reflow/git_helpers"
+require "thor"
 
 module GitReflow
   module Workflow
+    require "git_reflow/workflows/core"
+
     def self.included base
       base.extend ClassMethods
     end
@@ -23,5 +26,3 @@ module GitReflow
     end
   end
 end
-
-extend GitReflow::Workflow

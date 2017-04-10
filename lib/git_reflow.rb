@@ -29,11 +29,12 @@ require 'git_reflow/workflows/core'
 module GitReflow
   include Sandbox
   include GitHelpers
+  include Workflow
 
   extend self
 
   def workflow
-    Workflow.current
+    Workflow.current.new
   end
 
   def default_editor

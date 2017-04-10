@@ -16,17 +16,12 @@ describe GitReflow::GitServer::GitHub do
   let(:existing_pull_requests) { Fixture.new('pull_requests/pull_requests.json').to_json_hashie }
 
   before do
-    allow_any_instance_of(HighLine).to receive(:ask) do |terminal, question|
-      values = {
-        "Please enter your GitHub username: "                                                 => user,
-        "Please enter your GitHub password (we do NOT store this): "                          => password,
-        "Please enter your Enterprise site URL (e.g. https://github.company.com):"            => enterprise_site,
-        "Please enter your Enterprise API endpoint (e.g. https://github.company.com/api/v3):" => enterprise_api
-      }
-     return_value = values[question]
-     question = ""
-     return_value
-    end
+    stub_command_line_inputs({
+      "Please enter your GitHub username:"                                                 => user,
+      "Please enter your GitHub password (we do NOT store this):"                          => password,
+      "Please enter your Enterprise site URL (e.g. https://github.company.com):"            => enterprise_site,
+      "Please enter your Enterprise API endpoint (e.g. https://github.company.com/api/v3):" => enterprise_api
+    })
 
     allow(github.class).to receive(:remote_user).and_return(user)
     allow(github.class).to receive(:remote_repo_name).and_return(repo)
@@ -81,7 +76,7 @@ describe GitReflow::GitServer::GitHub do
       allow(GitReflow::GitServer::GitHub).to receive(:user).and_return('reenhanced')
       allow(github_api).to receive(:oauth).and_return(github_authorizations)
       allow(github_api).to receive_message_chain(:oauth, :all).and_return([])
-      allow(github).to receive(:run).with('hostname', loud: false).and_return(hostname)
+      allow(GitReflow).to receive(:run).with('hostname', capture: true).and_return(hostname)
     end
 
     context 'not yet authenticated' do
@@ -94,7 +89,7 @@ describe GitReflow::GitServer::GitHub do
         end
 
         it "notifies the user of successful setup" do
-          expect { subject }.to have_said "Your GitHub account was successfully setup!", :success
+          expect { subject }.to have_said "Your GitHub account was successfully setup!", :info, :green
         end
 
         it "creates a new GitHub oauth token" do
@@ -156,7 +151,7 @@ describe GitReflow::GitServer::GitHub do
         end
 
         it "notifies user of invalid login details" do
-          expect { subject }.to have_said "Github Authentication Error: #{Github::Error::Unauthorized.new(unauthorized_error_response).inspect}", :error
+          expect { subject }.to have_said "Github Authentication Error: #{Github::Error::Unauthorized.new(unauthorized_error_response).inspect}", :error, :red
         end
       end
     end

@@ -200,8 +200,16 @@ module GitReflow
 
           GitReflow.run_command_with_label "git checkout #{self.base_branch_name}"
           GitReflow.run_command_with_label "git pull origin #{self.base_branch_name}"
-          GitReflow.run_command_with_label "git merge #{options[:squash] == false ? '' : '--squash '}#{self.feature_branch_name}"
 
+          merge_method = options[:merge_method] || GitReflow::Config.get("reflow.merge-method")
+          case merge_method.to_s
+          when /merge/i
+            merge_command = "git merge #{self.feature_branch_name}"
+          else
+            merge_command = "git merge --squash #{self.feature_branch_name}"
+          end
+
+          GitReflow.run_command_with_label merge_command
           GitReflow.append_to_squashed_commit_message(message) if message.length > 0
 
           if GitReflow.run_command_with_label 'git commit', with_system: true

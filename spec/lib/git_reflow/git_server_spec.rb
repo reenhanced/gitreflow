@@ -46,7 +46,7 @@ describe GitReflow::GitServer do
 
     context 'provider not yet implemented' do
       let(:connection_options) {{ provider: 'GitLab' }}
-      it { expect{ subject }.to have_said "Error connecting to GitLab: GitServer not setup for \"GitLab\"", :error }
+      it { expect{ subject }.to have_said "Error connecting to GitLab: GitServer not setup for \"GitLab\"", :error, :red }
     end
   end
 
@@ -63,14 +63,14 @@ describe GitReflow::GitServer do
     context 'Reflow has not yet been setup' do
       before { allow(GitReflow::Config).to receive(:get).with('reflow.git-server').and_return('') }
       it     { is_expected.to be_nil }
-      it     { expect{ subject }.to have_said "Reflow hasn't been setup yet.  Run 'git reflow setup' to continue", :notice }
+      it     { expect{ subject }.to have_said "Reflow hasn't been setup yet.  Run 'git reflow setup' to continue", :info, :yellow }
     end
 
     context 'an unknown server provider is stored in the git config' do
       before { allow(GitReflow::Config).to receive(:get).with('reflow.git-server').and_return('GittyUp') }
 
       it { is_expected.to be_nil }
-      it { expect{ subject }.to have_said "GitServer not setup for \"GittyUp\"", :error }
+      it { expect{ subject }.to have_said "GitServer not setup for \"GittyUp\"", :error, :red }
     end
   end
 
@@ -95,7 +95,7 @@ describe GitReflow::GitServer do
     context "with an invalid provider" do
       before { allow(GitReflow::Config).to receive(:get).with('reflow.git-server').and_return('GittyUp') }
       it     { is_expected.to be_nil }
-      it     { expect{ subject }.to have_said "GitServer not setup for \"GittyUp\"", :error }
+      it     { expect{ subject }.to have_said "GitServer not setup for \"GittyUp\"", :error, :red }
     end
   end
 end

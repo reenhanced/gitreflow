@@ -307,13 +307,13 @@ describe GitReflow::GitServer::PullRequest do
       expect{ subject }.to have_output("branches: #{pr.feature_branch_name} -> #{pr.base_branch_name}")
       expect{ subject }.to have_output("number: #{pr.number}")
       expect{ subject }.to have_output("url: #{pr.html_url}")
-      expect{ subject }.to have_said("No one has reviewed your pull request.\n", :notice)
+      expect{ subject }.to have_said("No one has reviewed your pull request.\n", :info, :yellow)
     end
 
     context "with build status" do
       let(:build) { MockPullRequest::Build.new(state: "failure", description: "no dice", url: "https://example.com") }
       before      { allow(pr).to receive(:build).and_return(build) }
-      specify     { expect{ subject }.to have_said("Your build status is not successful: #{build.url}.\n", :notice) }
+      specify     { expect{ subject }.to have_said("Your build status is not successful: #{build.url}.\n", :info, :yellow) }
       context "and build status is 'success'" do
         before  { allow(build).to receive(:state).and_return('success') }
         specify { expect{ subject }.to_not have_output("Your build status is not successful") }
@@ -337,7 +337,7 @@ describe GitReflow::GitServer::PullRequest do
 
       context "and pending approvals" do
         before  { allow(pr).to receive(:reviewers_pending_response).and_return(['tito', 'ringo']) }
-        specify { expect{ subject }.to_not have_output "You still need a LGTM from: tito, ringo" }
+        specify { expect{ subject }.to have_output "You still need a LGTM from: tito, ringo" }
       end
 
       context "and no pending approvals" do
@@ -365,13 +365,15 @@ describe GitReflow::GitServer::PullRequest do
 
     before do
       allow(GitReflow).to receive(:append_to_squashed_commit_message)
+      allow(GitReflow::Config).to receive(:get)
+      allow(GitReflow::Config).to receive(:get).with("reflow.merge-method").and_return("")
       allow(pr).to receive(:commit_message_for_merge).and_return(commit_message_for_merge)
     end
 
     context "and can deliver" do
       before { allow(pr).to receive(:deliver?).and_return(true) }
 
-      specify { expect{ subject }.to have_said "Merging pull request ##{pr.number}: '#{pr.title}', from '#{pr.feature_branch_name}' into '#{pr.base_branch_name}'", :notice }
+      specify { expect{ subject }.to have_said "Merging pull request ##{pr.number}: '#{pr.title}', from '#{pr.feature_branch_name}' into '#{pr.base_branch_name}'", :info, :yellow }
 
       it "updates both feature and destination branch and squash-merges feature into base branch" do
         expect(GitReflow).to receive(:update_current_branch)
@@ -385,7 +387,7 @@ describe GitReflow::GitServer::PullRequest do
       end
 
       context "and successfully commits merge" do
-        specify { expect{ subject }.to have_said "Pull request ##{pr.number} successfully merged.", :success }
+        specify { expect{ subject }.to have_said "Pull request ##{pr.number} successfully merged.", :info, :green }
 
         context "and cleaning up feature branch" do
           before  { allow(pr).to receive(:cleanup_feature_branch?).and_return(true) }
@@ -404,17 +406,17 @@ describe GitReflow::GitServer::PullRequest do
           specify { expect{ subject }.to_not have_run_command "git push origin #{pr.base_branch_name}" }
           specify { expect{ subject }.to_not have_run_command "git push origin :#{pr.feature_branch_name}" }
           specify { expect{ subject }.to_not have_run_command "git branch -D #{pr.feature_branch_name}" }
-          specify { expect{ subject }.to have_said "Cleanup halted.  Local changes were not pushed to remote repo.", :deliver_halted }
+          specify { expect{ subject }.to have_said "Cleanup halted.  Local changes were not pushed to remote repo.", :info, :red }
           specify { expect{ subject }.to have_said "To reset and go back to your branch run \`git reset --hard origin/#{pr.base_branch_name} && git checkout #{pr.feature_branch_name}\`" }
         end
 
         context "and NOT squash merging" do
           let(:inputs) do
             {
-              base:    "base_branch",
-              title:   "title",
-              message: "message",
-              squash:  false
+              base:         "base_branch",
+              title:        "title",
+              message:      "message",
+              merge_method: "merge"
             }
           end
 
@@ -428,13 +430,13 @@ describe GitReflow::GitServer::PullRequest do
           allow(GitReflow).to receive(:run_command_with_label)
           allow(GitReflow).to receive(:run_command_with_label).with('git commit', with_system: true).and_return(false)
         end
-        specify { expect{ subject }.to have_said "There were problems commiting your feature... please check the errors above and try again.", :error }
+        specify { expect{ subject }.to have_said "There were problems commiting your feature... please check the errors above and try again.", :error, :red }
       end
     end
 
     context "but cannot deliver" do
       before  { allow(pr).to receive(:deliver?).and_return(false) }
-      specify { expect{ subject }.to have_said "Merge aborted", :deliver_halted }
+      specify { expect{ subject }.to have_said "Merge aborted", :info, :red }
     end
   end
 
@@ -486,13 +488,21 @@ describe GitReflow::GitServer::PullRequest do
       end
 
       context "and user chooses to cleanup" do
-        before { expect(pr).to receive(:ask).with('Would you like to push this branch to your remote repo and cleanup your feature branch? ').and_return('yes') }
-        it     { should be_truthy }
+        before do
+          stub_command_line_inputs({
+            'Would you like to push this branch to your remote repo and cleanup your feature branch? ' => 'yes'
+          })
+        end
+        it { should be_truthy }
       end
 
       context "and user choose not to cleanup" do
-        before { expect(pr).to receive(:ask).with('Would you like to push this branch to your remote repo and cleanup your feature branch? ').and_return('no') }
-        it     { should be_falsy }
+        before do
+          stub_command_line_inputs({
+            'Would you like to push this branch to your remote repo and cleanup your feature branch? ' => 'no'
+          })
+        end
+        it { should be_falsy }
       end
     end
   end
@@ -511,13 +521,21 @@ describe GitReflow::GitServer::PullRequest do
       end
 
       context "and user chooses to deliver" do
-        before { expect(pr).to receive(:ask).with('This is the current status of your Pull Request. Are you sure you want to deliver? ').and_return('yes') }
-        it     { should be_truthy }
+        before do
+          stub_command_line_inputs({
+            'This is the current status of your Pull Request. Are you sure you want to deliver? ' => 'yes'
+          })
+        end
+        it { should be_truthy }
       end
 
       context "and user choose not to cleanup" do
-        before { expect(pr).to receive(:ask).with('This is the current status of your Pull Request. Are you sure you want to deliver? ').and_return('no') }
-        it     { should be_falsy }
+        before do
+          stub_command_line_inputs({
+            'This is the current status of your Pull Request. Are you sure you want to deliver? ' => 'no'
+          })
+        end
+        it { should be_falsy }
       end
     end
   end

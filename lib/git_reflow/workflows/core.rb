@@ -1,5 +1,5 @@
 $: << File.expand_path(File.dirname(File.realpath(__FILE__)) + '/../..')
-require 'git_reflow/workflow'
+require "git_reflow/workflow"
 
 module GitReflow
   module Workflows
@@ -12,9 +12,9 @@ module GitReflow
       #
       # @option local [Boolean] whether to configure git-reflow specific to the current project
       # @option enterprise [Boolean] whether to configure git-reflow for use with Github Enterprise
-      desc "sets up your api token with GitHub"
-      method_option :local,      aliases: "-l", type: :boolean, default: false, desc: "setup GitReflow for the current project only"
-      method_option :enterprise, aliases: "-e", type: :boolean, default: false, desc: "setup GitReflow with a Github Enterprise account"
+      desc "setup", "sets up your api token with GitHub"
+      method_option :local,      aliases: "-l", type: :boolean, lazy_default: false, desc: "setup GitReflow for the current project only"
+      method_option :enterprise, aliases: "-e", type: :boolean, lazy_default: false, desc: "setup GitReflow with a Github Enterprise account"
       def setup
         reflow_options             = { project_only: options[:local], enterprise: options[:enterprise] }
         existing_git_include_paths = GitReflow::Config.get('include.path', all: true).split("\n")
@@ -53,9 +53,9 @@ module GitReflow
       # @param feature_branch [String] the name of the branch to create your feature on
       # @option base [String] the name of the base branch you want to checkout your feature from
       desc "start FEATURE_BRANCH", "Creates a new feature branch and setup remote tracking"
-      method_option :base, aliases: "-b", type: :string, default: "master", required: true
+      method_option :base, aliases: "-b", type: :string, default: "master", lazy_default: "master"
       def start(feature_branch)
-        base_branch = options[:base]
+        base_branch = options[:base] || "master"
 
         if feature_branch.nil? or feature_branch.length <= 0
           GitReflow.shell.say_status :info, "usage: git-reflow start [new-branch-name]", :red
@@ -76,13 +76,14 @@ module GitReflow
       method_option :title, aliases: "-t", type: :string
       method_option :message, aliases: "-m", type: :string
       def review(base = "master")
-        base_branch         = options[:base]
+        base_branch         = base || "master"
         create_pull_request = true
 
         GitReflow.fetch_destination base_branch
         begin
           GitReflow.push_current_branch
 
+          pr_options            = options.dup
           existing_pull_request = GitReflow.git_server.find_open_pull_request( from: GitReflow.current_branch, to: base_branch )
           if existing_pull_request
             GitReflow.shell.say_status :info, "A pull request already exists for these branches:", :yellow
@@ -106,23 +107,23 @@ module GitReflow
                 pr_msg.shift if pr_msg.first.empty?
               end
 
-              options[:title] = title
-              options[:body]  = "#{pr_msg.join("\n")}\n"
+              pr_options[:title] = title
+              pr_options[:body]  = "#{pr_msg.join("\n")}\n"
 
               GitReflow.shell.say "\nReview your PR:\n"
               GitReflow.shell.say "--------\n"
-              GitReflow.shell.say "Title:\n#{options[:title]}\n\n"
-              GitReflow.shell.say "Body:\n#{options[:body]}\n"
+              GitReflow.shell.say "Title:\n#{pr_options[:title]}\n\n"
+              GitReflow.shell.say "Body:\n#{pr_options[:body]}\n"
               GitReflow.shell.say "--------\n"
 
               create_pull_request = GitReflow.shell.ask("Submit pull request? (Y)") =~ /y/i
             end
 
             if create_pull_request
-              pull_request = GitReflow.git_server.create_pull_request(title: options[:title] || options[:body],
-                                                            body:  options[:body],
+              pull_request = GitReflow.git_server.create_pull_request(title: pr_options[:title] || pr_options[:body],
+                                                            body:  pr_options[:body],
                                                             head:  "#{GitReflow.remote_user}:#{GitReflow.current_branch}",
-                                                            base:  options[:base])
+                                                            base:  base_branch)
 
               GitReflow.shell.say_status :info, "Successfully created pull request ##{pull_request.number}: #{pull_request.title}\nPull Request URL: #{pull_request.html_url}\n", :green
             else
@@ -140,12 +141,13 @@ module GitReflow
       #
       # @option destination_branch [String] the branch you're merging your feature into ('master' is default)
       desc "status BASE_BRANCH", "display information about the status of your feature branch against the BASE_BRANCH"
-      def review(base = "master")
-        pull_request = GitReflow.git_server.find_open_pull_request( :from => GitReflow.current_branch, :to => options[:base] )
+      def status(base = "master")
+        base_branch  = base || "master"
+        pull_request = GitReflow.git_server.find_open_pull_request(from: GitReflow.current_branch, to: base_branch)
 
         if pull_request.nil?
-          GitReflow.shell.say_status :info, "No pull request exists for #{GitReflow.current_branch} -> #{options[:base]}", :yellow
-          GitReflow.shell.say_status :info, "Run 'git reflow review #{options[:base]}' to start the review process", :yellow
+          GitReflow.shell.say_status :info, "No pull request exists for #{GitReflow.current_branch} -> #{base_branch}", :yellow
+          GitReflow.shell.say_status :info, "Run 'git reflow review #{base_branch}' to start the review process", :yellow
         else
           GitReflow.shell.say "Here's the status of your review:"
           pull_request.display_pull_request_summary
@@ -153,12 +155,13 @@ module GitReflow
       end
 
       desc "deploy ENVIRONMENT", "deploy the current branch to a given environment"
-      def deploy(environment = 'default')
-        deploy_command = GitReflow::Config.get("reflow.deploy-to-#{environment}-command", local: true)
+      def deploy(environment = "default")
+        env            = environment || "default"
+        deploy_command = GitReflow::Config.get("reflow.deploy-to-#{env}-command", local: true)
 
         # first check is to allow for automated setup
         if deploy_command.empty?
-          deploy_command = GitReflow.shell.ask("Enter the command you use to deploy to #{environment} (leaving blank will skip deployment)")
+          deploy_command = GitReflow.shell.ask("Enter the command you use to deploy to #{env} (leaving blank will skip deployment)")
         end
 
         # second check is to see if the user wants to skip
@@ -166,7 +169,7 @@ module GitReflow
           GitReflow.shell.say "Skipping deployment..."
           false
         else
-          GitReflow::Config.set("reflow.deploy-to-#{environment}-command", deploy_command, local: true)
+          GitReflow::Config.set("reflow.deploy-to-#{env}-command", deploy_command, local: true)
           GitReflow.run_command_with_label(deploy_command, with_system: true)
         end
       end
@@ -206,10 +209,13 @@ module GitReflow
       # @option base [String] base branch to merge your feature branch into
       # @option force [Boolean] whether to force-deliver the feature branch, ignoring any QA checks
       desc "deliver BASE_BRANCH", "merge your feature branch down to your base branch, and cleanup your feature branch"
-      method_option :force, aliases: "-f", type: :boolean, default: false
+      method_option :force, aliases: "-f", type: :boolean, default: false, lazy_default: false
+      method_option :method, aliases: "-m", type: :string, default: "squash", lazy_default: "squash"
       def deliver(base = "master")
+        base_branch = base || "master"
+
         begin
-          existing_pull_request = GitReflow.git_server.find_open_pull_request( from: GitReflow.current_branch, to: base )
+          existing_pull_request = GitReflow.git_server.find_open_pull_request( from: GitReflow.current_branch, to: base_branch )
 
           if existing_pull_request.nil?
             GitReflow.shell.say_status :info, "No pull request exists for #{GitReflow.remote_user}:#{GitReflow.current_branch}\nPlease submit your branch for review first with \`git reflow review\`", :red
@@ -217,10 +223,12 @@ module GitReflow
 
             if existing_pull_request.good_to_merge?(force: options[:force])
               # displays current status and prompts user for confirmation
-              self.status destination_branch: options[:base]
+              self.status base_branch
+              merge_options = options.dup
+              merge_options[:base] = base_branch
               # TODO: change name of this in the merge! method
-              options[:skip_lgtm] = options[:force] if options[:force]
-              existing_pull_request.merge!(options)
+              merge_options[:skip_lgtm] = options[:force] if options[:force]
+              existing_pull_request.merge!(merge_options)
             else
               GitReflow.shell.say_status :info, existing_pull_request.rejection_message, :red
             end
@@ -244,10 +252,13 @@ module GitReflow
       # @param remote [String] the name of the remote repository to fetch updates from (origin by default)
       # @param base [String] the branch that you want to fetch updates from (master by default)
       desc "refresh", "Updates and synchronizes your base branch and feature branch."
-      method_option :remote, aliases: "-r", type: :string, default: "origin"
-      method_option :base, aliases: "-b", type: :string, default: "master"
+      method_option :remote, aliases: "-r", type: :string, lazy_default: "origin", default: "origin"
+      method_option :base, aliases: "-b", type: :string, lazy_default: "master", default: "master"
       def refresh
-        GitReflow.update_feature_branch(options)
+        update_options = options.dup
+        update_options[:remote] ||= "origin"
+        update_options[:base]   ||= "master"
+        GitReflow.update_feature_branch(update_options)
       end
     end
   end

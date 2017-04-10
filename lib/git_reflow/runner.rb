@@ -15,7 +15,7 @@ module GitReflow
         $stdout = @stdout
 
         # Run our normal Thor app the way we know and love.
-        MyCli::App.start(@argv)
+        GitReflow.workflow.start(@argv)
 
         # Thor::Base#start does not have a return value, assume success if no exception is raised.
         0

@@ -5,8 +5,6 @@ require 'webmock/rspec'
 require 'pry'
 
 $LOAD_PATH << 'lib'
-require 'git_reflow'
-
 require 'git_reflow/rspec'
 
 Dir[File.expand_path('../support/**/*.rb', __FILE__)].each {|f| require f}

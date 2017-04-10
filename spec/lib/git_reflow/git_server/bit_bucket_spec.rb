@@ -11,14 +11,9 @@ describe GitReflow::GitServer::BitBucket do
   let(:remote_url)   { "git@bitbucket.org:#{user}/#{repo}.git" }
 
   before do
-    allow_any_instance_of(HighLine).to receive(:ask) do |terminal, question|
-      values = {
-        "Please enter your BitBucket username: " => user
-      }
-     return_value = values[question]
-     question = ""
-     return_value
-    end
+    stub_command_line_inputs({
+      "Please enter your BitBucket username: " => user
+    })
   end
 
   describe '#initialize(options)' do

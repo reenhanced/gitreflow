@@ -463,6 +463,15 @@ describe GitReflow::GitServer::GitHub::PullRequest do
       it "falls back on manual squash merge" do
         expect { subject }.to have_run_command "git merge --squash #{feature_branch_name}"
       end
+
+      it "allows to override the merge method" do
+        expect { pr.merge! inputs.merge(merge_method: "merge") }.to have_run_command "git merge #{feature_branch_name}"
+      end
+
+      it "overrides the default merge method if config is set" do
+        allow(GitReflow::Config).to receive(:get).with('reflow.merge-method').and_return('merge')
+        expect { subject }.to have_run_command "git merge #{feature_branch_name}"
+      end
     end
 
     context "and always deliver is set" do
@@ -480,10 +489,10 @@ describe GitReflow::GitServer::GitHub::PullRequest do
     context "and not suqash merging" do
       let(:inputs) do
         {
-          base:    "base_branch",
-          title:   "title",
-          message: "message",
-          squash:  false
+          base:         "base_branch",
+          title:        "title",
+          message:      "message",
+          merge_method: "merge"
         }
       end
 
@@ -501,7 +510,7 @@ describe GitReflow::GitServer::GitHub::PullRequest do
             "commit_title"   => "#{inputs[:title]}",
             "commit_message" => "#{inputs[:message]}\n",
             "sha"            => pr.head.sha,
-            "squash"         => false
+            "merge_method"   => "merge"
           }
         )
 
@@ -519,8 +528,8 @@ describe GitReflow::GitServer::GitHub::PullRequest do
       end
 
       it "throws an error" do
-        expect { subject }.to have_said "Merge failed", :deliver_halted
-        expect { subject }.to have_said "There were problems commiting your feature... please check the errors above and try again.", :error
+        expect { subject }.to have_said "Merge failed", :error, :red
+        expect { subject }.to have_said "There were problems commiting your feature... please check the errors above and try again.", :error, :red
       end
     end
   end

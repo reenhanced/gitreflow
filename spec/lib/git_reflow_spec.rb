@@ -42,7 +42,7 @@ describe GitReflow do
         workflow_path = File.join(File.expand_path("../../fixtures", __FILE__), "/awesome_workflow.rb")
         allow(GitReflow::Config).to receive(:get).with("reflow.workflow").and_return(workflow_path)
 
-        expect(GitReflow.workflow).to eql(GitReflow::Workflow::AwesomeWorkflow)
+        expect(GitReflow.workflow).to be_instance_of(GitReflow::Workflow::AwesomeWorkflow)
         expect{ subject.start }.to have_said "Awesome."
       end
 
@@ -50,9 +50,9 @@ describe GitReflow do
         workflow_path = File.join(File.expand_path("../../fixtures", __FILE__), "/workflow_with_super.rb")
         allow(GitReflow::Config).to receive(:get).with("reflow.workflow").and_return(workflow_path)
 
-        expect(GitReflow.workflow).to eql(GitReflow::Workflow::WorkflowWithSuper)
+        expect(GitReflow.workflow).to be_instance_of(GitReflow::Workflow::WorkflowWithSuper)
         expect{ subject.start }.to have_said "Super."
-        expect{ subject.start }.to have_said "usage: git-reflow start [new-branch-name]", :error
+        expect{ subject.start }.to have_said "usage: git-reflow start [new-branch-name]", :info, :red
       end
     end
 

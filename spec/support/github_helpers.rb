@@ -16,7 +16,7 @@ module GithubHelpers
     branch           = options[:branch] || 'new-feature'
     pull             = options[:pull]
 
-    allow_any_instance_of(HighLine).to receive(:ask) do |terminal, question|
+    allow(GitReflow.shell).to receive(:ask) do |terminal, question|
       values = {
         "Please enter your GitHub username: "                                                 => user,
         "Please enter your GitHub password (we do NOT store this): "                          => password,

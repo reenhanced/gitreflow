@@ -14,7 +14,7 @@ module GitReflow
         else
           new_value = GitReflow.run "git config #{local}--get #{key}", capture: true
         end
-        instance_variable_set(:"@#{key.tr('.-', '_')}", new_value.strip)
+        instance_variable_set(:"@#{key.tr('.-', '_')}", "#{new_value}".strip)
       end
     end
 

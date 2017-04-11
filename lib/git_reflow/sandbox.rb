@@ -12,16 +12,19 @@ module GitReflow
     }
 
     def run(command, options = {})
-      options = { loud: true }.merge(options)
+      options = { loud: true, blocking: true }.merge(options)
 
       if options[:with_system] == true
         system(command)
-      elsif options[:loud] == true
-        output = %x{#{command}}
-        puts output
-        output
       else
-        %x{#{command}}
+        output = %x{#{command}}
+
+        if options[:blocking] == true && !$?.success?
+          abort "\`#{command}\` failed to run."
+        else
+          puts output if options[:loud] == true
+          output
+        end
       end
     end
 

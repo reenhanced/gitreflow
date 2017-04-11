@@ -30,7 +30,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency('wwtd', '1.3.0')
 
   s.add_dependency('colorize', '>= 0.7.0')
-  s.add_dependency('gli', '2.14.0')
+  s.add_dependency('gli', '2.15.0')
   s.add_dependency('highline')
   s.add_dependency('httpclient')
   s.add_dependency('github_api', '0.15.0')

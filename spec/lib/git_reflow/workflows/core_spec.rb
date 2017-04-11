@@ -21,7 +21,7 @@ describe GitReflow::Workflows::Core do
       })
     end
 
-    specify { expect { subject }.to have_run_command_silently "git config -f #{GitReflow::Config::CONFIG_FILE_PATH} --replace-all core.editor \"#{GitReflow.default_editor}\"" }
+    specify { expect { subject }.to have_run_command_silently "git config -f #{GitReflow::Config::CONFIG_FILE_PATH} --replace-all core.editor \"#{GitReflow.default_editor}\"", blocking: false }
     specify { expect { subject }.to have_said "Updated git's editor (via git config key 'core.editor') to: #{GitReflow.default_editor}.", :notice }
 
     context "core.editor git config has already been set" do
@@ -30,7 +30,7 @@ describe GitReflow::Workflows::Core do
         allow(GitReflow::Config).to receive(:get).with('core.editor').and_return('emacs')
       end
 
-      specify { expect { subject }.to_not have_run_command_silently "git config -f #{GitReflow::Config::CONFIG_FILE_PATH} --replace-all core.editor \"#{GitReflow.default_editor}\"" }
+      specify { expect { subject }.to_not have_run_command_silently "git config -f #{GitReflow::Config::CONFIG_FILE_PATH} --replace-all core.editor \"#{GitReflow.default_editor}\"", blocking: false }
     end
 
     context "git-reflow has not been setup before" do
@@ -42,15 +42,15 @@ describe GitReflow::Workflows::Core do
 
       it "creates a .gitconfig.reflow file and includes it in the user's global git config" do
         expect { subject }.to have_run_command "touch #{GitReflow::Config::CONFIG_FILE_PATH}"
-        expect { subject }.to have_run_command_silently "git config --global --add include.path \"#{GitReflow::Config::CONFIG_FILE_PATH}\""
+        expect { subject }.to have_run_command_silently "git config --global --add include.path \"#{GitReflow::Config::CONFIG_FILE_PATH}\"", blocking: false
 
         expect { subject }.to have_said "Created #{GitReflow::Config::CONFIG_FILE_PATH} for git-reflow specific configurations.", :notice
         expect { subject }.to have_said "Added #{GitReflow::Config::CONFIG_FILE_PATH} to include.path in $HOME/.gitconfig.", :notice
       end
 
       it "sets the default approval minimum and regex" do
-        expect { subject }.to have_run_command_silently "git config -f #{GitReflow::Config::CONFIG_FILE_PATH} --replace-all constants.minimumApprovals \"\""
-        expect { subject }.to have_run_command_silently "git config -f #{GitReflow::Config::CONFIG_FILE_PATH} --replace-all constants.approvalRegex \"#{GitReflow::GitServer::PullRequest::DEFAULT_APPROVAL_REGEX}\""
+        expect { subject }.to have_run_command_silently "git config -f #{GitReflow::Config::CONFIG_FILE_PATH} --replace-all constants.minimumApprovals \"\"", blocking: false
+        expect { subject }.to have_run_command_silently "git config -f #{GitReflow::Config::CONFIG_FILE_PATH} --replace-all constants.approvalRegex \"#{GitReflow::GitServer::PullRequest::DEFAULT_APPROVAL_REGEX}\"", blocking: false
       end
 
       context "when setting a custom approval minimum" do
@@ -60,7 +60,7 @@ describe GitReflow::Workflows::Core do
           })
         end
 
-        specify { expect { subject }.to have_run_command_silently "git config -f #{GitReflow::Config::CONFIG_FILE_PATH} --replace-all constants.minimumApprovals \"3\"" }
+        specify { expect { subject }.to have_run_command_silently "git config -f #{GitReflow::Config::CONFIG_FILE_PATH} --replace-all constants.minimumApprovals \"3\"", blocking: false }
       end
     end
 
@@ -75,7 +75,7 @@ describe GitReflow::Workflows::Core do
       end
 
       it "doesn't add the .gitconfig.reflow file to the git-config include path" do
-        expect { subject }.to_not have_run_command_silently "git config --global --add include.path \"#{GitReflow::Config::CONFIG_FILE_PATH}\""
+        expect { subject }.to_not have_run_command_silently "git config --global --add include.path \"#{GitReflow::Config::CONFIG_FILE_PATH}\"", blocking: false
 
         expect { subject }.to_not have_said "Added #{GitReflow::Config::CONFIG_FILE_PATH} to include.path in $HOME/.gitconfig.", :notice
       end
@@ -499,7 +499,7 @@ describe GitReflow::Workflows::Core do
         end
 
         it "sets the reflow.staging-branch git config to 'staging'" do
-          expect { subject }.to have_run_command_silently "git config --replace-all reflow.staging-branch \"staging\""
+          expect { subject }.to have_run_command_silently "git config --replace-all reflow.staging-branch \"staging\"", blocking: false
         end
 
         it "checks out and updates the staging branch" do

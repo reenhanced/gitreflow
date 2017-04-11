@@ -26,6 +26,12 @@ require 'git_reflow/sandbox'
 require 'git_reflow/workflow'
 require 'git_reflow/workflows/core'
 
+# This is a work around to silence logger spam from hashie
+# https://github.com/intridea/hashie/issues/394
+require "hashie"
+require "hashie/logger"
+Hashie.logger = Logger.new(nil)
+
 module GitReflow
   include Sandbox
   include GitHelpers

@@ -126,7 +126,7 @@ module GitReflow
                   "commit_title"   => "#{options[:title]}",
                   "commit_message" => "#{options[:body]}",
                   "sha"            => "#{self.head.sha}",
-                  "squash"         => !(options[:squash] == false)
+                  "merge_method"   => !(options[:squash] == false) ? "squash" : "merge"
                 }
               )
 

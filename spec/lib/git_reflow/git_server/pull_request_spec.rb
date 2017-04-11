@@ -411,10 +411,10 @@ describe GitReflow::GitServer::PullRequest do
         context "and NOT squash merging" do
           let(:inputs) do
             {
-              base:    "base_branch",
-              title:   "title",
-              message: "message",
-              squash:  false
+              base:         "base_branch",
+              title:        "title",
+              message:      "message",
+              merge_method: "merge"
             }
           end
 

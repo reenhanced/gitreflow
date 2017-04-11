@@ -196,11 +196,20 @@ module GitReflow
           GitReflow.update_current_branch
           GitReflow.fetch_destination(self.base_branch_name)
 
-          message = commit_message_for_merge
+          message      = commit_message_for_merge
+          merge_method = options[:merge_method] || GitReflow::Config.get("reflow.merge-method")
+          merge_method = "squash" if "#{merge_method}".length < 1
+
 
           GitReflow.run_command_with_label "git checkout #{self.base_branch_name}"
           GitReflow.run_command_with_label "git pull origin #{self.base_branch_name}"
-          GitReflow.run_command_with_label "git merge #{options[:squash] == false ? '' : '--squash '}#{self.feature_branch_name}"
+
+          case merge_method
+          when /squash/i
+            GitReflow.run_command_with_label "git merge --squash #{self.feature_branch_name}"
+          else
+            GitReflow.run_command_with_label "git merge #{self.feature_branch_name}"
+          end
 
           GitReflow.append_to_squashed_commit_message(message) if message.length > 0
 

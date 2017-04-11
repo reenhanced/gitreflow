@@ -118,6 +118,9 @@ module GitReflow
 
               options[:body] = "#{options[:message]}\n" if options[:body].nil? and "#{options[:message]}".length > 0
 
+              merge_method   = options[:merge_method] || GitReflow::Config.get("reflow.merge-method")
+              merge_method   = "squash" if "#{merge_method}".length < 1
+
               merge_response = GitReflow::GitServer::GitHub.connection.pull_requests.merge(
                 "#{GitReflow.git_server.class.remote_user}",
                 "#{GitReflow.git_server.class.remote_repo_name}",
@@ -126,7 +129,7 @@ module GitReflow
                   "commit_title"   => "#{options[:title]}",
                   "commit_message" => "#{options[:body]}",
                   "sha"            => "#{self.head.sha}",
-                  "merge_method"   => !(options[:squash] == false) ? "squash" : "merge"
+                  "merge_method"   => merge_method
                 }
               )
 

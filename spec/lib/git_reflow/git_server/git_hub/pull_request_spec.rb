@@ -501,7 +501,7 @@ describe GitReflow::GitServer::GitHub::PullRequest do
             "commit_title"   => "#{inputs[:title]}",
             "commit_message" => "#{inputs[:message]}\n",
             "sha"            => pr.head.sha,
-            "squash"         => false
+            "merge_method"   => "merge"
           }
         )
 

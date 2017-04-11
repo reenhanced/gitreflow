@@ -34,7 +34,7 @@ module GitReflow
 
       def stub_run_for(module_to_stub)
         allow(module_to_stub).to receive(:run) do |command, options|
-          options ||= {}
+          options = { loud: true, blocking: true }.merge(options || {})
           $commands_ran << Hashie::Mash.new(command: command, options: options)
           ret_value = $stubbed_commands[command] || ""
           command = "" # we need this due to a bug in rspec that will keep this assignment on subsequent runs of the stub
@@ -69,32 +69,36 @@ module GitReflow
   end
 end
 
-RSpec::Matchers.define :have_run_command do |command|
+RSpec::Matchers.define :have_run_command do |command, options|
+  options = { blocking: true, loud: true }.merge(options || {})
+
   match do |block|
     block.call
     (
-      $commands_ran.include? Hashie::Mash.new(command: command, options: {}) or
-      $commands_ran.include? Hashie::Mash.new(command: command, options: {with_system: true})
+      $commands_ran.include? Hashie::Mash.new(command: command, options: options) or
+      $commands_ran.include? Hashie::Mash.new(command: command, options: options.merge({with_system: true}))
     )
   end
 
   supports_block_expectations
 
   failure_message do |block|
-    "expected to have run the command \`#{command}\` but instead ran:\n\t#{$commands_ran.inspect}"
+    "expected to have run the command \`#{command}\` with options \`#{options}\` but instead ran:\n\t#{$commands_ran.inspect}"
   end
 end
 
-RSpec::Matchers.define :have_run_command_silently do |command|
+RSpec::Matchers.define :have_run_command_silently do |command, options|
+  options = { blocking: true, loud: false }.merge(options || {})
+
   match do |block|
     block.call
-    $commands_ran.include? Hashie::Mash.new(command: command, options: { loud: false })
+    $commands_ran.include? Hashie::Mash.new(command: command, options: options)
   end
 
   supports_block_expectations
 
   failure_message do |block|
-    "expected to have run the command \`#{command}\` silently but instead ran:\n\t#{$commands_ran.inspect}"
+    "expected to have run the command \`#{command}\` silently with options \`#{options}\` but instead ran:\n\t#{$commands_ran.inspect}"
   end
 end
 

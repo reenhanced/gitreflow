@@ -20,6 +20,7 @@ require 'git_reflow/git_helpers'
 require 'git_reflow/git_server'
 require 'git_reflow/git_server/bit_bucket'
 require 'git_reflow/git_server/git_hub'
+require 'git_reflow/logger'
 require 'git_reflow/merge_error'
 require 'git_reflow/os_detector'
 require 'git_reflow/sandbox'
@@ -37,6 +38,10 @@ module GitReflow
   include GitHelpers
 
   extend self
+
+  def logger(*args)
+    @logger ||= GitReflow::Logger.new(*args)
+  end
 
   def workflow
     Workflow.current

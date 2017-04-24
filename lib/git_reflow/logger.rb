@@ -36,7 +36,9 @@ module GitReflow
     def log_file_path
       return @log_file_path if "#{@log_file_path}".length > 0
 
-      configured_log_file_path = GitReflow::Config.get('reflow.log_file_path')
+      # Here we have to run the command in isolation to avoid a recursive loop
+      # to log this command run to fetch the config setting.
+      configured_log_file_path = %x{git config --get reflow.log-file-path}
 
       if configured_log_file_path.length > 0
         @log_file_path = configured_log_file_path

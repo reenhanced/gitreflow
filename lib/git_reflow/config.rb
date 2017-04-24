@@ -10,9 +10,9 @@ module GitReflow
       else
         local = local ? '--local ' : ''
         if all
-          new_value = GitReflow::Sandbox.run "git config #{local}--get-all #{key}", loud: false, blocking: false
+          new_value = GitReflow::Sandbox.run("git config #{local}--get-all #{key}", loud: false, blocking: false)
         else
-          new_value = GitReflow::Sandbox.run "git config #{local}--get #{key}", loud: false, blocking: false
+          new_value = GitReflow::Sandbox.run("git config #{local}--get #{key}", loud: false, blocking: false)
         end
         instance_variable_set(:"@#{key.tr('.-', '_')}", new_value.strip)
       end

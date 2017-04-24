@@ -22,7 +22,7 @@ module GitReflow
         output = %x{#{command}}
 
         if options[:blocking] == true && !$?.success?
-          abort "\`#{command}\` failed to run."
+          abort "\"#{command}\" failed to run."
         else
           puts output if options[:loud] == true
           output

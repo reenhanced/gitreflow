@@ -11,8 +11,10 @@ module GitReflow
     def self.current
       workflow_file = GitReflow::Config.get('reflow.workflow')
       if workflow_file.length > 0 and File.exists?(workflow_file)
+        GitReflow.logger.debug "Using workflow: #{workflow_file}"
         eval(File.read(workflow_file))
       else
+        GitReflow.logger.debug "Using core workflow..."
         GitReflow::Workflows::Core
       end
     end

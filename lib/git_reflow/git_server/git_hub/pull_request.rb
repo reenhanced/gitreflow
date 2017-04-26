@@ -47,12 +47,18 @@ module GitReflow
         end
 
         def reviewers
-          comment_authors
+          (comment_authors + pull_request_reviews.map(&:user).map(&:login)).uniq
         end
 
         def approvals
           pull_last_committed_at = get_committed_time(self.head.sha)
-          comment_authors(with: self.class.approval_regex, after: pull_last_committed_at)
+
+          approved_reviewers = pull_request_reviews.select { |r| r.state == 'APPROVED' }.map(&:user).map(&:login)
+
+          (
+            comment_authors(with: self.class.approval_regex, after: pull_last_committed_at) +
+            approved_reviewers
+          ).uniq
         end
 
         def comments
@@ -170,6 +176,13 @@ module GitReflow
         end
 
         private
+
+        def pull_request_reviews
+          @pull_request_reviews ||= GitReflow.git_server.connection.pull_requests.reviews.list(
+            user: base.label.split(':').first,
+            repo: GitReflow.git_server.class.remote_repo_name, number: number
+          )
+        end
 
         def comment_authors(with: nil, after: nil)
           comment_authors = []

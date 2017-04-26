@@ -21,7 +21,7 @@ class FakeGitHub
   #       comments: [{author: comment_author}]
   #     })
   #
-  def initialize(repo_owner: nil, repo_name: nil, pull_request: {}, issue: {}, commits: [])
+  def initialize(repo_owner: nil, repo_name: nil, pull_request: {}, issue: {}, commits: [], reviews: [])
     raise "FakeGitHub#new: repo_owner AND repo_name keywords are required" unless repo_owner and repo_name
 
     self.repo_owner = repo_owner
@@ -30,6 +30,7 @@ class FakeGitHub
     stub_github_request(:pull_request, pull_request) if pull_request
     stub_github_request(:issue, issue) if issue
     stub_github_request(:commits, commits) if commits.any?
+    stub_github_request(:reviews, reviews) if reviews.any?
 
     if pull_request and (issue.none? or !issue[:comments])
       stub_github_request(:issue, pull_request.merge({comments: []}))
@@ -115,6 +116,20 @@ class FakeGitHub
                                       pull_request_number: object_data[:number] || 1,
                                       created_at:          object_data[:created_at] || Chronic.parse(DEFAULT_COMMIT_TIME)).to_s,
                     status: 201,
+                    headers: {content_type: "application/json; charset=utf-8"})
+      end
+
+      # Stubbing pull request reviews
+      if object_data[:reviews]
+        stub_request(:get, %r{/repos/#{self.repo_owner}/#{self.repo_name}/pulls/#{object_data[:number] || 1}/reviews}).
+          with(query: {'access_token' => 'a1b2c3d4e5f6g7h8i9j0'}).
+          to_return(body: Fixture.new('pull_requests/reviews.json.erb',
+                                      repo_owner:          self.repo_owner,
+                                      repo_name:           self.repo_name,
+                                      reviews:             object_data[:reviews],
+                                      pull_request_number: object_data[:number] || 1,
+                                      body:                object_data[:body] || 'Hammer time').to_s,
+                    status: 200,
                     headers: {content_type: "application/json; charset=utf-8"})
       end
 

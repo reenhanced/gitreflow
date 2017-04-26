@@ -1,0 +1,16 @@
+[
+  <% reviews_json = [] %>
+  <% reviews.each_with_index do |review, index| %>
+    <% reviews_json << Fixture.new('pull_requests/review.json.erb',
+                    id: index,
+                    author: review[:author],
+                    pull_request_number: pull_request_number,
+                    repo_owner: repo_owner,
+                    repo_name: repo_name,
+                    body: review[:body] || 'Hammer time',
+                    state: review[:state] || 'PENDING',
+                    commit_id: review[:commit_id] || 'ecdd80bb57125d7ba9641ffaa4d7d2c19d3f3091'
+                   ).to_s %>
+  <% end %>
+  <%= reviews_json.join(", ") %>
+]

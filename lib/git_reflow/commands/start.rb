@@ -12,11 +12,7 @@ command :start do |c|
   c.flag [:b,:base], default_value: 'master'
   c.action do |global_options, options, args|
 
-    if args.empty?
-      raise "usage: git-reflow start [new-branch-name]"
-    else
-      GitReflow.start feature_branch: args[0], base: options[:base]
-    end
+    GitReflow.start feature_branch: args[0], base: options[:base]
 
   end
 end

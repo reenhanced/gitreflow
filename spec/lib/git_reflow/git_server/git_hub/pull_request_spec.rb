@@ -16,6 +16,7 @@ describe GitReflow::GitServer::GitHub::PullRequest do
   let(:existing_pull_requests)  { Fixture.new('pull_requests/pull_requests.json').to_json_hashie }
   let(:existing_pull_commits)   { Fixture.new('pull_requests/commits.json').to_json_hashie }
   let(:comment_author)          { 'octocat' }
+  let(:review_author)           { 'octocatty' }
   let(:feature_branch_name)     { existing_pull_request.head.label[/[^:]+$/] }
   let(:base_branch_name)        { existing_pull_request.base.label[/[^:]+$/] }
   let(:existing_pull_comments)  {
@@ -29,6 +30,12 @@ describe GitReflow::GitServer::GitHub::PullRequest do
                 repo_owner: user,
                 repo_name: repo,
                 comments: [{author: comment_author}],
+                pull_request_number: existing_pull_request.number).to_json_hashie }
+  let(:existing_pull_reviews) {
+    Fixture.new('pull_requests/reviews.json.erb',
+                repo_owner: user,
+                repo_name: repo,
+                reviews: [{author: comment_author}],
                 pull_request_number: existing_pull_request.number).to_json_hashie }
 
   let(:pr) { GitReflow::GitServer::GitHub::PullRequest.new(existing_pull_request) }
@@ -78,12 +85,14 @@ describe GitReflow::GitServer::GitHub::PullRequest do
           repo_name: repo,
           pull_request: {
             number: existing_pull_request.number,
-            comments: [{author: comment_author}]
+            comments: [{author: comment_author}],
+            reviews: []
           },
           issue: {
             number: existing_pull_request.number,
             comments: [{author: comment_author}]
-          })
+          }
+        )
       end
       specify { expect(subject).to eql(existing_pull_comments.to_a + existing_issue_comments.to_a) }
     end
@@ -99,7 +108,8 @@ describe GitReflow::GitServer::GitHub::PullRequest do
           repo_name: repo,
           pull_request: {
             number: existing_pull_request.number,
-            comments: nil
+            comments: nil,
+            reviews: nil
           },
           issue: {
             number: existing_pull_request.number,
@@ -122,7 +132,8 @@ describe GitReflow::GitServer::GitHub::PullRequest do
         pull_request: {
           number: existing_pull_request.number,
           owner: existing_pull_request.user.login,
-          comments: [{author: 'tito'}, {author: 'bobby'}, {author: 'ringo'}]
+          comments: [{author: 'tito'}, {author: 'bobby'}, {author: 'ringo'}],
+          reviews:  [{author: 'nature-boy'}]
         },
         issue: {
           number: existing_pull_request.number,
@@ -130,7 +141,7 @@ describe GitReflow::GitServer::GitHub::PullRequest do
         })
     end
 
-    specify { expect(subject).to eq(['tito', 'bobby', 'randy']) }
+    specify { expect(subject).to eq(['tito', 'bobby', 'randy', 'nature-boy']) }
   end
 
 
@@ -145,7 +156,8 @@ describe GitReflow::GitServer::GitHub::PullRequest do
           pull_request: {
             number: existing_pull_request.number,
             owner: existing_pull_request.head.user.login,
-            comments: []
+            comments: [],
+            reviews: []
           })
         allow(GitReflow::GitServer::GitHub::PullRequest).to receive(:minimum_approvals).and_return("0")
       end
@@ -160,7 +172,8 @@ describe GitReflow::GitServer::GitHub::PullRequest do
           pull_request: {
             number: existing_pull_request.number,
             owner: existing_pull_request.head.user.login,
-            comments: []
+            comments: [],
+            reviews: []
           })
         allow(GitReflow::GitServer::GitHub::PullRequest).to receive(:minimum_approvals).and_return(nil)
         allow(pr).to receive(:has_comments?).and_return(true)
@@ -178,7 +191,8 @@ describe GitReflow::GitServer::GitHub::PullRequest do
           pull_request: {
             number: existing_pull_request.number,
             owner: existing_pull_request.head.user.login,
-            comments: []
+            comments: [],
+            reviews: []
           })
         allow(GitReflow::GitServer::GitHub::PullRequest).to receive(:minimum_approvals).and_return("")
         allow(pr).to receive(:has_comments?).and_return(true)
@@ -196,7 +210,8 @@ describe GitReflow::GitServer::GitHub::PullRequest do
           pull_request: {
             number: existing_pull_request.number,
             owner: existing_pull_request.head.user.login,
-            comments: []
+            comments: [],
+            reviews: []
           })
         allow(GitReflow::GitServer::GitHub::PullRequest).to receive(:minimum_approvals).and_return("")
         allow(pr).to receive(:has_comments?).and_return(true)
@@ -269,7 +284,8 @@ describe GitReflow::GitServer::GitHub::PullRequest do
           pull_request: {
             number: existing_pull_request.number,
             owner: existing_pull_request.head.user.login,
-            comments: []
+            comments: [],
+            reviews: []
           })
       end
 
@@ -284,7 +300,8 @@ describe GitReflow::GitServer::GitHub::PullRequest do
           pull_request: {
             number: existing_pull_request.number,
             owner: existing_pull_request.head.user.login,
-            comments: [{author: 'tito', body: 'This is some funky stuff'}]
+            comments: [{author: 'tito', body: 'This is some funky stuff'}],
+            reviews: []
           })
       end
 
@@ -299,7 +316,8 @@ describe GitReflow::GitServer::GitHub::PullRequest do
           pull_request: {
             number:   existing_pull_request.number,
             owner:    existing_pull_request.head.user.login,
-            comments: [{author: 'tito', body: 'LGTM'}]
+            comments: [{author: 'tito', body: 'LGTM'}],
+            reviews: []
           })
       end
 
@@ -320,7 +338,8 @@ describe GitReflow::GitServer::GitHub::PullRequest do
             pull_request: {
               number:   existing_pull_request.number,
               owner:    existing_pull_request.head.user.login,
-              comments: [{author: 'tito', body: 'LGTM', created_at: Chronic.parse('1 minute ago')}]
+              comments: [{author: 'tito', body: 'LGTM', created_at: Chronic.parse('1 minute ago')}],
+              reviews: []
             })
         end
 
@@ -336,7 +355,8 @@ describe GitReflow::GitServer::GitHub::PullRequest do
           pull_request: {
             number:   existing_pull_request.number,
             owner:    existing_pull_request.head.user.login,
-            comments: [{author: 'tito', body: 'LGTM'}, {author: 'ringo', body: 'Needs more cowbell.'}]
+            comments: [{author: 'tito', body: 'LGTM'}],
+            reviews: [{author: 'ringo', state: 'CHANGES_REQUESTED'}]
           })
       end
 
@@ -351,7 +371,8 @@ describe GitReflow::GitServer::GitHub::PullRequest do
           pull_request: {
             number:   existing_pull_request.number,
             owner:    existing_pull_request.head.user.login,
-            comments: [{author: 'tito', body: 'lgtm'}, {author: 'ringo', body: ':+1:'}]
+            comments: [{author: 'tito', body: 'lgtm'}, {author: 'ringo', body: ':+1:'}],
+            reviews: []
           })
 
         allow(GitReflow::GitServer::GitHub::PullRequest).to receive(:approval_regex).and_return(/(?i-mx:lgtm|looks good to me|:\+1:|:thumbsup:|:shipit:)/)
@@ -359,6 +380,22 @@ describe GitReflow::GitServer::GitHub::PullRequest do
 
       context "2 approvals" do
         specify { expect(subject).to eq(['tito', 'ringo']) }
+      end
+
+      context "2 approvals including reviews" do
+        before do
+          FakeGitHub.new(
+            repo_owner:   user,
+            repo_name:    repo,
+            pull_request: {
+              number:   existing_pull_request.number,
+              owner:    existing_pull_request.head.user.login,
+              comments: [{author: 'tito', body: 'lgtm'}],
+              reviews: [{author: 'nature-boy', state: 'APPROVED'}]
+            })
+        end
+
+        specify { expect(subject).to eq(['tito', 'nature-boy']) }
       end
 
       context "but a new commit has been introduced" do
@@ -376,7 +413,8 @@ describe GitReflow::GitServer::GitHub::PullRequest do
             pull_request: {
               number:   existing_pull_request.number,
               owner:    existing_pull_request.head.user.login,
-              comments: [{author: 'tito', body: 'lgtm', created_at: Chronic.parse('1 minute ago')}, {author: 'ringo', body: ':+1:', created_at: Chronic.parse('1 minute ago')}]
+              comments: [{author: 'tito', body: 'lgtm', created_at: Chronic.parse('1 minute ago')}, {author: 'ringo', body: ':+1:', created_at: Chronic.parse('1 minute ago')}],
+              reviews: []
             })
         end
 
@@ -396,7 +434,8 @@ describe GitReflow::GitServer::GitHub::PullRequest do
         pull_request: {
           number:   existing_pull_request.number,
           owner:    existing_pull_request.head.user.login,
-          comments: [{author: 'tito', body: 'lgtm'}, {author: 'ringo', body: 'Cha cha cha'}]
+          comments: [{author: 'tito', body: 'lgtm'}, {author: 'ringo', body: 'Cha cha cha'}],
+          reviews: []
         })
     end
 

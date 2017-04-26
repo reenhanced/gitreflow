@@ -1,0 +1,35 @@
+{
+  "id": <%= id || 1 %>,
+  "user": {
+    "login": "<%= author %>",
+    "id": 1,
+    "avatar_url": "https://github.com/images/error/octocat_happy.gif",
+    "gravatar_id": "",
+    "url": "https://api.github.com/users/<%= author %>",
+    "html_url": "https://github.com/octocat",
+    "followers_url": "https://api.github.com/users/<%= author %>/followers",
+    "following_url": "https://api.github.com/users/<%= author %>/following{/other_user}",
+    "gists_url": "https://api.github.com/users/<%= author %>/gists{/gist_id}",
+    "starred_url": "https://api.github.com/users/<%= author %>/starred{/owner}{/repo}",
+    "subscriptions_url": "https://api.github.com/users/<%= author %>/subscriptions",
+    "organizations_url": "https://api.github.com/users/<%= author %>/orgs",
+    "repos_url": "https://api.github.com/users/<%= author %>/repos",
+    "events_url": "https://api.github.com/users/<%= author %>/events{/privacy}",
+    "received_events_url": "https://api.github.com/users/<%= author %>/received_events",
+    "type": "User",
+    "site_admin": false
+  },
+  "body": "<%= body || "Nice." %>",
+  "commit_id": "<%= commit_id || "ecdd80bb57125d7ba9641ffaa4d7d2c19d3f3091"%>",
+  "state": "<%= state || "PENDING" %>",
+  "html_url": "https://github.com/Hello-World/pull/<%= pull_request_number %>#pullrequestreview-<%= id || 1 %>",
+  "pull_request_url": "https://api.github.com/repos/octocat/Hello-World/pulls/<%= pull_request_number %>",
+  "_links": {
+    "html": {
+      "href": "https://github.com/octocat/Hello-World/pull/<%= pull_request_number %>#pullrequestreview-<%= id || 1 %>"
+    },
+    "pull_request": {
+      "href": "https://api.github.com/repos/octocat/Hello-World/pulls/<%= pull_request_number %>"
+    }
+  }
+}

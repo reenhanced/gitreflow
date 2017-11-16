@@ -490,10 +490,10 @@ describe GitReflow::GitServer::GitHub::PullRequest do
     context "and force-merging" do
       let(:inputs) do
         {
-          base:      "base_branch",
-          title:     "title",
-          message:   "message",
-          skip_lgtm: true
+          base:    "base_branch",
+          title:   "title",
+          message: "message",
+          force:   true
         }
       end
 

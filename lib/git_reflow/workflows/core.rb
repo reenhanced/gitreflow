@@ -204,8 +204,6 @@ module GitReflow
             if existing_pull_request.good_to_merge?(force: params[:force])
               # displays current status and prompts user for confirmation
               self.status destination_branch: params[:base]
-              # TODO: change name of this in the merge! method
-              params[:skip_lgtm] = params[:force] if params[:force]
               existing_pull_request.merge!(params)
             else
               say existing_pull_request.rejection_message, :deliver_halted

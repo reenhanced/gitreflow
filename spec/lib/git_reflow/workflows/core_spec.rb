@@ -589,7 +589,7 @@ describe GitReflow::Workflows::Core do
 
           before do
             allow(existing_gh_pull_request).to receive(:good_to_merge?).with(force: true).and_return(true)
-            allow(existing_gh_pull_request).to receive(:merge!).with(force: true, base: 'master', skip_lgtm: true)
+            allow(existing_gh_pull_request).to receive(:merge!).with(force: true, base: 'master')
           end
 
           it "displays the status of the PR" do
@@ -598,7 +598,7 @@ describe GitReflow::Workflows::Core do
           end
 
           it "merges the feature branch anyway" do
-            expect(existing_gh_pull_request).to receive(:merge!).with(force: true, base: 'master', skip_lgtm: true)
+            expect(existing_gh_pull_request).to receive(:merge!).with(force: true, base: 'master')
             subject
           end
         end

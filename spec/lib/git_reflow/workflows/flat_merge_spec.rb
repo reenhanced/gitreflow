@@ -50,7 +50,7 @@ describe 'FlatMerge' do
       end
 
       it "doesn't squash merge" do
-        expect(pr).to receive(:merge!).with(base: 'master', squash: false, force: true, skip_lgtm: true)
+        expect(pr).to receive(:merge!).with(base: 'master', squash: false, force: true)
         subject
       end
     end

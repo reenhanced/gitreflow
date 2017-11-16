@@ -87,7 +87,7 @@ module GitReflow
         def merge!(options = {})
 
           # fallback to default merge process if user "forces" merge
-          if(options[:skip_lgtm])
+          if(options[:force])
             super options
           else
             if deliver?

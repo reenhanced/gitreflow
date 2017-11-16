@@ -9,7 +9,7 @@ module GitReflow
       extend GitHelpers
       include Sandbox
 
-      attr_accessor :connection
+      attr_reader :connection
 
       def initialize(config_options = {})
         project_only     = !!config_options.delete(:project_only)

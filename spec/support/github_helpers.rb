@@ -97,13 +97,3 @@ module GithubHelpers
     github_server
   end
 end
-#
-# the github_api gem does some overrides to Hash so we have to make sure
-# this still works here...
-class Hash
-  def except(*keys)
-    cpy = self.dup
-    keys.each { |key| cpy.delete(key) }
-    cpy
-  end
-end

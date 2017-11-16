@@ -191,9 +191,6 @@ If you do not pass the title or message options to the review command, you will 
   Would you like to push this branch to your remote repo and cleanup your feature branch? y
 
 
-[OSX/Ubuntu only]  You can automatically open your default web browser to the pull request.
-                   This lets you edit the pull request with all of the detailed information you'll need before submitting it to your team.
-
 We output the pull request URL so you can distribute it to your team without leaving the terminal.
 
 ==== How it works

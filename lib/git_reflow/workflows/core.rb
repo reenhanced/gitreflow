@@ -18,8 +18,7 @@ module GitReflow
 
         unless File.exist?(GitReflow::Config::CONFIG_FILE_PATH) or existing_git_include_paths.include?(GitReflow::Config::CONFIG_FILE_PATH)
           GitReflow.say "We'll walk you through setting up git-reflow's defaults for all your projects.", :notice
-          GitReflow.say "In the future, you can run \`git-reflow setup\` from the root of any project you want to setup differently.", :notice
-          GitReflow.say "To adjust these settings globally, you can run \`git-reflow setup --global\`.", :notice
+          GitReflow.say "In the future, you can run \`git-reflow setup --local\` from the root of any project you want to setup differently.", :notice
           GitReflow.run "touch #{GitReflow::Config::CONFIG_FILE_PATH}"
           GitReflow.say "Created #{GitReflow::Config::CONFIG_FILE_PATH} for git-reflow specific configurations.", :notice
           GitReflow::Config.add "include.path", GitReflow::Config::CONFIG_FILE_PATH, global: true

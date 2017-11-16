@@ -36,8 +36,7 @@ describe GitReflow::Workflows::Core do
     context "git-reflow has not been setup before" do
       it "notifies the user of global setup" do
         expect { subject }.to have_said "We'll walk you through setting up git-reflow's defaults for all your projects.", :notice
-        expect { subject }.to have_said "In the future, you can run \`git-reflow setup\` from the root of any project you want to setup differently.", :notice
-        expect { subject }.to have_said "To adjust these settings globally, you can run \`git-reflow setup --global\`.", :notice
+        expect { subject }.to have_said "In the future, you can run \`git-reflow setup --local\` from the root of any project you want to setup differently.", :notice
       end
 
       it "creates a .gitconfig.reflow file and includes it in the user's global git config" do

@@ -9,7 +9,7 @@ RSpec.describe GitReflow::Sandbox do
 
     it "when blocking is flagged off, the command exits silently" do
       allow(GitReflow::Sandbox).to receive(:run).and_call_original
-      expect { GitReflow::Sandbox.run("ls wtf", blocking: false) }.to_not raise_error SystemExit
+      expect { GitReflow::Sandbox.run("ls wtf", blocking: false) }.to_not raise_error
     end
   end
 end

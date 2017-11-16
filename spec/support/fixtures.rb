@@ -5,7 +5,7 @@ require 'erb'
 require 'ostruct'
 
 class Fixture
-  attr_accessor :file, :locals
+  attr_reader :file, :locals
 
   def initialize(file, locals = {})
     @file   = fixture(file)

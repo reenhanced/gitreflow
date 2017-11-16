@@ -6,7 +6,7 @@ module GitReflow
     class BitBucket < Base
       require_relative 'bit_bucket/pull_request'
 
-      attr_accessor :connection
+      attr_reader :connection
 
       def initialize(config_options = {})
         project_only = !!config_options.delete(:project_only)

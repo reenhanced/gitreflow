@@ -38,7 +38,7 @@ describe GitReflow::Workflow do
     end
 
     it "creates a method for a bogus command with arguments" do
-      workflow.command :bogus, arguments: [:feature_branch] do |**params|
+      workflow.command :bogus, arguments: { feature_branch: nil } do |**params|
         "Woohoo #{params[:feature_branch]}!"
       end
 
@@ -46,7 +46,7 @@ describe GitReflow::Workflow do
     end
 
     it "creates a class method for a bogus command with default options" do
-      workflow.command :bogus, arguments: [:feature_branch], defaults: {decoration: 'sprinkles'} do |**params|
+      workflow.command :bogus, arguments: { feature_branch: nil, decoration: "sprinkles" } do |**params|
         donut_excitement = "Woohoo #{params[:feature_branch]}"
         donut_excitement += " with #{params[:decoration]}" if params[:decoration]
         "#{donut_excitement}!"

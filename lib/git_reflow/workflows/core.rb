@@ -10,9 +10,10 @@ module GitReflow
 
       # Sets up the required git configurations that git-reflow depends on.
       #
-      # @param local [Boolean] whether to configure git-reflow specific to the current project
-      # @param enterprise [Boolean] whether to configure git-reflow for use with Github Enterprise
-      command(:setup, defaults: {local: false, enterprise: false}) do |**params|
+      # @param [Hash] options the options to run setup with
+      # @option options [Boolean] :local (false) whether to configure git-reflow specific to the current project
+      # @option options [Boolean] :enterprise (false) whether to configure git-reflow for use with Github Enterprise
+      command(:setup, switches: { local: false, enterprise: false}) do |**params|
         reflow_options             = { project_only: params[:local], enterprise: params[:enterprise] }
         existing_git_include_paths = GitReflow::Config.get('include.path', all: true).split("\n")
 
@@ -41,12 +42,21 @@ module GitReflow
           GitReflow.say "Updated git's editor (via git config key 'core.editor') to: #{GitReflow.default_editor}.", :notice
         end
       end
+      command_help(
+        :setup,
+        summary: "Connect your GitServer (e.g. GitHub) account to git-reflow",
+        switches: {
+          local: "setup GitReflow for the current project only",
+          enterprise: "setup GitReflow with a Github Enterprise account",
+        }
+      )
 
       # Start a new feature branch
       #
-      # @param feature_branch [String] the name of the branch to create your feature on
-      # @option base [String] the name of the base branch you want to checkout your feature from
-      command(:start, defaults: {base: 'master'}) do |**params|
+      # @param [Hash] options the options to run start with
+      # @option options [String] :base ("master") the name of the base branch you want to checkout your feature from
+      # @option options [String] :feature_branch the name of the base branch you want to checkout your feature from
+      command(:start, arguments: { feature_branch: nil }, flags: { base: "master" }) do |**params|
         base_branch    = params[:base]
         feature_branch = params[:feature_branch]
 
@@ -59,13 +69,27 @@ module GitReflow
           GitReflow.run_command_with_label "git checkout --track -b #{feature_branch} origin/#{feature_branch}"
         end
       end
+      command_help(
+        :start,
+        summary: "This will create a new feature branch and setup remote tracking",
+        arguments: { new_feature_branch: "name of the new feature branch" },
+        flags: { base: "name of a branch you want to branch off of" },
+        description: <<LONGTIME
+Performs the following:\n
+\t$ git checkout <base_branch>\n
+\t$ git pull origin <base_branch>\n
+\t$ git push origin <base_branch>:refs/heads/[new_feature_branch]\n
+\t$ git checkout --track -b [new_feature_branch] origin/[new_feature_branch]\n
+LONGTIME
+      )
 
       # Submit a feature branch for review
       #
-      # @option base [String] the name of the base branch you want to merge your feature into
-      # @option title [String] the title of your pull request
-      # @option body [String] the body of your pull request
-      command(:review, defaults: {base: 'master'}) do |**params|
+      # @param [Hash] options the options to run review with
+      # @option options [String] :base ("master") the name of the base branch you want to merge your feature into
+      # @option options [String] :title (<current-branch-name>) the title of your pull request
+      # @option options [String] :message ("") the body of your pull request
+      command(:review, arguments: { base: "master" }, flags: { title: nil, message: nil }) do |**params|
         base_branch         = params[:base]
         create_pull_request = true
 
@@ -78,7 +102,7 @@ module GitReflow
             say "A pull request already exists for these branches:", :notice
             existing_pull_request.display_pull_request_summary
           else
-            unless params[:title] || params[:body]
+            unless params[:title] || params[:message]
               pull_request_msg_file = "#{GitReflow.git_root_dir}/.git/GIT_REFLOW_PR_MSG"
 
               File.open(pull_request_msg_file, 'w') do |file|
@@ -97,20 +121,20 @@ module GitReflow
               end
 
               params[:title] = title
-              params[:body]  = "#{pr_msg.join("\n")}\n"
+              params[:message]  = "#{pr_msg.join("\n")}\n"
 
               say "\nReview your PR:\n"
               say "--------\n"
               say "Title:\n#{params[:title]}\n\n"
-              say "Body:\n#{params[:body]}\n"
+              say "Body:\n#{params[:message]}\n"
               say "--------\n"
 
               create_pull_request = ask("Submit pull request? (Y)") =~ /y/i
             end
 
             if create_pull_request
-              pull_request = GitReflow.git_server.create_pull_request(title: params[:title] || params[:body],
-                                                            body:  params[:body],
+              pull_request = GitReflow.git_server.create_pull_request(title: params[:title] || params[:message],
+                                                            body:  params[:message],
                                                             head:  "#{GitReflow.remote_user}:#{GitReflow.current_branch}",
                                                             base:  params[:base])
 
@@ -125,11 +149,23 @@ module GitReflow
           say "\nError: #{e.inspect}", :error
         end
       end
+      command_help(
+        :review,
+        summary: "Pushes your latest feature branch changes to your remote repo and creates a pull request",
+        arguments: {
+          base: "the branch you want to merge your feature branch into"
+        },
+        flags: {
+          title: "the title of the Pull Request we'll create",
+          message: "the body of the Pull Request we'll create"
+        }
+      )
 
       # Checks the status of an existing pull request
       #
-      # @option destination_branch [String] the branch you're merging your feature into ('master' is default)
-      command(:status, defaults: {destination_branch: 'master'}) do |**params|
+      # @param [Hash] options the options to run review with
+      # @option options [String] :destination_branch ("master") the branch you're merging your feature into
+      command(:status, arguments: { destination_branch: "master" }) do |**params|
         pull_request = GitReflow.git_server.find_open_pull_request( :from => GitReflow.current_branch, :to => params[:destination_branch] )
 
         if pull_request.nil?
@@ -140,10 +176,22 @@ module GitReflow
           pull_request.display_pull_request_summary
         end
       end
+      command_help(
+        :status,
+        summary: "Display information about the status of your feature in the review process",
+        arguments: {
+          destination_branch: "the branch to merge your feature into"
+        }
+      )
 
-      command(:deploy) do |**params|
-        destination_server = params[:destination_server] || 'default'
+      # Deploys the current branch to a specified server
+      #
+      # @param [Hash] options the options to run review with
+      # @option options [String] :destination_server ("default") the environment server to deploy to (pulled from `git config "reflow.deploy-to-#{destination_server}-command")
+      command(:deploy, arguments: { destination_server: "default" }) do |**params|
+        destination_server = params[:destination_server] || "default"
         deploy_command = GitReflow::Config.get("reflow.deploy-to-#{destination_server}-command", local: true)
+        p params, deploy_command
 
         # first check is to allow for automated setup
         if deploy_command.empty?
@@ -159,6 +207,13 @@ module GitReflow
           run_command_with_label(deploy_command, with_system: true)
         end
       end
+      command_help(
+        :deploy,
+        summary: "Deploys the current branch to a specified server",
+        arguments: {
+          destination_server: 'the environment to deploy to (from: `git config "reflow.deploy-to-#{destination_server}-command"`)'
+        }
+      )
 
       # Merge and deploy a feature branch to a staging branch
       command(:stage) do |**params|
@@ -188,12 +243,18 @@ module GitReflow
           GitReflow.say "There were issues merging your feature branch to staging.", :error
         end
       end
+      command_help(
+        :stage,
+        summary: "Merge and deploy a feature branch to a staging branch"
+      )
 
       # Deliver a feature branch to a base branch
       #
-      # @option base [String] base branch to merge your feature branch into
-      # @option force [Boolean] whether to force-deliver the feature branch, ignoring any QA checks
-      command(:deliver, defaults: {base: 'master'}) do |**params|
+      # @param [Hash] options the options to run review with
+      # @option options [String] :base ("master") the base branch to merge your feature branch into
+      # @option options [String] :force (false) whether to force-deliver the feature branch, ignoring any QA checks
+      command(:deliver, arguments: { base: "master" }, switches: { force: false, :"skip-lgtm" => false }) do |**params|
+        params[:force] = params[:force] || params[:"skip-lgtm"]
         begin
           existing_pull_request = GitReflow.git_server.find_open_pull_request( from: GitReflow.current_branch, to: params[:base] )
 
@@ -215,21 +276,51 @@ module GitReflow
           say "Github Error: #{e.inspect}", :error
         end
       end
+      command_help(
+        :deliver,
+        summary: "deliver your feature branch",
+        arguments: {
+          base: "the branch to merge this feature into"
+        },
+        switches: {
+          force: "skip the lgtm checks and deliver your feature branch",
+          :"skip-lgtm" => "skip the lgtm checks and deliver your feature branch"
+        },
+        description: "merge your feature branch down to your base branch, and cleanup your feature branch"
+      )
 
 
       # Updates and synchronizes your base branch and feature branch.
-      # 
+      #
       # Performs the following:
       #   $ git checkout <base_branch>
       #   $ git pull <remote_location> <base_branch>
       #   $ git checkout <current_branch>
       #   $ git pull origin <current_branch>
       #   $ git merge <base_branch>
-      # @param remote [String] the name of the remote repository to fetch updates from (origin by default)
-      # @param base [String] the branch that you want to fetch updates from (master by default)
-      command(:refresh, defaults: {remote: 'origin', base: 'master'}) do |**params|
+      #
+      # @param [Hash] options the options to run review with
+      # @option options [String] :remote ("origin") the name of the remote repository to fetch updates from
+      # @option options [String] :base ("master") the branch that you want to fetch updates from
+      command(:refresh, flags: { remote: 'origin', base: 'master'}) do |**params|
         GitReflow.update_feature_branch(params)
       end
+      command_help(
+        :refresh,
+        summary: "Updates and synchronizes your base branch and feature branch.",
+        flags: {
+          base: "branch to merge into",
+          remote: "remote repository name to fetch updates from",
+        },
+        description: <<LONGTIME
+Performs the following:\n
+\t$ git checkout <base_branch>\n
+\t$ git pull <remote_location> <base_branch>\n
+\t$ git checkout <current_branch>\n
+\t$ git pull origin <current_branch>\n
+\t$ git merge <base_branch>\n
+LONGTIME
+      )
     end
   end
 end

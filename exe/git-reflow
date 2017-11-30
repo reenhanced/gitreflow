@@ -1,36 +1,15 @@
 #!/usr/bin/env ruby
 $: << File.expand_path(File.dirname(File.realpath(__FILE__)) + '/../lib')
 require 'rubygems'
-require 'gli'
 require 'git_reflow'
 
-include GLI::App
-
-program_desc 'Git Reflow manages your git workflow.'
-
-version GitReflow::VERSION
-
-commands_from 'git_reflow/commands'
-
-pre do |global,command,options,args|
-  # Pre logic here
-  # Return true to proceed; false to abourt and not call the
-  # chosen command
-  # Use skips_pre before a command to skip this block
-  # on that command only
-  true
+reflow_command = ARGV.shift
+if reflow_command.nil? || GitReflow.workflow.commands[reflow_command.to_sym].nil?
+  GitReflow.help
+elsif ARGV.include? "--help"
+  GitReflow.documentation_for_command(reflow_command)
+else
+  command_options = GitReflow.parse_command_options!(reflow_command)
+  p "Run the FUCK out of this command: #{reflow_command} #{command_options}"
+  GitReflow.public_send(reflow_command.to_sym, command_options)
 end
-
-post do |global,command,options,args|
-  # Post logic here
-  # Use skips_post before a command to skip this
-  # block on that command only
-end
-
-on_error do |exception|
-  # Error logic here
-  # return false to skip default error handling
-  true
-end
-
-exit run(ARGV)

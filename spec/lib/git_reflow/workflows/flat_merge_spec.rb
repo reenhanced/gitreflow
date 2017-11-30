@@ -33,7 +33,7 @@ describe 'FlatMerge' do
       end
 
       it "overrides squash merge in favor of flat merge" do
-        expect(pr).to receive(:merge!).with(base: 'master', squash: false)
+        expect(pr).to receive(:merge!).with(base: 'master', squash: false, force: false, :"skip-lgtm" => false)
         subject
       end
     end
@@ -51,7 +51,7 @@ describe 'FlatMerge' do
       end
 
       it "doesn't squash merge" do
-        expect(pr).to receive(:merge!).with(base: 'master', squash: false, force: true)
+        expect(pr).to receive(:merge!).with(base: 'master', squash: false, force: true, :"skip-lgtm" => false)
         subject
       end
     end

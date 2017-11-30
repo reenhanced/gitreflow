@@ -235,7 +235,7 @@ describe GitReflow::Workflows::Core do
     end
 
     context "providing only a body" do
-      let(:inputs) {{ body:  "Please pull this in!" }}
+      let(:inputs) {{ message:  "Please pull this in!" }}
 
       before do
         stub_command_line_inputs({
@@ -245,8 +245,8 @@ describe GitReflow::Workflows::Core do
 
       it "creates a pull request with the body as both title and body" do
         expect(GitReflow.git_server).to receive(:create_pull_request).with({
-          title: inputs[:body],
-          body: inputs[:body],
+          title: inputs[:message],
+          body: inputs[:message],
           head: "#{user}:#{feature_branch}",
           base: 'master'
         })
@@ -255,7 +255,7 @@ describe GitReflow::Workflows::Core do
     end
 
     context "providing both title and body" do
-      let(:inputs) {{ title: "Amazing new feature", body:  "Please pull this in!" }}
+      let(:inputs) {{ title: "Amazing new feature", message:  "Please pull this in!" }}
 
       before do
         stub_command_line_inputs({
@@ -266,7 +266,7 @@ describe GitReflow::Workflows::Core do
       it "creates a pull request with only the given title" do
         expect(GitReflow.git_server).to receive(:create_pull_request).with({
           title: inputs[:title],
-          body: inputs[:body],
+          body: inputs[:message],
           head: "#{user}:#{feature_branch}",
           base: 'master'
         })
@@ -589,7 +589,7 @@ describe GitReflow::Workflows::Core do
 
           before do
             allow(existing_gh_pull_request).to receive(:good_to_merge?).with(force: true).and_return(true)
-            allow(existing_gh_pull_request).to receive(:merge!).with(force: true, base: 'master')
+            allow(existing_gh_pull_request).to receive(:merge!).with(force: true, base: 'master', :"skip-lgtm" => false)
           end
 
           it "displays the status of the PR" do
@@ -598,7 +598,7 @@ describe GitReflow::Workflows::Core do
           end
 
           it "merges the feature branch anyway" do
-            expect(existing_gh_pull_request).to receive(:merge!).with(force: true, base: 'master')
+            expect(existing_gh_pull_request).to receive(:merge!).with(force: true, base: 'master', :"skip-lgtm" => false)
             subject
           end
         end
@@ -614,12 +614,12 @@ describe GitReflow::Workflows::Core do
 
         it "displays the status of the PR" do
           allow(existing_gh_pull_request).to receive(:merge!).with(base: 'development')
-          expect(GitReflow::Workflows::Core).to receive(:status).with(destination_branch: 'development')
+          expect(GitReflow::Workflows::Core).to receive(:status).with(destination_branch: 'development', force: false, :"skip-lgtm" => false)
           subject
         end
 
         it "merges the feature branch" do
-          expect(existing_gh_pull_request).to receive(:merge!).with(base: 'development')
+          expect(existing_gh_pull_request).to receive(:merge!).with(base: 'development', force: false, :"skip-lgtm" => false)
           subject
         end
       end

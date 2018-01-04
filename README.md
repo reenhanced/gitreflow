@@ -27,12 +27,12 @@ If your workflow looks like this:
 2. Write great code
 3. Create a pull request against master
 4. Get 'lgtm' through a code review
-5. Merge to master ([we prefer squash-merge](https://github.com/reenhanced/gitreflow/issues/52))
+5. Merge to master (squashed by default, but can be overridden; [why we prefer squash-merge](https://github.com/reenhanced/gitreflow/issues/52))
 6. Delete the feature branch
 
 Reflow will make your life easier.
 
-Reflow automatically creates pull requests, ensures the code review is approved, and squash merges finished branches to master with a great commit message template.
+Reflow automatically creates pull requests, ensures the code review is approved, and merges finished branches to master with a great commit message template.
 
 ## Usage Overview
 Create and switch to new branch `nh-branchy-branch`:
@@ -43,7 +43,7 @@ Create a pull request for your branch against `master` or a custom `base-branch`
 ```
     $ git reflow review
 ```
-If your code is approved, squash-merge to `base-branch` and delete the feature branch:
+If your code is approved, merge to `base-branch` and delete the feature branch:
 ```
     $ git reflow deliver
 ```
@@ -179,9 +179,6 @@ Successfully created pull request #6: rj_test
 Pull Request URL: https://github.com/meesterdude/gitreflow/pull/6
 Would you like to push this branch to your remote repo and cleanup your feature branch? y<enter>
 ```
-
-> **[OSX/Ubuntu only]** You can automatically open your default web browser to the pull request.
-  This lets you edit the pull request with all of the detailed information you'll need before submitting it to your team.
 
 We output the pull request URL so you can distribute it to your team.
 
@@ -424,7 +421,7 @@ If the review is done, it's time to merge. Here's what happens:
 | "1"              | You need a minimum of 1 LGTM and the last comment on your PR must be an LGTM. |
 | "2"              | You need a minimum of 2 LGTM and the last comment on your PR must be an LGTM. |
 
-* Once approved, your **feature-branch** is squash-merged to your **base-branch**.
+* Once approved, your **feature-branch** is merged to your **base-branch**.
   This makes the history of the **base-branch** extremely clean and easy to follow.
 
 * `git blame` becomes your friend. You'll know who to blame and can see the full context of changes.

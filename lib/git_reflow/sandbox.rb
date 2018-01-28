@@ -6,6 +6,18 @@ module GitReflow
     include Thor::Actions
     extend self
 
+    class Runner < Thor
+      include Thor::Actions
+    end
+
+    def runner
+      @command_line_runner = Runner.new
+    end
+
+    def run(command, config = {})
+      runner.run(command, config)
+    end
+
     def shell
       @shell ||= Thor::Shell::Color.new
     end

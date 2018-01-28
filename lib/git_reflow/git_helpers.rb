@@ -5,7 +5,7 @@ module GitReflow
   module GitHelpers
     def git_root_dir
       return @git_root_dir if "#{@git_root_dir}".length > 0
-      @git_root_dir = GitReflow.run('git rev-parse --show-toplevel', capture: true).strip
+      @git_root_dir = GitReflow.run('git rev-parse --show-toplevel', capture: true, verbose: false).strip
     end
 
     def git_editor_command
@@ -28,7 +28,7 @@ module GitReflow
     end
 
     def current_branch
-      GitReflow.run("git branch --no-color | grep '^\* ' | grep -v 'no branch' | sed 's/^* //g'", capture: true).strip
+      GitReflow.run("git branch --no-color | grep '^\* ' | grep -v 'no branch' | sed 's/^* //g'", capture: true, verbose: false).strip
     end
 
     def pull_request_template
@@ -47,7 +47,7 @@ module GitReflow
     end
 
     def get_first_commit_message
-      GitReflow.run('git log --pretty=format:"%s" --no-merges -n 1', capture: true).strip
+      GitReflow.run('git log --pretty=format:"%s" --no-merges -n 1', capture: true, verbose: false).strip
     end
 
     def push_current_branch(options = {})

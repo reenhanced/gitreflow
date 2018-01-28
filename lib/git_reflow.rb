@@ -34,7 +34,7 @@ module GitReflow
   extend self
 
   def workflow
-    Workflow.current.new
+    Workflow.current
   end
 
   def default_editor
@@ -46,15 +46,23 @@ module GitReflow
   end
 
   def respond_to?(method_sym, include_all = false)
-    (workflow and workflow.respond_to?(method_sym, include_all)) || super(method_sym, include_all)
+    p "Workflow respond_to?: #{method_sym}, #{workflow_instance}"
+    (workflow_instance and workflow_instance.respond_to?(method_sym, include_all)) || super(method_sym, include_all)
   end
 
   def method_missing(method_sym, *arguments, &block)
-    if workflow and workflow.respond_to? method_sym
-      workflow.send method_sym, *arguments, &block
+    p "Calling workflow: #{method_sym}, #{workflow_instance}"
+    if workflow_instance and workflow_instance.respond_to? method_sym
+      workflow_instance.send method_sym, *arguments, &block
     else
       super
     end
+  end
+
+  private
+
+  def workflow_instance
+    @workflow = GitReflow.workflow.new
   end
 
 end

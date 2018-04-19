@@ -6,7 +6,7 @@ describe 'FlatMerge' do
   let(:git_server)  { double(find_open_pull_request: mergable_pr) }
 
   before  do
-    allow(GitReflow::Config).to receive(:get).and_return('')
+    allow(GitReflow::Config).to receive(:get).and_call_original
     allow(GitReflow::Config).to receive(:get).with("reflow.workflow").and_return(workflow_path)
     allow(GitReflow).to receive(:git_server).and_return(git_server)
     allow(GitReflow).to receive(:status)
@@ -26,9 +26,10 @@ describe 'FlatMerge' do
 
       before do
         allow_any_instance_of(GitReflow::GitServer::PullRequest).to receive(:deliver?).and_return(false)
+        allow(GitReflow::Workflows::Core).to receive(:status)
+        allow(GitReflow.git_server).to receive(:get_build_status).and_return(Struct.new(:state, :description, :url, :target_url).new)
         allow(GitReflow::GitServer::GitHub::PullRequest).to receive(:find_open).and_return(pr)
         allow(pr).to receive(:good_to_merge?).and_return(true)
-        allow(GitReflow::Workflows::Core).to receive(:status)
       end
 
       it "overrides squash merge in favor of flat merge" do

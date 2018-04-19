@@ -5,3 +5,4 @@ gemfiles
 *.gem
 .byebug_history
 *.log
+vendor

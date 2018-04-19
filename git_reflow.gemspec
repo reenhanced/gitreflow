@@ -19,25 +19,21 @@ Gem::Specification.new do |s|
   s.require_paths    = ["lib"]
   s.rdoc_options     << '--title' << 'git_reflow' << '--main' << 'README.rdoc' << '-ri'
 
-  s.add_development_dependency('appraisal', '2.1.0')
-  s.add_development_dependency('bundler', "~> 1.12")
+  s.add_development_dependency('appraisal', '2.2.0')
+  s.add_development_dependency('bundler', "~> 1.16")
   s.add_development_dependency('chronic')
   s.add_development_dependency('pry-byebug')
-  s.add_development_dependency('rake', "~> 11.0")
+  s.add_development_dependency('rake', "~> 12.3")
   s.add_development_dependency('rdoc')
-  s.add_development_dependency('rspec', "~> 3.4.0")
+  s.add_development_dependency('rspec', "~> 3.7.0")
   s.add_development_dependency('webmock')
   s.add_development_dependency('wwtd', '1.3.0')
 
   s.add_dependency('colorize', '>= 0.7.0')
-  s.add_dependency('gli', '2.15.0')
+  s.add_dependency('gli', '2.17.0')
   s.add_dependency('highline')
   s.add_dependency('httpclient')
   s.add_dependency('github_api', '0.15.0')
-  # rack is a dependency of oauth2, which is a dependency of github_api
-  # The latest rack only supports ruby > 2.2.2, so we lock this down until
-  # support for ruby 2.1.x is dropped
-  s.add_dependency('rack', ['>= 1.2', '< 2'])
   s.add_dependency('reenhanced_bitbucket_api', '0.3.2')
 
   s.post_install_message = "You need to setup your GitHub OAuth token\nPlease run 'git-reflow setup'"

@@ -1,7 +1,3 @@
-class AwesomeWorkflow < GitReflow::Workflows::Core
-  def self.start(**args)
-    GitReflow.say "Awesome."
-  end
+command :start do
+  GitReflow.say "Awesome."
 end
-
-AwesomeWorkflow

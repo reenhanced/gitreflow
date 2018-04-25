@@ -10,6 +10,6 @@ elsif ARGV.include? "--help"
   GitReflow.documentation_for_command(reflow_command)
 else
   command_options = GitReflow.parse_command_options!(reflow_command)
-  p "Run the FUCK out of this command: #{reflow_command} #{command_options}"
+  GitReflow.logger.debug "Running command `#{reflow_command}` with options: #{command_options.inspect}"
   GitReflow.public_send(reflow_command.to_sym, command_options)
 end

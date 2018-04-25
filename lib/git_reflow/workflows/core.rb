@@ -8,6 +8,23 @@ module GitReflow
     class Core
       include GitReflow::Workflow
 
+      # Reads and evaluates the provided file  in the context of this class
+      #
+      # @param workflow_path [String] the path of the Workflow file to eval
+      def self.load_workflow(workflow_path)
+        return unless workflow_path.length > 0 and File.exists?(workflow_path)
+        GitReflow.logger.debug "Using workflow: #{workflow_path}"
+        self.load_raw_workflow(File.read(workflow_path))
+      end
+
+      # Evaluates the provided string in the context of this class
+      #
+      # @param workflow_string [String] the contents of a Workflow file to eval
+      def self.load_raw_workflow(workflow_string)
+        GitReflow.logger.debug "Evaluating workflow..."
+        binding.eval(workflow_string)
+      end
+
       # Sets up the required git configurations that git-reflow depends on.
       #
       # @param [Hash] options the options to run setup with
@@ -191,7 +208,6 @@ LONGTIME
       command(:deploy, arguments: { destination_server: "default" }) do |**params|
         destination_server = params[:destination_server] || "default"
         deploy_command = GitReflow::Config.get("reflow.deploy-to-#{destination_server}-command", local: true)
-        p params, deploy_command
 
         # first check is to allow for automated setup
         if deploy_command.empty?
@@ -253,8 +269,8 @@ LONGTIME
       # @param [Hash] options the options to run review with
       # @option options [String] :base ("master") the base branch to merge your feature branch into
       # @option options [String] :force (false) whether to force-deliver the feature branch, ignoring any QA checks
-      command(:deliver, arguments: { base: "master" }, switches: { force: false, :"skip-lgtm" => false }) do |**params|
-        params[:force] = params[:force] || params[:"skip-lgtm"]
+      command(:deliver, arguments: { base: "master" }, flags: { merge_method: "squash" }, switches: { force: false, skip_lgtm: false }) do |**params|
+        params[:force] = params[:force] || params[:skip_lgtm]
         begin
           existing_pull_request = GitReflow.git_server.find_open_pull_request( from: GitReflow.current_branch, to: params[:base] )
 
@@ -282,9 +298,12 @@ LONGTIME
         arguments: {
           base: "the branch to merge this feature into"
         },
+        flags: {
+          merge_method: "how you want your feature branch merged ('squash', 'merge', 'rebase')"
+        },
         switches: {
           force: "skip the lgtm checks and deliver your feature branch",
-          :"skip-lgtm" => "skip the lgtm checks and deliver your feature branch"
+          skip_lgtm: "skip the lgtm checks and deliver your feature branch"
         },
         description: "merge your feature branch down to your base branch, and cleanup your feature branch"
       )

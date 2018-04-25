@@ -9,14 +9,27 @@ module GitReflow
 
     # @nodoc
     def self.current
-      workflow_file = GitReflow::Config.get('reflow.workflow')
-      if workflow_file.length > 0 and File.exists?(workflow_file)
-        GitReflow.logger.debug "Using workflow: #{workflow_file}"
-        eval(File.read(workflow_file))
-      else
-        GitReflow.logger.debug "Using core workflow..."
-        GitReflow::Workflows::Core
+      # First look for a "Workflow" file in the current directory, then check
+      # for a global Workflow file stored in git-reflow git config.
+      loaded_local_workflow  = GitReflow::Workflows::Core.load_workflow "#{GitReflow.git_root_dir}/Workflow"
+      loaded_global_workflow = false
+
+      unless loaded_local_workflow
+        loaded_global_workflow = GitReflow::Workflows::Core.load_workflow GitReflow::Config.get('reflow.workflow')
       end
+
+      GitReflow.logger.debug "Using core workflow..." unless loaded_local_workflow || loaded_global_workflow
+
+      GitReflow::Workflows::Core
+    end
+
+    # @nodoc
+    # This is primarily a helper method for tests.  Due to the nature of how the
+    # tests load many different workflows, this helps start fresh and isolate
+    # the scenario at hand.
+    def self.reset!
+      remove_const(:Core) if const_defined? :Core
+      load "git_reflow/workflows/core.rb"
     end
 
     module ClassMethods
@@ -31,6 +44,37 @@ module GitReflow
         @@command_docs ||= {}
       end
 
+      def callbacks
+        @@callbacks ||= {
+          before: {},
+          after: {}
+        }
+      end
+
+      # Loads a pre-defined workflow (FlatMergeWorkflow) from within another
+      # Workflow file
+      #
+      # @param name [String] the name of the Workflow file to use as a basis
+      def use(workflow_name)
+        if workflows.has_key?(workflow_name)
+          GitReflow::Workflows::Core.load_workflow(workflows[workflow_name])
+        else
+          GitReflow.logger.error "Tried to use non-existent Workflow: #{workflow_name}"
+        end
+      end
+
+      # Keeps track of available workflows when using `.use(workflow_name)`
+      # Workflow file
+      #
+      # @return [Hash, nil] A hash with [workflow_name, workflow_path] as key/value pairs
+      def workflows
+        return @workflows if @workflows
+        workflow_paths = Dir["#{File.dirname(__FILE__)}/workflows/*Workflow"]
+        @workflows = {}
+        workflow_paths.each { |p| @workflows[File.basename(p)] = p }
+        @workflows
+      end
+
       # Creates a singleton method on the inlcuded class
       #
       # This method will take any number of keyword parameters. If @defaults keyword is provided, and the given
@@ -41,13 +85,15 @@ module GitReflow
       # @param defaults [Hash] keyword arguments to provide fallbacks for
       #
       # @yield [a:, b:, c:, ...] Invokes the block with an arbitrary number of keyword arguments
-      #
-      # Needs to support :flags, :switches, :arguments
       def command(name, **params, &block)
         params[:flags]     ||= {}
         params[:switches]  ||= {}
         params[:arguments] ||= {}
         defaults           ||= params[:arguments].merge(params[:flags]).merge(params[:switches])
+
+        # Ensure flags and switches use kebab-case
+        kebab_case_keys!(params[:flags])
+        kebab_case_keys!(params[:switches])
 
         # Register the command with the workflow so that we can properly handle
         # option parsing from the command line
@@ -70,7 +116,57 @@ module GitReflow
             end
           end
 
+
+          Array(callbacks[:before][name]).each do |block|
+            GitReflow.logger.debug "Running [before] callback for `#{name}` command..."
+            block.call(**args_with_defaults)
+          end
+
           block.call(**args_with_defaults)
+
+          Array(callbacks[:after][name]).each do |block|
+            GitReflow.logger.debug "Running [before] callback for `#{name}` command..."
+            block.call(**args_with_defaults)
+          end
+        end
+      end
+
+      # Stores a Proc to be called once the command successfully finishes
+      #
+      # Procs declared with `before` are executed sequentially in the order they are defined in a custom Workflow
+      # file.
+      #
+      # @param name [Symbol] the name of the method to create
+      #
+      # @yield A block to be executed before the given command.  These blocks
+      # are executed in the context of `GitReflow::Workflows::Core`
+      def before(name, &block)
+        name = name.to_sym
+        if commands[name].nil?
+          GitReflow.logger.error "Attempted to register (before) callback for non-existing command: #{name}"
+        else
+          GitReflow.logger.debug "Callback (before) registered for: #{name}, #{block}"
+          callbacks[:before][name] ||= []
+          callbacks[:before][name] << block
+        end
+      end
+
+      # Stores a Proc to be called once the command successfully finishes
+      #
+      # Procs declared with `after` are executed sequentially in the order they are defined in a custom Workflow
+      # file.
+      #
+      # @param name [Symbol] the name of the method to create
+      #
+      # @yield A block to be executed after the given command.  These blocks
+      # are executed in the context of `GitReflow::Workflows::Core`
+      def after(name, &block)
+        name = name.to_sym
+        if commands[name].nil?
+          GitReflow.logger.error "Attempted to register (after) callback for non-existing command: #{name}"
+        else
+          callbacks[:after][name] ||= []
+          callbacks[:after][name] << block
         end
       end
 
@@ -85,8 +181,8 @@ module GitReflow
           summary: summary,
           description: description,
           arguments: arguments,
-          flags: flags,
-          switches: switches
+          flags: kebab_case_keys!(flags),
+          switches: kebab_case_keys!(switches)
         }
       end
 
@@ -110,7 +206,7 @@ module GitReflow
             cmd = commands[name.to_sym]
             GitReflow.say "COMMAND OPTIONS"
             docs[:flags].each do |flag_name, flag_desc|
-              flag_names = [flag_name.to_s[0], flag_name].map {|f| "-#{f}" }.join(', ')
+              flag_names = ["-#{flag_name.to_s[0]}", "--#{flag_name}"]
               flag_default = cmd[:flags][flag_name]
 
               GitReflow.say "    #{flag_names} – #{!flag_default.nil? ? "(default: #{flag_default})  " : ""}#{flag_desc}"
@@ -141,6 +237,9 @@ module GitReflow
         end
       end
 
+      # Parses ARGV for the provided git-reflow command name
+      #
+      # @param name [Symbol, String] the name of the git-reflow command to parse from ARGV
       def parse_command_options!(name)
         name = name.to_sym
         options = {}
@@ -152,13 +251,13 @@ module GitReflow
 
           self.commands[name][:flags].each do |flag_name, flag_default|
             opts.on("-#{flag_name[0]}", "--#{flag_name} #{flag_name.upcase}", command_docs[name][:flags][flag_name]) do |f|
-              options[flag_name] = f || flag_default
+              options[kebab_to_underscore(flag_name)] = f || flag_default
             end
           end
 
           self.commands[name][:switches].each do |switch_name, switch_default|
             opts.on("-#{switch_name[0]}", "--[no-]#{switch_name}", command_docs[name][:switches][switch_name]) do |s|
-              options[switch_name] = s || switch_default
+              options[kebab_to_underscore(switch_name)] = s || switch_default
             end
           end
         end.parse!
@@ -173,6 +272,23 @@ module GitReflow
         exit 1
       end
 
+      private
+
+      def kebab_case_keys!(hsh)
+        hsh.keys.each do |key_to_update|
+          hsh[underscore_to_kebab(key_to_update)] = hsh.delete(key_to_update) if key_to_update =~ /_/
+        end
+
+        hsh
+      end
+
+      def kebab_to_underscore(sym_or_string)
+        sym_or_string.to_s.gsub('-', '_').to_sym
+      end
+
+      def underscore_to_kebab(sym_or_string)
+        sym_or_string.to_s.gsub('_', '-').to_sym
+      end
     end
   end
 end

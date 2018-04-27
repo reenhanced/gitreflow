@@ -6,13 +6,51 @@ describe GitReflow::Workflows::Core do
   let(:existing_gh_pull_request)  { GitReflow::GitServer::GitHub::PullRequest.new existing_pull_requests.first }
   let(:pull_request_message_file) { "#{GitReflow.git_root_dir}/.git/GIT_REFLOW_PR_MSG" }
 
+  class CoreWorkflow < GitReflow::Workflows::Core
+  end
+
   before do
     allow(GitReflow).to receive(:current_branch).and_return(feature_branch)
     allow_any_instance_of(HighLine).to receive(:choose)
+    GitReflow::Workflow.reset!
+  end
+
+  describe ".load_workflow(workflow_path)" do
+    let(:workflow_path) { "/tmp/Workflow" }
+    subject { GitReflow::Workflows::Core.load_workflow(workflow_path) }
+
+    it "returns `nil` if the workflow path doesn't exist" do
+      allow(File).to receive(:exists?).and_return(false)
+      expect(subject).to be_nil
+    end
+
+    it "evaluates the workflow file in the context of the class" do
+      allow(File).to receive(:exists?).and_return(true)
+      fake_binding = instance_double(Binding)
+      workflow_content = "# testing"
+      expect(File).to receive(:read).with(workflow_path).and_return(workflow_content)
+      expect(described_class).to receive(:binding).and_return(fake_binding)
+      expect(fake_binding).to receive(:eval).with(workflow_content)
+      subject
+    end
+  end
+
+  describe ".load_raw_workflow(workflow_string)" do
+    it "evaluates the raw string in the context of the Core workflow" do
+      workflow_content = <<~WORKFLOW_CONTENT
+        command :dummy do
+          puts "Dummy"
+        end
+      WORKFLOW_CONTENT
+      fake_binding = instance_double(Binding)
+      expect(fake_binding).to receive(:eval).with(workflow_content)
+      expect(described_class).to receive(:binding).and_return(fake_binding)
+      GitReflow::Workflows::Core.load_raw_workflow(workflow_content)
+    end
   end
 
   describe ".setup" do
-    subject { GitReflow::Workflows::Core.setup }
+    subject { CoreWorkflow.setup }
 
     before do
       allow(File).to receive(:exist?).and_return(false)
@@ -83,7 +121,7 @@ describe GitReflow::Workflows::Core do
 
   describe ".start" do
     let(:feature_branch) { 'new_feature' }
-    subject              { GitReflow::Workflows::Core.start feature_branch: feature_branch }
+    subject              { CoreWorkflow.start feature_branch: feature_branch }
 
     it "updates the local repo and starts creates a new branch" do
       expect { subject }.to have_run_commands_in_order [
@@ -107,7 +145,7 @@ describe GitReflow::Workflows::Core do
     end
 
     it "starts from a different base branch when one is supplied" do
-      expect { GitReflow::Workflows::Core.start feature_branch: feature_branch, base: 'development' }.to have_run_commands_in_order [
+      expect { CoreWorkflow.start feature_branch: feature_branch, base: 'development' }.to have_run_commands_in_order [
         "git checkout development",
         "git pull origin development",
         "git push origin development:refs/heads/#{feature_branch}",
@@ -138,7 +176,7 @@ describe GitReflow::Workflows::Core do
       })
     end
 
-    subject { GitReflow::Workflows::Core.review inputs }
+    subject { CoreWorkflow.review inputs }
 
     it "fetches updates to the base branch" do
       expect { subject }.to have_run_command "git fetch origin master"
@@ -235,7 +273,7 @@ describe GitReflow::Workflows::Core do
     end
 
     context "providing only a body" do
-      let(:inputs) {{ body:  "Please pull this in!" }}
+      let(:inputs) {{ message:  "Please pull this in!" }}
 
       before do
         stub_command_line_inputs({
@@ -245,8 +283,8 @@ describe GitReflow::Workflows::Core do
 
       it "creates a pull request with the body as both title and body" do
         expect(GitReflow.git_server).to receive(:create_pull_request).with({
-          title: inputs[:body],
-          body: inputs[:body],
+          title: inputs[:message],
+          body: inputs[:message],
           head: "#{user}:#{feature_branch}",
           base: 'master'
         })
@@ -255,7 +293,7 @@ describe GitReflow::Workflows::Core do
     end
 
     context "providing both title and body" do
-      let(:inputs) {{ title: "Amazing new feature", body:  "Please pull this in!" }}
+      let(:inputs) {{ title: "Amazing new feature", message:  "Please pull this in!" }}
 
       before do
         stub_command_line_inputs({
@@ -266,7 +304,7 @@ describe GitReflow::Workflows::Core do
       it "creates a pull request with only the given title" do
         expect(GitReflow.git_server).to receive(:create_pull_request).with({
           title: inputs[:title],
-          body: inputs[:body],
+          body: inputs[:message],
           head: "#{user}:#{feature_branch}",
           base: 'master'
         })
@@ -333,7 +371,7 @@ describe GitReflow::Workflows::Core do
     let(:feature_branch)     { 'new-feature' }
     let(:destination_branch) { nil }
 
-    subject { GitReflow::Workflows::Core.status destination_branch: destination_branch }
+    subject { CoreWorkflow.status destination_branch: destination_branch }
 
     before do
       allow(GitReflow).to receive(:git_server).and_return(GitReflow::GitServer)
@@ -373,7 +411,7 @@ describe GitReflow::Workflows::Core do
   describe ".deploy" do
     let(:deploy_command) { "bundle exec cap #{destination} deploy" }
     let(:destination)    { nil }
-    subject              { GitReflow::Workflows::Core.deploy(destination_server: destination) }
+    subject              { CoreWorkflow.deploy(destination_server: destination) }
 
     before do
       stub_command_line_inputs({
@@ -408,7 +446,7 @@ describe GitReflow::Workflows::Core do
   describe ".stage" do
     let(:feature_branch) { 'new-feature' }
 
-    subject { GitReflow::Workflows::Core.stage }
+    subject { CoreWorkflow.stage }
 
     before do
       allow(GitReflow).to receive(:current_branch).and_return(feature_branch)
@@ -518,7 +556,7 @@ describe GitReflow::Workflows::Core do
     let(:user)           { 'reenhanced' }
     let(:repo)           { 'repo' }
 
-    subject { GitReflow::Workflows::Core.deliver }
+    subject { CoreWorkflow.deliver }
 
     before do
       allow(GitReflow).to receive(:git_server).and_return(GitReflow::GitServer)
@@ -585,11 +623,16 @@ describe GitReflow::Workflows::Core do
         end
 
         context "but forcing the deliver" do
-          subject { GitReflow::Workflows::Core.deliver force: true }
+          subject { CoreWorkflow.deliver force: true }
 
           before do
             allow(existing_gh_pull_request).to receive(:good_to_merge?).with(force: true).and_return(true)
-            allow(existing_gh_pull_request).to receive(:merge!).with(force: true, base: 'master')
+            allow(existing_gh_pull_request).to receive(:merge!).with(
+              force: true,
+              merge_method: "squash",
+              base: 'master',
+              skip_lgtm: false
+            )
           end
 
           it "displays the status of the PR" do
@@ -598,14 +641,19 @@ describe GitReflow::Workflows::Core do
           end
 
           it "merges the feature branch anyway" do
-            expect(existing_gh_pull_request).to receive(:merge!).with(force: true, base: 'master')
+            expect(existing_gh_pull_request).to receive(:merge!).with(
+              force: true,
+              merge_method: "squash",
+              base: 'master',
+              skip_lgtm: false
+            )
             subject
           end
         end
       end
 
       context "and using a custom base branch" do
-        subject { GitReflow::Workflows::Core.deliver base: 'development' }
+        subject { CoreWorkflow.deliver base: 'development' }
         before do
           expect(GitReflow.git_server).to receive(:find_open_pull_request).with( from: feature_branch, to: 'development').and_return(existing_gh_pull_request)
           allow(existing_gh_pull_request).to receive(:good_to_merge?).and_return(true)
@@ -613,13 +661,23 @@ describe GitReflow::Workflows::Core do
 
 
         it "displays the status of the PR" do
-          allow(existing_gh_pull_request).to receive(:merge!).with(base: 'development')
+          allow(existing_gh_pull_request).to receive(:merge!).with(
+            base: 'development',
+            merge_method: "squash",
+            force: false,
+            skip_lgtm: false
+          )
           expect(GitReflow::Workflows::Core).to receive(:status).with(destination_branch: 'development')
           subject
         end
 
         it "merges the feature branch" do
-          expect(existing_gh_pull_request).to receive(:merge!).with(base: 'development')
+          expect(existing_gh_pull_request).to receive(:merge!).with(
+            base: "development",
+            merge_method: "squash",
+            force: false,
+            skip_lgtm: false
+          )
           subject
         end
       end
@@ -627,7 +685,7 @@ describe GitReflow::Workflows::Core do
   end
 
   describe ".refresh" do
-    subject { GitReflow::Workflows::Core.refresh }
+    subject { CoreWorkflow.refresh }
 
     it "updates the feature branch with default remote repo and base branch" do
       expect(GitReflow).to receive(:update_feature_branch).with(remote: 'origin', base: 'master')
@@ -635,7 +693,7 @@ describe GitReflow::Workflows::Core do
     end
 
     context "providing a custom base branch" do
-      subject { GitReflow::Workflows::Core.refresh base: 'development' }
+      subject { CoreWorkflow.refresh base: 'development' }
 
       it "updates the feature branch with default remote repo and base branch" do
         expect(GitReflow).to receive(:update_feature_branch).with(remote: 'origin', base: 'development')
@@ -644,7 +702,7 @@ describe GitReflow::Workflows::Core do
     end
 
     context "provding a custom remote repo" do
-      subject { GitReflow::Workflows::Core.refresh remote: 'upstream' }
+      subject { CoreWorkflow.refresh remote: 'upstream' }
 
       it "updates the feature branch with default remote repo and base branch" do
         expect(GitReflow).to receive(:update_feature_branch).with(remote: 'upstream', base: 'master')
@@ -653,7 +711,7 @@ describe GitReflow::Workflows::Core do
     end
 
     context "providing a custom base branch and remote repo" do
-      subject { GitReflow::Workflows::Core.refresh remote: 'upstream', base: 'development' }
+      subject { CoreWorkflow.refresh remote: 'upstream', base: 'development' }
 
       it "updates the feature branch with default remote repo and base branch" do
         expect(GitReflow).to receive(:update_feature_branch).with(remote: 'upstream', base: 'development')

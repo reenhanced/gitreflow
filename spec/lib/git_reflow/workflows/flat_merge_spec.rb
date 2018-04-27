@@ -1,19 +1,18 @@
 require 'spec_helper'
 
 describe 'FlatMerge' do
-  let(:workflow_path) { File.join(File.expand_path("../../../../../lib/git_reflow/workflows", __FILE__), "/flat_merge.rb") }
   let(:mergable_pr) { double(good_to_merge?: true, merge!: true) }
   let(:git_server)  { double(find_open_pull_request: mergable_pr) }
 
   before  do
     allow(GitReflow::Config).to receive(:get).and_call_original
-    allow(GitReflow::Config).to receive(:get).with("reflow.workflow").and_return(workflow_path)
     allow(GitReflow).to receive(:git_server).and_return(git_server)
     allow(GitReflow).to receive(:status)
+    # Makes sure we are loading the right workflow
+    GitReflow.workflow.use("FlatMergeWorkflow")
   end
 
-  # Makes sure we are loading the right workflow
-  specify { expect( GitReflow.workflow ).to eql(GitReflow::Workflow::FlatMerge) }
+  after { GitReflow::Workflow.reset! }
 
   context ".deliver" do
     subject { GitReflow.deliver }
@@ -33,7 +32,12 @@ describe 'FlatMerge' do
       end
 
       it "overrides squash merge in favor of flat merge" do
-        expect(pr).to receive(:merge!).with(base: 'master', squash: false)
+        expect(pr).to receive(:merge!).with(
+          base: "master",
+          merge_method: "merge",
+          force: false,
+          skip_lgtm: false
+        )
         subject
       end
     end
@@ -51,7 +55,12 @@ describe 'FlatMerge' do
       end
 
       it "doesn't squash merge" do
-        expect(pr).to receive(:merge!).with(base: 'master', squash: false, force: true)
+        expect(pr).to receive(:merge!).with(
+          base: "master",
+          merge_method: "merge",
+          force: true,
+          skip_lgtm: false
+        )
         subject
       end
     end

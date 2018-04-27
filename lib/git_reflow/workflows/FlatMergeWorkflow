@@ -1,0 +1,38 @@
+command(:deliver, arguments: { base: "master" }, flags: { merge_method: "merge" }, switches: { force: false, skip_lgtm: false }) do |**params|
+  params[:force] = params[:force] || params[:skip_lgtm]
+  begin
+    existing_pull_request = GitReflow.git_server.find_open_pull_request( from: GitReflow.current_branch, to: params[:base] )
+
+    if existing_pull_request.nil?
+      say "No pull request exists for #{GitReflow.remote_user}:#{GitReflow.current_branch}\nPlease submit your branch for review first with \`git reflow review\`", :deliver_halted
+    else
+
+      if existing_pull_request.good_to_merge?(force: params[:force])
+        # displays current status and prompts user for confirmation
+        self.status destination_branch: params[:base]
+        existing_pull_request.merge!(params)
+      else
+        say existing_pull_request.rejection_message, :deliver_halted
+      end
+
+    end
+
+  rescue Github::Error::UnprocessableEntity => e
+    say "Github Error: #{e.inspect}", :error
+  end
+end
+command_help(
+  :deliver,
+  summary: "deliver your feature branch",
+  arguments: {
+    base: "the branch to merge this feature into"
+  },
+  flags: {
+    merge_method: "how you want your feature branch merged ('merge', 'squash', 'rebase')"
+  },
+  switches: {
+    force: "skip the lgtm checks and deliver your feature branch",
+    skip_lgtm: "skip the lgtm checks and deliver your feature branch"
+  },
+  description: "merge your feature branch down to your base branch, and cleanup your feature branch"
+)

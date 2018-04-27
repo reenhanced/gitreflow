@@ -443,6 +443,15 @@ If the review is done, it's time to merge. Here's what happens:
 
   See our [Advanced Usage](https://github.com/reenhanced/gitreflow/wiki/Full-List-of-Configuration-Options) for more ways you can customize your workflow.
 
+## Customization
+
+Git-reflow's default process isn't meant to fit every team, which is why we've introduced [Custom Workflows](https://github.com/reenhanced/gitreflow/wiki/Custom-Workflows). With a custom workflow, you can:
+
+* Add hooks to be run before, or after any command
+* Use one of our pre-configured workflows as a basis for your own
+* Override any of the default commands
+* Create new commands
+
 ---
 
 ## Contributing

@@ -97,6 +97,68 @@ describe GitReflow::GitHelpers do
     end
   end
 
+  describe ".pull_request_template" do
+    subject { Gitacular.pull_request_template }
+
+    context "template file exists" do
+      let(:root_dir) { "/some_repo" }
+      let(:template_content) { "Template content" }
+
+      before do
+        allow(Gitacular).to receive(:git_root_dir).and_return(root_dir)
+        allow(File).to receive(:exist?).with("#{root_dir}/.github/PULL_REQUEST_TEMPLATE.md").and_return(true)
+        allow(File).to receive(:read).with("#{root_dir}/.github/PULL_REQUEST_TEMPLATE.md").and_return(template_content)
+      end
+
+      it { is_expected.to eq template_content }
+
+      context "when template has mustache tags" do
+        let(:template_content) { "This is the coolest {{current_branch}}" }
+        before { allow(GitReflow).to receive(:current_branch).and_return("tomato") }
+        it { is_expected.to eq "This is the coolest tomato" }
+      end
+    end
+
+    context "template file does not exist" do
+      before do
+        allow(File).to receive(:exist?).and_return(false)
+      end
+
+      it { is_expected.to be_nil }
+    end
+  end
+
+  describe ".merge_commit_template" do
+    subject { Gitacular.merge_commit_template }
+
+    context "template file exists" do
+      let(:root_dir) { "/some_repo" }
+      let(:template_content) { "Template content" }
+
+      before do
+        allow(Gitacular).to receive(:git_root_dir).and_return(root_dir)
+        allow(File).to receive(:exist?).with("#{root_dir}/.github/MERGE_COMMIT_TEMPLATE.md").and_return(true)
+        allow(File).to receive(:read).with("#{root_dir}/.github/MERGE_COMMIT_TEMPLATE.md").and_return(template_content)
+      end
+
+      it { is_expected.to eq template_content }
+
+      context "when template has mustache tags" do
+        let(:template_content) { "This is the coolest {{current_branch}}" }
+        before { allow(GitReflow).to receive(:current_branch).and_return("tomato") }
+        it { is_expected.to eq "This is the coolest tomato" }
+      end
+    end
+
+    context "template file does not exist" do
+      before do
+        allow(File).to receive(:exist?).and_return(false)
+      end
+
+      it { is_expected.to be_nil }
+    end
+  end
+
   describe ".get_first_commit_message" do
     subject { Gitacular.get_first_commit_message }
     it      { expect{ subject }.to have_run_command_silently 'git log --pretty=format:"%s" --no-merges -n 1' }
@@ -157,26 +219,43 @@ describe GitReflow::GitHelpers do
     end
   end
 
-  describe ".append_to_squashed_commit_message(message)" do
-    let(:original_squash_message) { "Oooooo, SQUASH IT" }
+  describe ".append_to_merge_commit_message(message)" do
+    let(:original_commit_message) { "Oooooo, SQUASH IT" }
     let(:message)                 { "do do the voodoo that you do" }
     let(:root_dir)                { '/home/gitreflow' }
-    let(:squash_path)             { "#{root_dir}/.git/SQUASH_MSG" }
-    let(:tmp_squash_path)         { "#{root_dir}/.git/tmp_squash_msg" }
+    let(:merge_message_path)      { "#{root_dir}/.git/SQUASH_MSG" }
+    let(:tmp_merge_message_path)  { "#{root_dir}/.git/tmp_merge_msg" }
     before                        { allow(Gitacular).to receive(:git_root_dir).and_return(root_dir) }
-    subject                       { Gitacular.append_to_squashed_commit_message(message) }
+    subject                       { Gitacular.append_to_merge_commit_message(message) }
 
     it "appends the message to git's SQUASH_MSG temp file" do
       tmp_file = double('file')
-      allow(File).to receive(:open).with(tmp_squash_path, "w").and_yield(tmp_file)
-      allow(File).to receive(:exists?).with(squash_path).and_return(true)
-      allow(File).to receive(:foreach).with(squash_path).and_yield(original_squash_message)
+      allow(File).to receive(:open).with(tmp_merge_message_path, "w").and_yield(tmp_file)
+      allow(File).to receive(:exists?).with(merge_message_path).and_return(true)
+      allow(File).to receive(:foreach).with(merge_message_path).and_yield(original_commit_message)
       expect(tmp_file).to receive(:puts).with(message)
-      expect(tmp_file).to receive(:puts).with(original_squash_message)
+      expect(tmp_file).to receive(:puts).with(original_commit_message)
 
       expect { subject }.to have_run_commands_in_order [
-        "mv #{tmp_squash_path} #{squash_path}"
+        "mv #{tmp_merge_message_path} #{merge_message_path}"
       ]
+    end
+
+    context "when doing a direct merge" do
+      let(:merge_message_path) { "#{root_dir}/.git/MERGE_MSG" }
+      subject { Gitacular.append_to_merge_commit_message(message, merge_method: "merge") }
+      it "appends the message to git's MERGE_MSG temp file if using a direct merge" do
+        tmp_file = double('file')
+        allow(File).to receive(:open).with(tmp_merge_message_path, "w").and_yield(tmp_file)
+        allow(File).to receive(:exists?).with(merge_message_path).and_return(true)
+        allow(File).to receive(:foreach).with(merge_message_path).and_yield(original_commit_message)
+        expect(tmp_file).to receive(:puts).with(message)
+        expect(tmp_file).to receive(:puts).with(original_commit_message)
+
+        expect { subject }.to have_run_commands_in_order [
+          "mv #{tmp_merge_message_path} #{merge_message_path}"
+        ]
+      end
     end
   end
 end

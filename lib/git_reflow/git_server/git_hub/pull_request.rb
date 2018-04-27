@@ -93,20 +93,22 @@ module GitReflow
             if deliver?
               GitReflow.say "Merging pull request ##{self.number}: '#{self.title}', from '#{self.feature_branch_name}' into '#{self.base_branch_name}'", :notice
 
+              merge_method       = options[:merge_method] || GitReflow::Config.get("reflow.merge-method")
+              merge_method       = "squash" if "#{merge_method}".length < 1
+              merge_message_file = GitReflow.merge_message_path(merge_method: merge_method)
+
               unless options[:title] || options[:message]
                 # prompts user for commit_title and commit_message
-                squash_merge_message_file = "#{GitReflow.git_root_dir}/.git/SQUASH_MSG"
-
-                File.open(squash_merge_message_file, 'w') do |file|
+                File.open(merge_message_file, 'w') do |file|
                   file.write("#{self.title}\n#{self.commit_message_for_merge}\n")
                 end
 
-                GitReflow.run("#{GitReflow.git_editor_command} #{squash_merge_message_file}", with_system: true)
-                merge_message = File.read(squash_merge_message_file).split(/[\r\n]|\r\n/).map(&:strip)
+                GitReflow.run("#{GitReflow.git_editor_command} #{merge_message_file}", with_system: true)
+                merge_message = File.read(merge_message_file).split(/[\r\n]|\r\n/).map(&:strip)
 
                 title  = merge_message.shift
 
-                File.delete(squash_merge_message_file)
+                File.delete(merge_message_file)
 
                 unless merge_message.empty?
                   merge_message.shift if merge_message.first.empty?
@@ -123,9 +125,6 @@ module GitReflow
               end
 
               options[:body] = "#{options[:message]}\n" if options[:body].nil? and "#{options[:message]}".length > 0
-
-              merge_method   = options[:merge_method] || GitReflow::Config.get("reflow.merge-method")
-              merge_method   = "squash" if "#{merge_method}".length < 1
 
               merge_response = GitReflow::GitServer::GitHub.connection.pull_requests.merge(
                 "#{GitReflow.git_server.class.remote_user}",

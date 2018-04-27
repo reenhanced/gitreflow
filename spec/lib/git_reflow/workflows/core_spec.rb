@@ -222,7 +222,6 @@ describe GitReflow::Workflows::Core do
         expect(fake_file).to receive(:write).with(template_content)
         subject
       end
-
     end
 
     context "providing a base branch" do

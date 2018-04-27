@@ -158,6 +158,8 @@ module GitReflow
       end
 
       def commit_message_for_merge
+        return GitReflow.merge_commit_template unless GitReflow.merge_commit_template.nil?
+
         message = ""
 
         if "#{self.description}".length > 0
@@ -204,14 +206,14 @@ module GitReflow
           GitReflow.run_command_with_label "git checkout #{self.base_branch_name}"
           GitReflow.run_command_with_label "git pull origin #{self.base_branch_name}"
 
-          case merge_method
+          case merge_method.to_s
           when /squash/i
             GitReflow.run_command_with_label "git merge --squash #{self.feature_branch_name}"
           else
             GitReflow.run_command_with_label "git merge #{self.feature_branch_name}"
           end
 
-          GitReflow.append_to_squashed_commit_message(message) if message.length > 0
+          GitReflow.append_to_merge_commit_message(message) if message.length > 0
 
           if GitReflow.run_command_with_label 'git commit', with_system: true
             GitReflow.say "Pull request ##{self.number} successfully merged.", :success

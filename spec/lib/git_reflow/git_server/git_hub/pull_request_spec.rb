@@ -484,7 +484,7 @@ describe GitReflow::GitServer::GitHub::PullRequest do
       allow(GitReflow.git_server).to receive(:connection).and_return(github_api)
       allow(GitReflow.git_server).to receive(:get_build_status).and_return(Struct.new(:state, :description, :target_url).new())
       allow_any_instance_of(GitReflow::GitServer::PullRequest).to receive(:commit_message_for_merge).and_return('Bingo')
-      allow_any_instance_of(GitReflow).to receive(:append_to_squashed_commit_message).and_return(true)
+      allow_any_instance_of(GitReflow).to receive(:append_to_merge_commit_message).and_return(true)
     end
 
     context "and force-merging" do

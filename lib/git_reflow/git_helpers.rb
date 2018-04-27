@@ -41,11 +41,18 @@ module GitReflow
         "#{git_root_dir}/#{file}"
       end
 
-      filename = filenames_to_try.detect do |file|
-        File.exist? file
+      parse_first_matching_template_file(filenames_to_try)
+    end
+
+    def merge_commit_template
+      filenames_to_try = %w( .github/MERGE_COMMIT_TEMPLATE.md
+                             .github/MERGE_COMMIT_TEMPLATE
+                             MERGE_COMMIT_TEMPLATE.md
+                             MERGE_COMMIT_TEMPLATE ).map do |file|
+        "#{git_root_dir}/#{file}"
       end
 
-      File.read filename if filename
+      parse_first_matching_template_file(filenames_to_try)
     end
 
     def get_first_commit_message
@@ -86,22 +93,49 @@ module GitReflow
       run_command_with_label "git merge #{base_branch}"
     end
 
-    def append_to_squashed_commit_message(message = '')
-      tmp_squash_message_path = "#{git_root_dir}/.git/tmp_squash_msg"
-      squash_message_path     = "#{git_root_dir}/.git/SQUASH_MSG"
-      File.open(tmp_squash_message_path, "w") do |file_content|
+    def append_to_merge_commit_message(message = '', merge_method: "squash")
+      tmp_merge_message_path  = "#{git_root_dir}/.git/tmp_merge_msg"
+      dest_merge_message_path = merge_message_path(merge_method: merge_method)
+
+      run "touch #{tmp_merge_message_path}"
+
+      File.open(tmp_merge_message_path, "w") do |file_content|
         file_content.puts message
-        if File.exists?(squash_message_path)
-          File.foreach(squash_message_path) do |line|
+        if File.exists? dest_merge_message_path
+          File.foreach(dest_merge_message_path) do |line|
             file_content.puts line
           end
         end
       end
 
-      run "mv #{tmp_squash_message_path} #{squash_message_path}"
+      run "mv #{tmp_merge_message_path} #{dest_merge_message_path}"
+    end
+
+    def merge_message_path(merge_method: nil)
+      merge_method = merge_method || GitReflow::Config.get("reflow.merge-method")
+      merge_method = "squash" if "#{merge_method}".length < 1
+      if merge_method =~ /squash/i
+        "#{git_root_dir}/.git/SQUASH_MSG"
+      else
+        "#{git_root_dir}/.git/MERGE_MSG"
+      end
     end
 
     private
+
+    def parse_first_matching_template_file(template_file_names)
+      filename = template_file_names.detect do |file|
+        File.exist? file
+      end
+
+      # Thanks to @Shalmezad for contribuiting the template `gsub` snippet :-)
+      # https://github.com/reenhanced/gitreflow/issues/51#issuecomment-253535093
+      if filename
+        template_content = File.read filename
+        template_content.gsub!(/\{\{([a-zA-Z_]+[a-zA-Z0-9_]*)\}\}/) { GitReflow.public_send($1) }
+        template_content
+      end
+    end
 
     def extract_remote_user_and_repo_from_remote_url(remote_url)
       result = { user: '', repo: '' }

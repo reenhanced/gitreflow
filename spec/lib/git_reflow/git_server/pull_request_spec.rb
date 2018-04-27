@@ -364,7 +364,7 @@ describe GitReflow::GitServer::PullRequest do
     subject { pr.merge! inputs }
 
     before do
-      allow(GitReflow).to receive(:append_to_squashed_commit_message)
+      allow(GitReflow).to receive(:append_to_merge_commit_message)
       allow(pr).to receive(:commit_message_for_merge).and_return(commit_message_for_merge)
     end
 
@@ -376,7 +376,7 @@ describe GitReflow::GitServer::PullRequest do
       it "updates both feature and destination branch and squash-merges feature into base branch" do
         expect(GitReflow).to receive(:update_current_branch)
         expect(GitReflow).to receive(:fetch_destination).with(pr.base_branch_name)
-        expect(GitReflow).to receive(:append_to_squashed_commit_message).with(pr.commit_message_for_merge)
+        expect(GitReflow).to receive(:append_to_merge_commit_message).with(pr.commit_message_for_merge)
         expect { subject }.to have_run_commands_in_order [
           "git checkout #{pr.base_branch_name}",
           "git pull origin #{pr.base_branch_name}",
@@ -469,6 +469,12 @@ describe GitReflow::GitServer::PullRequest do
     context "with approvals" do
       before  { allow(pr).to receive(:approvals).and_return(['sally', 'joey']) }
       specify { expect(subject).to include "\nLGTM given by: @sally, @joey\n" }
+    end
+
+    context "with custom merge commit message template" do
+      before { allow(GitReflow).to receive(:merge_commit_template).and_return("Super cool changes") }
+      specify { expect(subject).to include "Super cool changes" }
+      specify { expect(subject).to_not include "\nMerges ##{pr.number}\n" }
     end
   end
 

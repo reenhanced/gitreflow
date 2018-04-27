@@ -123,7 +123,13 @@ LONGTIME
               pull_request_msg_file = "#{GitReflow.git_root_dir}/.git/GIT_REFLOW_PR_MSG"
 
               File.open(pull_request_msg_file, 'w') do |file|
-                file.write(params[:title] || GitReflow.pull_request_template || GitReflow.current_branch)
+                begin
+                  pr_message = params[:title] || GitReflow.pull_request_template || GitReflow.current_branch
+                  file.write(pr_message)
+                rescue StandardError => e
+                  GitReflow.logger.error "Unable to parse PR template (#{pull_request_msg_file}): #{e.inspect}"
+                  file.write(params[:title] || GitReflow.current_branch)
+                end
               end
 
               GitReflow.run("#{GitReflow.git_editor_command} #{pull_request_msg_file}", with_system: true)

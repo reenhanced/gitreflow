@@ -12,6 +12,7 @@ describe GitReflow::Workflows::Core do
   before do
     allow(GitReflow).to receive(:current_branch).and_return(feature_branch)
     allow_any_instance_of(HighLine).to receive(:choose)
+    GitReflow::Workflow.reset!
   end
 
   describe ".load_workflow(workflow_path)" do

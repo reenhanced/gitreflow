@@ -496,7 +496,7 @@ describe GitReflow::GitServer::PullRequest do
         it     { should be_truthy }
       end
 
-      context "and user choose not to cleanup" do
+      context "and user chooses not to cleanup" do
         before { expect(pr).to receive(:ask).with('Would you like to push this branch to your remote repo and cleanup your feature branch? ').and_return('no') }
         it     { should be_falsy }
       end

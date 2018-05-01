@@ -52,11 +52,14 @@ describe GitReflow do
     end
 
     context "when a workflow is set" do
+      before { GitReflow::Workflow.reset! }
       after { GitReflow::Workflow.reset! }
 
       it "calls the defined workflow methods instead of the default core" do
         workflow_path = File.join(File.expand_path("../../fixtures", __FILE__), "/awesome_workflow.rb")
         allow(GitReflow::Config).to receive(:get).with("reflow.workflow").and_return(workflow_path)
+        expect(GitReflow::Workflows::Core).to receive(:load_workflow).with("#{GitReflow.git_root_dir}/Workflow").once
+        expect(GitReflow::Workflows::Core).to receive(:load_workflow).with(workflow_path).once.and_call_original
 
         expect{ subject.start }.to have_said "Awesome."
       end

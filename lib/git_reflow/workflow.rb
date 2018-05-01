@@ -9,6 +9,7 @@ module GitReflow
 
     # @nodoc
     def self.current
+      return @current unless @current.nil?
       # First look for a "Workflow" file in the current directory, then check
       # for a global Workflow file stored in git-reflow git config.
       loaded_local_workflow  = GitReflow::Workflows::Core.load_workflow "#{GitReflow.git_root_dir}/Workflow"
@@ -20,7 +21,7 @@ module GitReflow
 
       GitReflow.logger.debug "Using core workflow..." unless loaded_local_workflow || loaded_global_workflow
 
-      GitReflow::Workflows::Core
+      @current = GitReflow::Workflows::Core
     end
 
     # @nodoc
@@ -29,6 +30,7 @@ module GitReflow
     # the scenario at hand.
     def self.reset!
       remove_const(:Core) if const_defined? :Core
+      @current = nil
       load "git_reflow/workflows/core.rb"
     end
 
@@ -118,14 +120,14 @@ module GitReflow
 
 
           Array(callbacks[:before][name]).each do |block|
-            GitReflow.logger.debug "Running [before] callback for `#{name}` command..."
+            GitReflow.logger.debug "(before) callback running for `#{name}` command..."
             block.call(**args_with_defaults)
           end
 
           block.call(**args_with_defaults)
 
           Array(callbacks[:after][name]).each do |block|
-            GitReflow.logger.debug "Running [before] callback for `#{name}` command..."
+            GitReflow.logger.debug "(after) callback running for `#{name}` command..."
             block.call(**args_with_defaults)
           end
         end
@@ -145,7 +147,7 @@ module GitReflow
         if commands[name].nil?
           GitReflow.logger.error "Attempted to register (before) callback for non-existing command: #{name}"
         else
-          GitReflow.logger.debug "Callback (before) registered for: #{name}, #{block}"
+          GitReflow.logger.debug "(before) callback registered for: #{name}"
           callbacks[:before][name] ||= []
           callbacks[:before][name] << block
         end
@@ -165,6 +167,7 @@ module GitReflow
         if commands[name].nil?
           GitReflow.logger.error "Attempted to register (after) callback for non-existing command: #{name}"
         else
+          GitReflow.logger.debug "(after) callback registered for: #{name}"
           callbacks[:after][name] ||= []
           callbacks[:after][name] << block
         end

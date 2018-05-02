@@ -9,6 +9,8 @@ describe GitReflow::Workflow do
   let(:workflow) { DummyWorkflow }
   let(:loader)   { double() }
 
+  before { GitReflow::Workflow.reset! }
+
   describe ".current" do
     subject { GitReflow::Workflow.current }
 

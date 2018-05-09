@@ -346,6 +346,24 @@ describe GitReflow::Workflows::Core do
         expect(GitReflow.git_server).to receive(:create_pull_request).and_return(existing_gh_pull_request)
         expect{ subject }.to have_said "Successfully created pull request ##{existing_gh_pull_request.number}: #{existing_gh_pull_request.title}\nPull Request URL: #{existing_gh_pull_request.html_url}\n", :success
       end
+
+      context "when pull request creation fails" do
+        let(:github_error) { Github::Error::UnprocessableEntity.new(eval(Fixture.new('pull_requests/pull_request_branch_nonexistent_error.json').to_s)) }
+
+        it "retries creating a pull request" do
+          call_count = 0
+          allow(GitReflow.git_server).to receive(:create_pull_request) do
+            call_count += 1
+            (call_count <= 1) ? raise(github_error) : existing_gh_pull_request
+          end
+          expect{ subject }.to have_said "Successfully created pull request ##{existing_gh_pull_request.number}: #{existing_gh_pull_request.title}\nPull Request URL: #{existing_gh_pull_request.html_url}\n", :success
+        end
+
+        it "reports failures even after retrying" do
+          allow(GitReflow.git_server).to receive(:create_pull_request).and_raise github_error
+          expect { subject }.to have_said "Github Error: #{github_error.to_s}", :error
+        end
+      end
     end
 
     context "aborting during PR template review" do

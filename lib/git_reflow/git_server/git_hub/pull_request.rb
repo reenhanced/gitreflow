@@ -38,7 +38,7 @@ module GitReflow
 
         def commit_author
           begin
-            username, branch = base.label.split(':')
+            username, _  = base.label.split(':')
             first_commit = GitReflow.git_server.connection.pull_requests.commits(username, GitReflow.git_server.class.remote_repo_name, number.to_s).first
             "#{first_commit.commit.author.name} <#{first_commit.commit.author.email}>".strip
           rescue Github::Error::NotFound

@@ -156,10 +156,18 @@ LONGTIME
             end
 
             if create_pull_request
-              pull_request = GitReflow.git_server.create_pull_request(title: params[:title] || params[:message],
-                                                            body:  params[:message],
-                                                            head:  "#{GitReflow.remote_user}:#{GitReflow.current_branch}",
-                                                            base:  params[:base])
+              begin
+                retries ||= 0
+                pull_request = GitReflow.git_server.create_pull_request(
+                  title: params[:title] || params[:message],
+                  body:  params[:message],
+                  head:  "#{GitReflow.remote_user}:#{GitReflow.current_branch}",
+                  base:  params[:base]
+                )
+              rescue Github::Error::UnprocessableEntity
+                retry if (retries += 1) < 3
+                raise
+              end
 
               say "Successfully created pull request ##{pull_request.number}: #{pull_request.title}\nPull Request URL: #{pull_request.html_url}\n", :success
             else

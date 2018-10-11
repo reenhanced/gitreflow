@@ -6,13 +6,6 @@ require 'httpclient'
 require 'json'
 require 'colorize'
 
-# XXX: work around logger spam from hashie (required by github api)
-# https://github.com/intridea/hashie/issues/394
-require "hashie"
-require "hashie/logger"
-Hashie.logger = Logger.new(nil)
-
-
 require 'github_api'
 require 'git_reflow/version.rb' unless defined?(GitReflow::VERSION)
 require 'git_reflow/config'

@@ -2,8 +2,8 @@ require "highline"
 
 module GitReflow
   module RSpec
+    # @nodoc
     module CommandLineHelpers
-
       def stub_command_line
         $commands_ran     = []
         $stubbed_commands = {}

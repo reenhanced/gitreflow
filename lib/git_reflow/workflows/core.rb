@@ -1,4 +1,4 @@
-$: << File.expand_path(File.dirname(File.realpath(__FILE__)) + '/../..')
+$LOAD_PATH << File.expand_path(File.realpath(__dir__) + '/../..')
 require 'git_reflow/workflow'
 
 module GitReflow

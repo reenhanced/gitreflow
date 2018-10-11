@@ -12,6 +12,9 @@ describe GitReflow::Workflows::Core do
   before do
     allow(GitReflow).to receive(:current_branch).and_return(feature_branch)
     allow_any_instance_of(HighLine).to receive(:choose)
+  end
+
+  after do
     GitReflow::Workflow.reset!
   end
 
@@ -25,9 +28,10 @@ describe GitReflow::Workflows::Core do
     end
 
     it "evaluates the workflow file in the context of the class" do
-      allow(File).to receive(:exists?).and_return(true)
       fake_binding = instance_double(Binding)
       workflow_content = "# testing"
+      allow(File).to receive(:exists?).with("#{GitReflow.git_root_dir}/Workflow").and_return(false)
+      allow(File).to receive(:exists?).with(workflow_path).and_return(true)
       expect(File).to receive(:read).with(workflow_path).and_return(workflow_content)
       expect(described_class).to receive(:binding).and_return(fake_binding)
       expect(fake_binding).to receive(:eval).with(workflow_content)
@@ -122,6 +126,8 @@ describe GitReflow::Workflows::Core do
   describe ".start" do
     let(:feature_branch) { 'new_feature' }
     subject              { CoreWorkflow.start feature_branch: feature_branch }
+
+    before { suppress_loading_of_external_workflows }
 
     it "updates the local repo and starts creates a new branch" do
       expect { subject }.to have_run_commands_in_order [

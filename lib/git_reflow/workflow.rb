@@ -19,8 +19,6 @@ module GitReflow
         loaded_global_workflow = GitReflow::Workflows::Core.load_workflow GitReflow::Config.get('reflow.workflow')
       end
 
-      GitReflow.logger.debug "Using core workflow..." unless loaded_local_workflow || loaded_global_workflow
-
       @current = GitReflow::Workflows::Core
     end
 
@@ -29,9 +27,10 @@ module GitReflow
     # tests load many different workflows, this helps start fresh and isolate
     # the scenario at hand.
     def self.reset!
-      remove_const(:Core) if const_defined? :Core
+      GitReflow.logger.debug "Resetting GitReflow workflow..."
+      current.commands = {}
+      current.callbacks = { before: {}, after: {}}
       @current = nil
-      load "git_reflow/workflows/core.rb"
     end
 
     module ClassMethods
@@ -39,18 +38,30 @@ module GitReflow
       include GitReflow::GitHelpers
 
       def commands
-        @@commands ||= {}
+        @commands ||= {}
+      end
+
+      def commands=(command_hash)
+        @commands = command_hash
       end
 
       def command_docs
-        @@command_docs ||= {}
+        @command_docs ||= {}
+      end
+
+      def command_docs=(command_doc_hash)
+        @command_docs = command_doc_hash
       end
 
       def callbacks
-        @@callbacks ||= {
+        @callbacks ||= {
           before: {},
           after: {}
         }
+      end
+
+      def callbacks=(callback_hash)
+        @callbacks = callback_hash
       end
 
       # Loads a pre-defined workflow (FlatMergeWorkflow) from within another
@@ -118,12 +129,14 @@ module GitReflow
             end
           end
 
-
+          GitReflow.logger.debug "callbacks: #{callbacks.inspect}"
           Array(callbacks[:before][name]).each do |block|
             GitReflow.logger.debug "(before) callback running for `#{name}` command..."
-            block.call(**args_with_defaults)
+            argument_overrides = block.call(**args_with_defaults) || {}
+            args_with_defaults.merge!(argument_overrides) if argument_overrides.is_a?(Hash)
           end
 
+          GitReflow.logger.debug "Running command `#{name}` with args: #{args_with_defaults.inspect}..."
           block.call(**args_with_defaults)
 
           Array(callbacks[:after][name]).each do |block|

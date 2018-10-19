@@ -1,31 +1,38 @@
+# frozen_string_literal: true
+
 require 'git_reflow/config'
 require 'git_reflow/sandbox'
 
 module GitReflow
+  # Includes many helper methods for common tasks within a git repository.
   module GitHelpers
     include Sandbox
 
+    def default_editor
+      ENV['EDITOR'] || 'vi'
+    end
+
     def git_root_dir
-      return @git_root_dir if "#{@git_root_dir}".length > 0
+      return @git_root_dir unless @git_root_dir.to_s.empty?
       @git_root_dir = run('git rev-parse --show-toplevel', loud: false).strip
     end
 
     def git_editor_command
-      git_editor = "#{GitReflow::Config.get('core.editor')}"
-      if git_editor.length > 0
+      git_editor = GitReflow::Config.get('core.editor')
+      if !git_editor.empty?
         git_editor
       else
-        GitReflow.default_editor
+        default_editor
       end
     end
 
     def remote_user
-      return "" unless "#{GitReflow::Config.get('remote.origin.url')}".length > 0
+      return '' if GitReflow::Config.get('remote.origin.url').empty?
       extract_remote_user_and_repo_from_remote_url(GitReflow::Config.get('remote.origin.url'))[:user]
     end
 
     def remote_repo_name
-      return "" unless "#{GitReflow::Config.get('remote.origin.url')}".length > 0
+      return '' if GitReflow::Config.get('remote.origin.url').empty?
       extract_remote_user_and_repo_from_remote_url(GitReflow::Config.get('remote.origin.url'))[:repo]
     end
 
@@ -34,10 +41,10 @@ module GitReflow
     end
 
     def pull_request_template
-      filenames_to_try = %w( .github/PULL_REQUEST_TEMPLATE.md
-                             .github/PULL_REQUEST_TEMPLATE
-                             PULL_REQUEST_TEMPLATE.md
-                             PULL_REQUEST_TEMPLATE ).map do |file|
+      filenames_to_try = %w[.github/PULL_REQUEST_TEMPLATE.md
+                            .github/PULL_REQUEST_TEMPLATE
+                            PULL_REQUEST_TEMPLATE.md
+                            PULL_REQUEST_TEMPLATE].map do |file|
         "#{git_root_dir}/#{file}"
       end
 
@@ -45,10 +52,10 @@ module GitReflow
     end
 
     def merge_commit_template
-      filenames_to_try = %w( .github/MERGE_COMMIT_TEMPLATE.md
-                             .github/MERGE_COMMIT_TEMPLATE
-                             MERGE_COMMIT_TEMPLATE.md
-                             MERGE_COMMIT_TEMPLATE ).map do |file|
+      filenames_to_try = %w[.github/MERGE_COMMIT_TEMPLATE.md
+                            .github/MERGE_COMMIT_TEMPLATE
+                            MERGE_COMMIT_TEMPLATE.md
+                            MERGE_COMMIT_TEMPLATE].map do |file|
         "#{git_root_dir}/#{file}"
       end
 
@@ -60,12 +67,12 @@ module GitReflow
     end
 
     def push_current_branch(options = {})
-      remote = options[:remote] || "origin"
+      remote = options[:remote] || 'origin'
       run_command_with_label "git push #{remote} #{current_branch}"
     end
 
     def update_current_branch(options = {})
-      remote = options[:remote] || "origin"
+      remote = options[:remote] || 'origin'
       run_command_with_label "git pull #{remote} #{current_branch}"
       push_current_branch(options)
     end

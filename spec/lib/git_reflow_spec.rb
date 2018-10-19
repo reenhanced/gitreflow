@@ -17,20 +17,6 @@ describe GitReflow do
     end
   end
 
-  describe ".default_editor" do
-    subject { GitReflow.default_editor }
-
-    context "when the environment has EDITOR set" do
-      before  { allow(ENV).to receive(:[]).with('EDITOR').and_return('emacs') }
-      specify { expect( subject ).to eql('emacs') }
-    end
-
-    context "when the environment has no EDITOR set" do
-      before  { allow(ENV).to receive(:[]).with('EDITOR').and_return(nil) }
-      specify { expect( subject ).to eql('vi') }
-    end
-  end
-
   describe ".git_server" do
     subject { GitReflow.git_server }
 

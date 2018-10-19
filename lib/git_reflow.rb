@@ -39,20 +39,16 @@ module GitReflow
     Workflow.current
   end
 
-  def default_editor
-    "#{ENV['EDITOR'] || 'vi'}".freeze
-  end
-
   def git_server
     @git_server ||= GitServer.connect provider: GitReflow::Config.get('reflow.git-server').strip, silent: true
   end
 
-  def respond_to?(method_sym, include_all = false)
-    (workflow and workflow.respond_to?(method_sym, include_all)) || super(method_sym, include_all)
+  def respond_to_missing?(method_sym, include_all = false)
+    (workflow && workflow.respond_to?(method_sym, include_all)) || super(method_sym, include_all)
   end
 
   def method_missing(method_sym, *arguments, &block)
-    if workflow and workflow.respond_to? method_sym
+    if workflow && workflow.respond_to?(method_sym, false)
       workflow.send method_sym, *arguments, &block
     else
       super

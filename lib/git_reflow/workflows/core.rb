@@ -6,14 +6,14 @@ module GitReflow
     # This class contains the core workflow for git-reflow. Going forward, this
     # will act as the base class for customizing and extending git-reflow.
     class Core
-      include GitReflow::Workflow
+      include ::GitReflow::Workflow
 
       # Reads and evaluates the provided file  in the context of this class
       #
       # @param workflow_path [String] the path of the Workflow file to eval
       def self.load_workflow(workflow_path)
         return unless workflow_path.length > 0 and File.exists?(workflow_path)
-        GitReflow.logger.debug "Using workflow: #{workflow_path}"
+        ::GitReflow.logger.debug "Using workflow: #{workflow_path}"
         self.load_raw_workflow(File.read(workflow_path))
       end
 
@@ -21,7 +21,7 @@ module GitReflow
       #
       # @param workflow_string [String] the contents of a Workflow file to eval
       def self.load_raw_workflow(workflow_string)
-        GitReflow.logger.debug "Evaluating workflow..."
+        ::GitReflow.logger.debug "Evaluating workflow..."
         binding.eval(workflow_string)
       end
 
@@ -32,31 +32,31 @@ module GitReflow
       # @option options [Boolean] :enterprise (false) whether to configure git-reflow for use with Github Enterprise
       command(:setup, switches: { local: false, enterprise: false}) do |**params|
         reflow_options             = { project_only: params[:local], enterprise: params[:enterprise] }
-        existing_git_include_paths = GitReflow::Config.get('include.path', all: true).split("\n")
+        existing_git_include_paths = git_config.get('include.path', all: true).split("\n")
 
-        unless File.exist?(GitReflow::Config::CONFIG_FILE_PATH) or existing_git_include_paths.include?(GitReflow::Config::CONFIG_FILE_PATH)
-          GitReflow.say "We'll walk you through setting up git-reflow's defaults for all your projects.", :notice
-          GitReflow.say "In the future, you can run \`git-reflow setup --local\` from the root of any project you want to setup differently.", :notice
-          GitReflow.run "touch #{GitReflow::Config::CONFIG_FILE_PATH}"
-          GitReflow.say "Created #{GitReflow::Config::CONFIG_FILE_PATH} for git-reflow specific configurations.", :notice
-          GitReflow::Config.add "include.path", GitReflow::Config::CONFIG_FILE_PATH, global: true
-          GitReflow.say "Added #{GitReflow::Config::CONFIG_FILE_PATH} to include.path in $HOME/.gitconfig.", :notice
+        unless File.exist?(git_config::CONFIG_FILE_PATH) or existing_git_include_paths.include?(git_config::CONFIG_FILE_PATH)
+          say "We'll walk you through setting up git-reflow's defaults for all your projects.", :notice
+          say "In the future, you can run \`git-reflow setup --local\` from the root of any project you want to setup differently.", :notice
+          run "touch #{git_config::CONFIG_FILE_PATH}"
+          say "Created #{git_config::CONFIG_FILE_PATH} for git-reflow specific configurations.", :notice
+          git_config.add "include.path", git_config::CONFIG_FILE_PATH, global: true
+          say "Added #{git_config::CONFIG_FILE_PATH} to include.path in $HOME/.gitconfig.", :notice
         end
 
         choose do |menu|
           menu.header = "Available remote Git Server services"
           menu.prompt = "Which service would you like to use for this project?  "
 
-          menu.choice('GitHub')    { GitReflow::GitServer.connect reflow_options.merge({ provider: 'GitHub', silent: false }) }
-          menu.choice('BitBucket (team-owned repos only)') { GitReflow::GitServer.connect reflow_options.merge({ provider: 'BitBucket', silent: false }) }
+          menu.choice('GitHub')    { ::GitReflow::GitServer.connect reflow_options.merge({ provider: 'GitHub', silent: false }) }
+          menu.choice('BitBucket (team-owned repos only)') { ::GitReflow::GitServer.connect reflow_options.merge({ provider: 'BitBucket', silent: false }) }
         end
 
-        GitReflow::Config.set "constants.minimumApprovals", ask("Set the minimum number of approvals (leaving blank will require approval from all commenters): "), local: reflow_options[:project_only]
-        GitReflow::Config.set "constants.approvalRegex", GitReflow::GitServer::PullRequest::DEFAULT_APPROVAL_REGEX, local: reflow_options[:project_only]
+        git_config.set "constants.minimumApprovals", ask("Set the minimum number of approvals (leaving blank will require approval from all commenters): "), local: reflow_options[:project_only]
+        git_config.set "constants.approvalRegex", ::GitReflow::GitServer::PullRequest::DEFAULT_APPROVAL_REGEX, local: reflow_options[:project_only]
 
-        if GitReflow::Config.get('core.editor').length <= 0
-          GitReflow::Config.set('core.editor', GitReflow.default_editor, local: reflow_options[:project_only])
-          GitReflow.say "Updated git's editor (via git config key 'core.editor') to: #{GitReflow.default_editor}.", :notice
+        if git_config.get('core.editor').length <= 0
+          git_config.set('core.editor', default_editor, local: reflow_options[:project_only])
+          say "Updated git's editor (via git config key 'core.editor') to: #{default_editor}.", :notice
         end
       end
       command_help(
@@ -78,12 +78,12 @@ module GitReflow
         feature_branch = params[:feature_branch]
 
         if feature_branch.nil? or feature_branch.length <= 0
-          GitReflow.say "usage: git-reflow start [new-branch-name]", :error
+          say "usage: git-reflow start [new-branch-name]", :error
         else
-          GitReflow.run_command_with_label "git checkout #{base_branch}"
-          GitReflow.run_command_with_label "git pull origin #{base_branch}"
-          GitReflow.run_command_with_label "git push origin #{base_branch}:refs/heads/#{feature_branch}"
-          GitReflow.run_command_with_label "git checkout --track -b #{feature_branch} origin/#{feature_branch}"
+          run_command_with_label "git checkout #{base_branch}"
+          run_command_with_label "git pull origin #{base_branch}"
+          run_command_with_label "git push origin #{base_branch}:refs/heads/#{feature_branch}"
+          run_command_with_label "git checkout --track -b #{feature_branch} origin/#{feature_branch}"
         end
       end
       command_help(
@@ -110,29 +110,29 @@ LONGTIME
         base_branch         = params[:base]
         create_pull_request = true
 
-        GitReflow.fetch_destination base_branch
+        fetch_destination base_branch
         begin
-          GitReflow.push_current_branch
+          push_current_branch
 
-          existing_pull_request = GitReflow.git_server.find_open_pull_request( from: GitReflow.current_branch, to: base_branch )
+          existing_pull_request = git_server.find_open_pull_request( from:current_branch, to: base_branch )
           if existing_pull_request
             say "A pull request already exists for these branches:", :notice
             existing_pull_request.display_pull_request_summary
           else
             unless params[:title] || params[:message]
-              pull_request_msg_file = "#{GitReflow.git_root_dir}/.git/GIT_REFLOW_PR_MSG"
+              pull_request_msg_file = "#{git_root_dir}/.git/GIT_REFLOW_PR_MSG"
 
               File.open(pull_request_msg_file, 'w') do |file|
                 begin
-                  pr_message = params[:title] || GitReflow.pull_request_template || GitReflow.current_branch
+                  pr_message = params[:title] || pull_request_template || current_branch
                   file.write(pr_message)
                 rescue StandardError => e
-                  GitReflow.logger.error "Unable to parse PR template (#{pull_request_msg_file}): #{e.inspect}"
-                  file.write(params[:title] || GitReflow.current_branch)
+                  logger.error "Unable to parse PR template (#{pull_request_msg_file}): #{e.inspect}"
+                  file.write(params[:title] || current_branch)
                 end
               end
 
-              GitReflow.run("#{GitReflow.git_editor_command} #{pull_request_msg_file}", with_system: true)
+              run("#{git_editor_command} #{pull_request_msg_file}", with_system: true)
 
               pr_msg = File.read(pull_request_msg_file).split(/[\r\n]|\r\n/).map(&:strip)
               title  = pr_msg.shift
@@ -158,10 +158,10 @@ LONGTIME
             if create_pull_request
               begin
                 retries ||= 0
-                pull_request = GitReflow.git_server.create_pull_request(
+                pull_request = git_server.create_pull_request(
                   title: params[:title] || params[:message],
                   body:  params[:message],
-                  head:  "#{GitReflow.remote_user}:#{GitReflow.current_branch}",
+                  head:  "#{remote_user}:#{current_branch}",
                   base:  params[:base]
                 )
               rescue Github::Error::UnprocessableEntity
@@ -197,10 +197,10 @@ LONGTIME
       # @param [Hash] options the options to run review with
       # @option options [String] :destination_branch ("master") the branch you're merging your feature into
       command(:status, arguments: { destination_branch: "master" }) do |**params|
-        pull_request = GitReflow.git_server.find_open_pull_request( :from => GitReflow.current_branch, :to => params[:destination_branch] )
+        pull_request = git_server.find_open_pull_request( :from => current_branch, :to => params[:destination_branch] )
 
         if pull_request.nil?
-          say "No pull request exists for #{GitReflow.current_branch} -> #{params[:destination_branch]}", :notice
+          say "No pull request exists for #{current_branch} -> #{params[:destination_branch]}", :notice
           say "Run 'git reflow review #{params[:destination_branch]}' to start the review process", :notice
         else
           say "Here's the status of your review:"
@@ -221,7 +221,7 @@ LONGTIME
       # @option options [String] :destination_server ("default") the environment server to deploy to (pulled from `git config "reflow.deploy-to-#{destination_server}-command")
       command(:deploy, arguments: { destination_server: "default" }) do |**params|
         destination_server = params[:destination_server] || "default"
-        deploy_command = GitReflow::Config.get("reflow.deploy-to-#{destination_server}-command", local: true)
+        deploy_command = git_config.get("reflow.deploy-to-#{destination_server}-command", local: true)
 
         # first check is to allow for automated setup
         if deploy_command.empty?
@@ -233,7 +233,7 @@ LONGTIME
           say "Skipping deployment..."
           false
         else
-          GitReflow::Config.set("reflow.deploy-to-#{destination_server}-command", deploy_command, local: true)
+          git_config.set("reflow.deploy-to-#{destination_server}-command", deploy_command, local: true)
           run_command_with_label(deploy_command, with_system: true)
         end
       end
@@ -247,30 +247,30 @@ LONGTIME
 
       # Merge and deploy a feature branch to a staging branch
       command(:stage) do |**params|
-        feature_branch_name = GitReflow.current_branch
-        staging_branch_name = GitReflow::Config.get('reflow.staging-branch', local: true)
+        feature_branch_name = current_branch
+        staging_branch_name = git_config.get('reflow.staging-branch', local: true)
 
         if staging_branch_name.empty?
-          staging_branch_name = GitReflow.ask("What's the name of your staging branch? (default: 'staging') ")
+          staging_branch_name = ask("What's the name of your staging branch? (default: 'staging') ")
           staging_branch_name = 'staging' if staging_branch_name.strip == ''
-          GitReflow::Config.set('reflow.staging-branch', staging_branch_name, local: true)
+          git_config.set('reflow.staging-branch', staging_branch_name, local: true)
         end
 
-        GitReflow.run_command_with_label "git checkout #{staging_branch_name}"
-        GitReflow.run_command_with_label "git pull origin #{staging_branch_name}"
+        run_command_with_label "git checkout #{staging_branch_name}"
+        run_command_with_label "git pull origin #{staging_branch_name}"
 
-        if GitReflow.run_command_with_label "git merge #{feature_branch_name}", with_system: true
-          GitReflow.run_command_with_label "git push origin #{staging_branch_name}"
+        if run_command_with_label "git merge #{feature_branch_name}", with_system: true
+          run_command_with_label "git push origin #{staging_branch_name}"
 
           staged = self.deploy(destination_server: :staging)
 
           if staged
-            GitReflow.say "Deployed to Staging.", :success
+            say "Deployed to Staging.", :success
           else
-            GitReflow.say "There were issues deploying to staging.", :error
+            say "There were issues deploying to staging.", :error
           end
         else
-          GitReflow.say "There were issues merging your feature branch to staging.", :error
+          say "There were issues merging your feature branch to staging.", :error
         end
       end
       command_help(
@@ -286,10 +286,10 @@ LONGTIME
       command(:deliver, arguments: { base: "master" }, flags: { merge_method: "squash" }, switches: { force: false, skip_lgtm: false }) do |**params|
         params[:force] = params[:force] || params[:skip_lgtm]
         begin
-          existing_pull_request = GitReflow.git_server.find_open_pull_request( from: GitReflow.current_branch, to: params[:base] )
+          existing_pull_request = git_server.find_open_pull_request( from: current_branch, to: params[:base] )
 
           if existing_pull_request.nil?
-            say "No pull request exists for #{GitReflow.remote_user}:#{GitReflow.current_branch}\nPlease submit your branch for review first with \`git reflow review\`", :deliver_halted
+            say "No pull request exists for #{remote_user}:#{current_branch}\nPlease submit your branch for review first with \`git reflow review\`", :deliver_halted
           else
 
             if existing_pull_request.good_to_merge?(force: params[:force])
@@ -336,7 +336,7 @@ LONGTIME
       # @option options [String] :remote ("origin") the name of the remote repository to fetch updates from
       # @option options [String] :base ("master") the branch that you want to fetch updates from
       command(:refresh, flags: { remote: 'origin', base: 'master'}) do |**params|
-        GitReflow.update_feature_branch(params)
+        update_feature_branch(params)
       end
       command_help(
         :refresh,

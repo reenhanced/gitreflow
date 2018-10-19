@@ -14,6 +14,20 @@ describe GitReflow::GitHelpers do
     stub_run_for Gitacular
   end
 
+  describe ".default_editor" do
+    subject { Gitacular.default_editor }
+
+    context "when the environment has EDITOR set" do
+      before  { allow(ENV).to receive(:[]).with('EDITOR').and_return('emacs') }
+      specify { expect( subject ).to eql('emacs') }
+    end
+
+    context "when the environment has no EDITOR set" do
+      before  { allow(ENV).to receive(:[]).with('EDITOR').and_return(nil) }
+      specify { expect( subject ).to eql('vi') }
+    end
+  end
+
   describe ".git_root_dir" do
     subject { Gitacular.git_root_dir }
     it      { expect{ subject }.to have_run_command_silently "git rev-parse --show-toplevel" }
@@ -42,7 +56,7 @@ describe GitReflow::GitHelpers do
     it { is_expected.to eq('reenhanced.spectacular') }
 
     context "remote origin url isn't set" do
-      let(:origin_url) { nil }
+      let(:origin_url) { '' }
       it { is_expected.to eq('') }
     end
 
@@ -58,7 +72,7 @@ describe GitReflow::GitHelpers do
     it { is_expected.to eq('this-is-the.shit') }
 
     context "remote origin url isn't set" do
-      let(:origin_url) { nil }
+      let(:origin_url) { '' }
       it { is_expected.to eq('') }
     end
 

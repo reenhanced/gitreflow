@@ -64,6 +64,19 @@ module GitReflow
         @callbacks = callback_hash
       end
 
+      # Proxy our Config class so that it's available in workflow files
+      def git_config
+        GitReflow::Config
+      end
+
+      def git_server
+        GitReflow.git_server
+      end
+
+      def logger
+        GitReflow.logger
+      end
+
       # Loads a pre-defined workflow (FlatMergeWorkflow) from within another
       # Workflow file
       #

@@ -7,12 +7,12 @@ dependencies:
     - >
       case $CIRCLE_NODE_INDEX in
        0)
-         rvm-exec 2.3.7 gem install bundler
-         rvm-exec 2.3.7 bash -c "bundle check --path=vendor/bundle_2.1 || bundle install --path=vendor/bundle_2.2"
+         rvm-exec 2.3.8 gem install bundler
+         rvm-exec 2.3.8 bash -c "bundle check --path=vendor/bundle_2.3 || bundle install --path=vendor/bundle_2.3"
          ;;
        1)
-         rvm-exec 2.4.4 gem install bundler
-         rvm-exec 2.4.4 bash -c "bundle check --path=vendor/bundle_2.2 || bundle install --path=vendor/bundle_2.3"
+         rvm-exec 2.4.5 gem install bundler
+         rvm-exec 2.4.5 bash -c "bundle check --path=vendor/bundle_2.4 || bundle install --path=vendor/bundle_2.4"
          ;;
        2)
          rvm-exec ruby-head gem install bundler
@@ -22,5 +22,5 @@ dependencies:
 
 test:
   override:
-    - case $CIRCLE_NODE_INDEX in 0) rvm-exec 2.3.7 bundle exec rake ;; 1) rvm-exec 2.4.4 bundle exec rake ;; 2) rvm-exec ruby-head bundle exec rake ;; esac:
+    - case $CIRCLE_NODE_INDEX in 0) rvm-exec 2.3.8 bundle exec rake ;; 1) rvm-exec 2.4.5 bundle exec rake ;; 2) rvm-exec ruby-head bundle exec rake ;; esac:
         parallel: true

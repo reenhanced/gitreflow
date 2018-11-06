@@ -7,21 +7,18 @@ describe GitReflow::Workflows::Core do
   let(:pull_request_message_file) { "#{GitReflow.git_root_dir}/.git/GIT_REFLOW_PR_MSG" }
   let(:workflow)                  { GitReflow.workflow }
 
-  class CoreWorkflow < GitReflow::Workflows::Core
-  end
+  class CoreWorkflow < GitReflow::Workflows::Core; end
 
   before do
     allow(workflow).to receive(:current_branch).and_return(feature_branch)
     allow_any_instance_of(HighLine).to receive(:choose)
   end
 
-  after do
-    GitReflow::Workflow.reset!
-  end
-
   describe ".load_workflow(workflow_path)" do
     let(:workflow_path) { "/tmp/Workflow" }
     subject { GitReflow::Workflows::Core.load_workflow(workflow_path) }
+
+    before { allow(GitReflow::Workflows::Core).to receive(:load_workflow).and_call_original }
 
     it "returns `nil` if the workflow path doesn't exist" do
       allow(File).to receive(:exists?).and_return(false)
@@ -41,6 +38,7 @@ describe GitReflow::Workflows::Core do
   end
 
   describe ".load_raw_workflow(workflow_string)" do
+    before { allow(GitReflow::Workflows::Core).to receive(:load_workflow).and_call_original }
     it "evaluates the raw string in the context of the Core workflow" do
       workflow_content = <<~WORKFLOW_CONTENT
         command :dummy do
@@ -131,7 +129,7 @@ describe GitReflow::Workflows::Core do
 
     before { suppress_loading_of_external_workflows }
 
-    it "updates the local repo and starts creates a new branch" do
+    it "updates the local repo and creates a new branch" do
       expect { subject }.to have_run_commands_in_order [
         "git checkout master",
         "git pull origin master",

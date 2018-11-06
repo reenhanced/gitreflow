@@ -39,7 +39,7 @@ module GithubHelpers
     stub_request(:get, "#{api_endpoint}/authorizations?").to_return(:body => [oauth_token_hash].to_json, status: 200, headers: {})
     allow(Github::Client).to receive(:new).and_return(github)
     allow(GitReflow).to receive(:push_current_branch).and_return(true)
-    allow(GitReflow).to receive(:github).and_return(github)
+    allow(GitReflow).to receive(:git_server).and_return(github)
     allow(GitReflow).to receive(:current_branch).and_return(branch)
     allow(GitReflow).to receive(:remote_repo_name).and_return(repo)
     allow(GitReflow).to receive(:remote_user).and_return(user)

@@ -82,7 +82,8 @@ module GitReflow
       #
       # @param name [String] the name of the Workflow file to use as a basis
       def use(workflow_name)
-        if workflows.has_key?(workflow_name)
+        if workflows.key?(workflow_name)
+          GitReflow.logger.debug "Using Workflow: #{workflow_name}"
           GitReflow::Workflows::Core.load_workflow(workflows[workflow_name])
         else
           GitReflow.logger.error "Tried to use non-existent Workflow: #{workflow_name}"

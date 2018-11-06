@@ -9,10 +9,16 @@ describe GitReflow::Workflow do
   let(:workflow) { DummyWorkflow }
   let(:loader)   { double() }
 
-  after { GitReflow::Workflow.reset! }
-
   describe ".current" do
     subject { GitReflow::Workflow.current }
+
+    before do
+      allow(GitReflow::Workflows::Core).to receive(:load_workflow).and_call_original
+    end
+
+    after do
+      GitReflow::Workflow.reset!
+    end
 
     context "when no workflow is set" do
       before  { allow(GitReflow::Config).to receive(:get).with("reflow.workflow").and_return('') }

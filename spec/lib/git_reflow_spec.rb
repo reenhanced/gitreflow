@@ -21,6 +21,7 @@ describe GitReflow do
     subject { GitReflow.git_server }
 
     before do
+      allow(GitReflow::Config).to receive(:get)
       allow(GitReflow::Config).to receive(:get).with('reflow.git-server').and_return('GitHub ')
     end
 
@@ -39,7 +40,6 @@ describe GitReflow do
 
     context "when a workflow is set" do
       it "calls the defined workflow methods instead of the default core" do
-        GitReflow::Workflow.reset!
         workflow_path = File.join(File.expand_path("../../fixtures", __FILE__), "/awesome_workflow.rb")
         allow(GitReflow::Config).to receive(:get).with("reflow.workflow").and_return(workflow_path)
         allow(GitReflow::Workflows::Core).to receive(:load_workflow).with("#{GitReflow.git_root_dir}/Workflow")

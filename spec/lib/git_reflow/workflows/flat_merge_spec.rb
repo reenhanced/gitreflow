@@ -9,6 +9,8 @@ describe 'FlatMerge' do
     allow(GitReflow).to receive(:git_server).and_return(git_server)
     allow(GitReflow).to receive(:status)
     # Makes sure we are loading the right workflow
+    workflow_path = File.join(File.expand_path("../../../../../lib/git_reflow/workflows", __FILE__), "FlatMergeWorkflow")
+    allow(GitReflow::Workflows::Core).to receive(:load_workflow).with(workflow_path).and_call_original
     GitReflow.workflow.use("FlatMergeWorkflow")
   end
 
@@ -24,6 +26,7 @@ describe 'FlatMerge' do
       let!(:github_api) { github.connection }
 
       before do
+        allow(File).to receive(:read).and_call_original
         allow_any_instance_of(GitReflow::GitServer::PullRequest).to receive(:deliver?).and_return(false)
         allow(GitReflow::Workflows::Core).to receive(:status)
         allow(GitReflow.git_server).to receive(:get_build_status).and_return(Struct.new(:state, :description, :url, :target_url).new)

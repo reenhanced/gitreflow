@@ -21,6 +21,7 @@ module GitReflow
       #
       # @param workflow_string [String] the contents of a Workflow file to eval
       def self.load_raw_workflow(workflow_string)
+        return if workflow_string.strip.empty?
         ::GitReflow.logger.debug "Evaluating workflow..."
         binding.eval(workflow_string)
       end
@@ -77,7 +78,7 @@ module GitReflow
         base_branch    = params[:base]
         feature_branch = params[:feature_branch]
 
-        if feature_branch.nil? or feature_branch.length <= 0
+        if feature_branch.to_s.strip.empty?
           say "usage: git-reflow start [new-branch-name]", :error
         else
           run_command_with_label "git checkout #{base_branch}"

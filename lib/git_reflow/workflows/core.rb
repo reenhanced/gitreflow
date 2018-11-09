@@ -196,12 +196,13 @@ LONGTIME
       #
       # @param [Hash] options the options to run review with
       # @option options [String] :destination_branch ("master") the branch you're merging your feature into
-      command(:status, arguments: { destination_branch: "master" }) do |**params|
-        pull_request = GitReflow.git_server.find_open_pull_request( :from => GitReflow.current_branch, :to => params[:destination_branch] )
+      command(:status, arguments: { destination_branch: nil }) do |**params|
+        base_branch = params[:destination_branch] || default_base_branch
+        pull_request = GitReflow.git_server.find_open_pull_request( :from => GitReflow.current_branch, :to => base_branch )
 
         if pull_request.nil?
-          say "No pull request exists for #{GitReflow.current_branch} -> #{params[:destination_branch]}", :notice
-          say "Run 'git reflow review #{params[:destination_branch]}' to start the review process", :notice
+          say "No pull request exists for #{GitReflow.current_branch} -> #{base_branch}", :notice
+          say "Run 'git reflow review #{base_branch}' to start the review process", :notice
         else
           say "Here's the status of your review:"
           pull_request.display_pull_request_summary

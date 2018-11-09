@@ -452,6 +452,18 @@ describe GitReflow::Workflows::Core do
           subject
         end
       end
+
+      context "when custom base-branch is configured" do
+        before do
+          allow(GitReflow::Config).to receive(:get).and_call_original
+          allow(GitReflow::Config).to receive(:get).with('reflow.base-branch').and_return('racecar')
+        end
+        subject { workflow.status }
+        it "uses the custom configured base-branch to lookup the pull request" do
+          expect(GitReflow.git_server).to receive(:find_open_pull_request).with({from: feature_branch, to: 'racecar'}).and_return(existing_gh_pull_request)
+          subject
+        end
+      end
     end
   end
 

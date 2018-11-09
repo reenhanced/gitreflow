@@ -204,8 +204,11 @@ If not, create it and print "Pull request created at http://pull-url/". If so, p
 ### Checking your branch status
 ![git reflow status](http://reenhanced.com/reflow/git-reflow-status.gif)
 ```
-git reflow status
+git reflow status <base-branch>
 ```
+
+> **Note:** If no > base-branch is provided, then we'll look for a `reflow.base-branch` git
+> configuration and fallback to `master` as the default.
 
 Sometimes you start working on a branch and can't get back to it for a while. It happens. Use +status+ to check on the status of your work.
 

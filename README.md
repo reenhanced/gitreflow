@@ -8,7 +8,7 @@
     <img alt="Circle CI" src="https://circleci.com/gh/reenhanced/gitreflow.svg?style=svg&circle-token=d94825c17c7e33558dc2a82b37afad7b558e5a12">
   </a>
   <a href="https://github.com/reenhanced/gitreflow" title="git workflow">
-    <img alt="Git workflow powered by git-reflow"  src="https://img.shields.io/badge/git--reflow-v0.8.10-blue.svg?style=flat">
+    <img alt="Git workflow powered by git-reflow"  src="https://img.shields.io/badge/git--reflow-v0.9.0-blue.svg?style=flat">
   </a>
   <a href="http://inch-ci.org/github/reenhanced/gitreflow" title="documentation coverage">
     <img src="http://inch-ci.org/github/reenhanced/gitreflow.svg?branch=master&style=shields" alt="Git-Reflow Documentation" />

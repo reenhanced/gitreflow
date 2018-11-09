@@ -1,13 +1,91 @@
 # Change Log
 
-## [Unreleased](https://github.com/reenhanced/gitreflow/tree/v0.8.4)
+## [v0.9.0](https://github.com/reenhanced/gitreflow/tree/v0.9.0) (2018-11-09)
 
+[Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.8.10...v0.9.0)
+
+**Implemented enhancements:**
+
+- Make a git-reflow specific configuration for storing a custom base-branch [\#202](https://github.com/reenhanced/gitreflow/issues/202)
+
+**Fixed bugs:**
+
+- bitbucket: error occurs while creating pull request [\#93](https://github.com/reenhanced/gitreflow/issues/93)
+- Review command race condition [\#84](https://github.com/reenhanced/gitreflow/issues/84)
+
+**Closed issues:**
+
+- No help from git reflow --help [\#118](https://github.com/reenhanced/gitreflow/issues/118)
+- f has already been specified as a switch in the command deliver \(ArgumentError\) [\#59](https://github.com/reenhanced/gitreflow/issues/59)
+- Command to edit default commit format [\#51](https://github.com/reenhanced/gitreflow/issues/51)
+
+**Merged pull requests:**
+
+- Allows for configuring a custom base-branch [\#231](https://github.com/reenhanced/gitreflow/pull/231) ([codenamev](https://github.com/codenamev))
+- Fixes many scoping issues with new Workflow [\#229](https://github.com/reenhanced/gitreflow/pull/229) ([codenamev](https://github.com/codenamev))
+- Retry pull-request creation if there are errors [\#226](https://github.com/reenhanced/gitreflow/pull/226) ([codenamev](https://github.com/codenamev))
+- Fixes loading of custom workflow file to once per session [\#224](https://github.com/reenhanced/gitreflow/pull/224) ([codenamev](https://github.com/codenamev))
+- Allow for custom commit/merge message templates [\#223](https://github.com/reenhanced/gitreflow/pull/223) ([codenamev](https://github.com/codenamev))
+
+## [v0.8.10](https://github.com/reenhanced/gitreflow/tree/v0.8.10) (2018-04-19)
+[Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.8.9...v0.8.10)
+
+**Merged pull requests:**
+
+- Updates rubies and gems [\#221](https://github.com/reenhanced/gitreflow/pull/221) ([codenamev](https://github.com/codenamev))
+- Remove lingering `skip\_lgtm` options in favor of `force` option [\#218](https://github.com/reenhanced/gitreflow/pull/218) ([codenamev](https://github.com/codenamev))
+- Remove dead code [\#217](https://github.com/reenhanced/gitreflow/pull/217) ([codenamev](https://github.com/codenamev))
+- Updates REAME to Markdown [\#216](https://github.com/reenhanced/gitreflow/pull/216) ([codenamev](https://github.com/codenamev))
+- Updates readme with details on customization [\#214](https://github.com/reenhanced/gitreflow/pull/214) ([codenamev](https://github.com/codenamev))
+
+## [v0.8.9](https://github.com/reenhanced/gitreflow/tree/v0.8.9) (2017-04-26)
+[Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.8.8...v0.8.9)
+
+**Fixed bugs:**
+
+- `git reflow deliver` no longer squashing! [\#212](https://github.com/reenhanced/gitreflow/issues/212)
+- Github approval message is not seen as a LGTM [\#207](https://github.com/reenhanced/gitreflow/issues/207)
+
+**Merged pull requests:**
+
+- Adds checks for new GH reviews when delivering [\#215](https://github.com/reenhanced/gitreflow/pull/215) ([codenamev](https://github.com/codenamev))
+
+## [v0.8.8](https://github.com/reenhanced/gitreflow/tree/v0.8.8) (2017-04-24)
+[Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.8.7...v0.8.8)
+
+## [v0.8.7](https://github.com/reenhanced/gitreflow/tree/v0.8.7) (2017-04-21)
+[Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.8.4...v0.8.7)
+
+**Implemented enhancements:**
+
+- Use a logger instead of `puts` [\#156](https://github.com/reenhanced/gitreflow/issues/156)
+
+**Closed issues:**
+
+- Rejected push deletes local branch on deliver [\#206](https://github.com/reenhanced/gitreflow/issues/206)
+- Running setup multiple times will create multiple entries in .gitconfig [\#203](https://github.com/reenhanced/gitreflow/issues/203)
+- Add Direct Merge Workflow [\#201](https://github.com/reenhanced/gitreflow/issues/201)
+- undefined method for strip [\#197](https://github.com/reenhanced/gitreflow/issues/197)
+- Ideas for additional steps, such as linting, etc. [\#190](https://github.com/reenhanced/gitreflow/issues/190)
+
+**Merged pull requests:**
+
+- 0.8.7 [\#213](https://github.com/reenhanced/gitreflow/pull/213) ([nhance](https://github.com/nhance))
+- Updates Github merge request to use new `merge\_method` param [\#211](https://github.com/reenhanced/gitreflow/pull/211) ([codenamev](https://github.com/codenamev))
+- Adds a logger to log command runs [\#210](https://github.com/reenhanced/gitreflow/pull/210) ([codenamev](https://github.com/codenamev))
+- All commands that are run through reflow \(except git-config\) are now blocking [\#209](https://github.com/reenhanced/gitreflow/pull/209) ([codenamev](https://github.com/codenamev))
+- Fix loading of PR template from '.github' directory [\#208](https://github.com/reenhanced/gitreflow/pull/208) ([codenamev](https://github.com/codenamev))
+- \[\#201\] Add direct merge workflow [\#205](https://github.com/reenhanced/gitreflow/pull/205) ([codenamev](https://github.com/codenamev))
+- \[\#203\] Evaluate environment variables when checking existing config files [\#204](https://github.com/reenhanced/gitreflow/pull/204) ([Shalmezad](https://github.com/Shalmezad))
+- \[53\] Allow workflows to be loaded from git config [\#199](https://github.com/reenhanced/gitreflow/pull/199) ([codenamev](https://github.com/codenamev))
+
+## [v0.8.4](https://github.com/reenhanced/gitreflow/tree/v0.8.4) (2016-08-22)
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.8.3...v0.8.4)
 
 **Closed issues:**
 
+- error: We were unable to authenticate with Github [\#196](https://github.com/reenhanced/gitreflow/issues/196)
 - Introduce the idea of "Workflows" to customize steps [\#53](https://github.com/reenhanced/gitreflow/issues/53)
-- undefined method for strip during setup [\#197](https://github.com/reenhanced/gitreflow/issues/197)
 
 **Merged pull requests:**
 

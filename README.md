@@ -117,7 +117,7 @@ This sets up a feature branch remotely and brings a local copy to your machine. 
 
 `git reflow start` takes in the name of the new branch name that you want to create your feature on.
 In addition, it takes in an optional flag of a _base-branch_ name (`--base`). If you don't pass in this parameter,
-then it defaults to "master". The base branch name is the base branch that you want to base your feature off of.
+then it will look up the `reflow.base-branch` git configuration or default to "master". The base branch name is the base branch that you want to base your feature off of.
 This ensures that every time you start a new base branch, it will be based off of your latest remote base.
 
     git reflow start nh-branch-name --base base-branch-name

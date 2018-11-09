@@ -74,12 +74,13 @@ module GitReflow
       # @param [Hash] options the options to run start with
       # @option options [String] :base ("master") the name of the base branch you want to checkout your feature from
       # @option options [String] :feature_branch the name of the base branch you want to checkout your feature from
-      command(:start, arguments: { feature_branch: nil }, flags: { base: "master" }) do |**params|
-        base_branch    = params[:base]
+      command(:start, arguments: { feature_branch: nil }, flags: { base: nil }) do |**params|
+        base_branch    = params[:base] || GitReflow::Config.get("reflow.base-branch")
         feature_branch = params[:feature_branch]
 
         if feature_branch.to_s.strip.empty?
           say "usage: git-reflow start [new-branch-name]", :error
+
         else
           run_command_with_label "git checkout #{base_branch}"
           run_command_with_label "git pull origin #{base_branch}"

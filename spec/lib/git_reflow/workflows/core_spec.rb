@@ -153,6 +153,16 @@ describe GitReflow::Workflows::Core do
         "git checkout --track -b #{feature_branch} origin/#{feature_branch}"
       ]
     end
+
+    it "starts from a different base branch when one is configured" do
+      allow(GitReflow::Config).to receive(:get).with("reflow.base-branch").and_return("sudo-master")
+      expect { CoreWorkflow.start feature_branch: feature_branch }.to have_run_commands_in_order [
+        "git checkout sudo-master",
+        "git pull origin sudo-master",
+        "git push origin sudo-master:refs/heads/#{feature_branch}",
+        "git checkout --track -b #{feature_branch} origin/#{feature_branch}"
+      ]
+    end
   end
 
   describe ".review" do

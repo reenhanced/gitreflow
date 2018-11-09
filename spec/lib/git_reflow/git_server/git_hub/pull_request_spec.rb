@@ -86,15 +86,15 @@ describe GitReflow::GitServer::GitHub::PullRequest do
           pull_request: {
             number: existing_pull_request.number,
             comments: [{author: comment_author}],
-            reviews: []
+            reviews: [{author: existing_pull_request.user.login}]
           },
           issue: {
             number: existing_pull_request.number,
-            comments: [{author: comment_author}]
+            comments: [{author: comment_author}, {author: existing_pull_request.user.login}]
           }
         )
       end
-      specify { expect(subject).to eql(existing_pull_comments.to_a + existing_issue_comments.to_a) }
+      specify { expect(subject).to eql(existing_pull_comments.to_a + existing_issue_comments.to_a - [existing_pull_request.user.login]) }
     end
 
     context "Testing Nil Comments" do
@@ -133,7 +133,7 @@ describe GitReflow::GitServer::GitHub::PullRequest do
           number: existing_pull_request.number,
           owner: existing_pull_request.user.login,
           comments: [{author: 'tito'}, {author: 'bobby'}, {author: 'ringo'}],
-          reviews:  [{author: 'nature-boy'}]
+          reviews:  [{author: 'ringo'}, {author: 'nature-boy'}]
         },
         issue: {
           number: existing_pull_request.number,

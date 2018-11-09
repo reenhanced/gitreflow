@@ -16,6 +16,7 @@ RSpec.configure do |config|
   config.include GitReflow::RSpec::CommandLineHelpers
   config.include GithubHelpers
   config.include GitReflow::RSpec::StubHelpers
+  config.include GitReflow::RSpec::WorkflowHelpers
 
   config.expect_with :rspec do |c|
     c.syntax = [:should, :expect]
@@ -28,6 +29,8 @@ RSpec.configure do |config|
   config.before(:each) do
     WebMock.reset!
     stub_command_line
+    suppress_loading_of_external_workflows
+    GitReflow::Workflow.reset!
     allow_message_expectations_on_nil
   end
 

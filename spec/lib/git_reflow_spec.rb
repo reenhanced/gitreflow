@@ -17,24 +17,11 @@ describe GitReflow do
     end
   end
 
-  describe ".default_editor" do
-    subject { GitReflow.default_editor }
-
-    context "when the environment has EDITOR set" do
-      before  { allow(ENV).to receive(:[]).with('EDITOR').and_return('emacs') }
-      specify { expect( subject ).to eql('emacs') }
-    end
-
-    context "when the environment has no EDITOR set" do
-      before  { allow(ENV).to receive(:[]).with('EDITOR').and_return(nil) }
-      specify { expect( subject ).to eql('vi') }
-    end
-  end
-
   describe ".git_server" do
     subject { GitReflow.git_server }
 
     before do
+      allow(GitReflow::Config).to receive(:get)
       allow(GitReflow::Config).to receive(:get).with('reflow.git-server').and_return('GitHub ')
     end
 
@@ -52,14 +39,10 @@ describe GitReflow do
     end
 
     context "when a workflow is set" do
-      before { GitReflow::Workflow.reset! }
-      after { GitReflow::Workflow.reset! }
-
       it "calls the defined workflow methods instead of the default core" do
         workflow_path = File.join(File.expand_path("../../fixtures", __FILE__), "/awesome_workflow.rb")
         allow(GitReflow::Config).to receive(:get).with("reflow.workflow").and_return(workflow_path)
-        expect(GitReflow::Workflows::Core).to receive(:load_workflow).with("#{GitReflow.git_root_dir}/Workflow").once
-        expect(GitReflow::Workflows::Core).to receive(:load_workflow).with(workflow_path).once.and_call_original
+        expect(GitReflow::Workflows::Core).to receive(:load_raw_workflow).with(File.read(workflow_path)).and_call_original
 
         expect{ subject.start }.to have_said "Awesome."
       end

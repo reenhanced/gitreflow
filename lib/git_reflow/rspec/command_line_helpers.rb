@@ -2,8 +2,8 @@ require "highline"
 
 module GitReflow
   module RSpec
+    # @nodoc
     module CommandLineHelpers
-
       def stub_command_line
         $commands_ran     = []
         $stubbed_commands = {}
@@ -55,6 +55,14 @@ module GitReflow
       def stub_command(command, return_value)
         $stubbed_commands[command] = return_value
         allow(GitReflow::Sandbox).to receive(:run).with(command).and_return(return_value)
+      end
+
+      def stub_command_line_inputs_for(module_to_stub, inputs)
+        allow(module_to_stub).to receive(:ask) do |terminal, question|
+        return_value = inputs[question]
+        question = ""
+        return_value
+        end
       end
 
       def stub_command_line_inputs(inputs)

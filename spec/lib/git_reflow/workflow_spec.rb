@@ -9,10 +9,12 @@ describe GitReflow::Workflow do
   let(:workflow) { DummyWorkflow }
   let(:loader)   { double() }
 
-  before { GitReflow::Workflow.reset! }
-
   describe ".current" do
     subject { GitReflow::Workflow.current }
+
+    before do
+      allow(GitReflow::Workflows::Core).to receive(:load_raw_workflow)
+    end
 
     context "when no workflow is set" do
       before  { allow(GitReflow::Config).to receive(:get).with("reflow.workflow").and_return('') }
@@ -29,15 +31,16 @@ describe GitReflow::Workflow do
     context "when a local workflow is set" do
       let(:workflow_content) do
         <<~WORKFLOW_CONTENT
-        command :dummy do
-          GitReflow.say "derp"
-        end
+          command :dummy do
+            GitReflow.say "derp"
+          end
         WORKFLOW_CONTENT
       end
 
-      before  do
+      before do
         allow(File).to receive(:exists?).with("#{GitReflow.git_root_dir}/Workflow").and_return(true)
         allow(File).to receive(:read).with("#{GitReflow.git_root_dir}/Workflow").and_return(workflow_content)
+        expect(GitReflow::Workflows::Core).to receive(:load_raw_workflow).with(workflow_content).and_call_original
       end
 
       specify { expect( subject ).to respond_to(:dummy) }
@@ -48,9 +51,9 @@ describe GitReflow::Workflow do
       let(:workflow_path) { File.join(File.expand_path("../../../fixtures", __FILE__), "/awesome_workflow.rb") }
       let(:workflow_content) do
         <<~WORKFLOW_CONTENT
-        command :dummy do
-          GitReflow.say "derp"
-        end
+          command :dummy do
+            GitReflow.say "derp"
+          end
         WORKFLOW_CONTENT
       end
 
@@ -58,10 +61,11 @@ describe GitReflow::Workflow do
         allow(File).to receive(:exists?).with("#{GitReflow.git_root_dir}/Workflow").and_return(true)
         allow(File).to receive(:read).with("#{GitReflow.git_root_dir}/Workflow").and_return(workflow_content)
         allow(GitReflow::Config).to receive(:get).with("reflow.workflow").and_return(workflow_path)
+        allow(GitReflow::Workflows::Core).to receive(:load_raw_workflow).and_call_original
       end
 
-      specify { expect( subject ).to respond_to(:dummy) }
-      specify { expect( subject ).to eql(GitReflow::Workflows::Core) }
+      specify { expect(subject).to respond_to(:dummy) }
+      specify { expect(subject).to eql(GitReflow::Workflows::Core) }
     end
   end
 
@@ -75,7 +79,7 @@ describe GitReflow::Workflow do
         before :yips do
           puts "Would you like a donut?"
         end
-        WORKFLOW_CONTENT
+      WORKFLOW_CONTENT
 
       allow(GitReflow::Workflows::Core).to receive(:load_workflow).and_return(true)
 
@@ -95,11 +99,66 @@ describe GitReflow::Workflow do
         before :yips do
           puts "Would you like a donut?"
         end
-        WORKFLOW_CONTENT
+      WORKFLOW_CONTENT
 
       allow(GitReflow::Workflows::Core).to receive(:load_workflow).and_return(true)
 
       expect { GitReflow.workflow.yips }.to have_output "Cupcake?\nWould you like a donut?\nYips."
+    end
+
+    it "proxies any arguments returned to the command" do
+      GitReflow::Workflows::Core.load_raw_workflow <<~WORKFLOW_CONTENT
+        command :yips, arguments: { spiced: false } do |**params|
+          puts params[:spiced] ? "Too spicy." : "Yips."
+        end
+
+        before :yips do
+          puts "Wasabe?"
+          { spiced: true }
+        end
+      WORKFLOW_CONTENT
+
+      allow(GitReflow::Workflows::Core).to receive(:load_workflow).and_return(true)
+
+      expect { GitReflow.workflow.yips }.to have_output "Wasabe?\nToo spicy."
+    end
+  end
+
+  describe ".after" do
+    it "executes the block after the command" do
+      GitReflow::Workflows::Core.load_raw_workflow <<~WORKFLOW_CONTENT
+        command :vroom do
+          puts "Vroom"
+        end
+
+        after :vroom do
+          puts "VROOOOM"
+        end
+      WORKFLOW_CONTENT
+
+      allow(GitReflow::Workflows::Core).to receive(:load_workflow).and_return(true)
+
+      expect { GitReflow.workflow.vroom }.to have_output "Vroom\nVROOOOM"
+    end
+
+    it "executes blocks sequentially by order of appearance" do
+      GitReflow::Workflows::Core.load_raw_workflow <<~WORKFLOW_CONTENT
+        command :vroom do
+          puts "Vroom"
+        end
+
+        after :vroom do
+          puts "Vrooom"
+        end
+
+        after :vroom do
+          puts "VROOOOM"
+        end
+      WORKFLOW_CONTENT
+
+      allow(GitReflow::Workflows::Core).to receive(:load_workflow).and_return(true)
+
+      expect { GitReflow.workflow.vroom }.to have_output "Vroom\nVrooom\nVROOOOM"
     end
   end
 
@@ -168,6 +227,7 @@ describe GitReflow::Workflow do
 
   describe ".use(workflow_name)" do
     it "Uses a pre-existing workflow as a basis" do
+      allow(GitReflow::Workflows::Core).to receive(:load_workflow)
       expect(GitReflow::Workflows::Core).to receive(:load_workflow)
         .with(workflow.workflows["FlatMergeWorkflow"])
         .and_return(true)

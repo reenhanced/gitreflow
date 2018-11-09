@@ -1,3 +1,3 @@
 command :start do
-  GitReflow.say "Awesome."
+  say "Awesome."
 end

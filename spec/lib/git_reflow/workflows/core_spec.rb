@@ -24,7 +24,6 @@ describe GitReflow::Workflows::Core do
     end
 
     it "evaluates the workflow file in the context of the class" do
-      fake_binding = instance_double(Binding)
       workflow_content = "# testing"
       allow(File).to receive(:exists?).with("#{GitReflow.git_root_dir}/Workflow").and_return(false)
       allow(File).to receive(:exists?).with(workflow_path).and_return(true)
@@ -153,6 +152,16 @@ describe GitReflow::Workflows::Core do
         "git checkout --track -b #{feature_branch} origin/#{feature_branch}"
       ]
     end
+
+    it "starts from a different base branch when one is configured" do
+      allow(GitReflow::Config).to receive(:get).with("reflow.base-branch").and_return("sudo-master")
+      expect { workflow.start feature_branch: feature_branch }.to have_run_commands_in_order [
+        "git checkout sudo-master",
+        "git pull origin sudo-master",
+        "git push origin sudo-master:refs/heads/#{feature_branch}",
+        "git checkout --track -b #{feature_branch} origin/#{feature_branch}"
+      ]
+    end
   end
 
   describe ".review" do
@@ -240,6 +249,25 @@ describe GitReflow::Workflows::Core do
           body: "\n",
           head: "#{user}:#{feature_branch}",
           base: inputs[:base]
+        })
+        subject
+      end
+    end
+
+    context 'when a base branch is configured' do
+      before do
+        stub_command_line_inputs('Submit pull request? (Y)' => 'yes')
+        allow(GitReflow::Config).to receive(:get).and_call_original
+        allow(GitReflow::Config).to receive(:get).with('reflow.base-branch').and_return('racecar')
+        inputs.delete(:base)
+      end
+
+      it 'creates a pull request using the custom base branch' do
+        expect(GitReflow.git_server).to receive(:create_pull_request).with({
+          title: 'bingo',
+          body: "\n",
+          head: "#{user}:#{feature_branch}",
+          base: 'racecar'
         })
         subject
       end
@@ -420,6 +448,18 @@ describe GitReflow::Workflows::Core do
 
         it "uses the custom destination branch to lookup the pull request" do
           expect(workflow.git_server).to receive(:find_open_pull_request).with({from: feature_branch, to: destination_branch}).and_return(existing_gh_pull_request)
+          subject
+        end
+      end
+
+      context "when custom base-branch is configured" do
+        before do
+          allow(GitReflow::Config).to receive(:get).and_call_original
+          allow(GitReflow::Config).to receive(:get).with('reflow.base-branch').and_return('racecar')
+        end
+        subject { workflow.status }
+        it "uses the custom configured base-branch to lookup the pull request" do
+          expect(GitReflow.git_server).to receive(:find_open_pull_request).with({from: feature_branch, to: 'racecar'}).and_return(existing_gh_pull_request)
           subject
         end
       end
@@ -701,6 +741,37 @@ describe GitReflow::Workflows::Core do
           subject
         end
       end
+
+      context "when a custom base-branch is configured" do
+        subject { workflow.deliver }
+        before do
+          expect(GitReflow.git_server).to receive(:find_open_pull_request).with( from: feature_branch, to: 'racecar').and_return(existing_gh_pull_request)
+          allow(existing_gh_pull_request).to receive(:good_to_merge?).and_return(true)
+          allow(GitReflow::Config).to receive(:get).with('reflow.base-branch').and_return('racecar')
+        end
+
+
+        it "displays the status of the PR" do
+          allow(existing_gh_pull_request).to receive(:merge!).with(
+            base: 'racecar',
+            merge_method: "squash",
+            force: false,
+            skip_lgtm: false
+          )
+          expect(GitReflow::Workflows::Core).to receive(:status).with(destination_branch: 'racecar')
+          subject
+        end
+
+        it "merges the feature branch" do
+          expect(existing_gh_pull_request).to receive(:merge!).with(
+            base: "racecar",
+            merge_method: "squash",
+            force: false,
+            skip_lgtm: false
+          )
+          subject
+        end
+      end
     end
   end
 
@@ -717,6 +788,16 @@ describe GitReflow::Workflows::Core do
 
       it "updates the feature branch with default remote repo and base branch" do
         expect(workflow).to receive(:update_feature_branch).with(remote: 'origin', base: 'development')
+        subject
+      end
+    end
+
+    context "when a custom base branch is configured" do
+      before { allow(workflow.git_config).to receive(:get).with('reflow.base-branch').and_return('racecar') }
+      subject { workflow.refresh }
+
+      it "updates the feature branch with custom base branch" do
+        expect(workflow).to receive(:update_feature_branch).with(remote: 'origin', base: 'racecar')
         subject
       end
     end

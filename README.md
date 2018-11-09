@@ -117,7 +117,7 @@ This sets up a feature branch remotely and brings a local copy to your machine. 
 
 `git reflow start` takes in the name of the new branch name that you want to create your feature on.
 In addition, it takes in an optional flag of a _base-branch_ name (`--base`). If you don't pass in this parameter,
-then it defaults to "master". The base branch name is the base branch that you want to base your feature off of.
+then it will look up the `reflow.base-branch` git configuration or default to "master". The base branch name is the base branch that you want to base your feature off of.
 This ensures that every time you start a new base branch, it will be based off of your latest remote base.
 
     git reflow start nh-branch-name --base base-branch-name
@@ -137,6 +137,9 @@ git reflow refresh -r <remote-location> -b <base-branch>
 
 You pass in the name of the remote to fetch from and the name of the **base-branch** that you would like to merge into your **feature-branch**. The **remote-location** defaults to `origin` and the base-branch defaults to `master`. This command also takes in remote and branch name as flag options.
 
+> **Note:** If no `base-branch` argument is provided, then we'll look for a `reflow.base-branch` git
+> configuration and fallback to `master` as the default.
+
 ### Reviewing your work
 ![git reflow review](http://reenhanced.com/reflow/git-reflow-review.gif)
 ```
@@ -150,9 +153,11 @@ We assume you know what you're doing, so if you need something different, do it 
 
 After making commits to your branch, run `review`. Didn't push it up? No problem, we'll do it for you.
 ```
-git reflow review -t <title> -m <message>
+git reflow review -t <title> -m <message> <base-branch>
 ```
-> **Note:** `-t` and `-m` are optional.
+> **Note:** `-t` and `-m` are optional, as is the `base-branch` argument. If no
+> base-branch is provided, then we'll look for a `reflow.base-branch` git
+> configuration and fallback to `master` as the default.
 
 If you do not pass the title or message options to the review command, you will be given an editor to write your PR request commit message, similar to `git commit`. The first line is the title, the rest is the body.
 
@@ -202,8 +207,11 @@ If not, create it and print "Pull request created at http://pull-url/". If so, p
 ### Checking your branch status
 ![git reflow status](http://reenhanced.com/reflow/git-reflow-status.gif)
 ```
-git reflow status
+git reflow status <base-branch>
 ```
+
+> **Note:** If no `base-branch` is provided, then we'll look for a `reflow.base-branch` git
+> configuration and fallback to `master` as the default.
 
 Sometimes you start working on a branch and can't get back to it for a while. It happens. Use +status+ to check on the status of your work.
 
@@ -226,10 +234,13 @@ to find out where your pull request is at. But in case you want to take a look, 
 ### Delivering approved code
 ![git-reflow deliver](http://reenhanced.com/reflow/git-reflow-deliver.gif)
 ```
-git reflow deliver
+git reflow deliver <base-branch>
 ```
 
-> **Note:** This documentation is for the process for the github "remote" merge process via the github_api.
+> **Note:** If no `base-branch` argument is provided, then we'll look for a `reflow.base-branch` git
+> configuration and fallback to `master` as the default.
+
+> **Also:** This documentation is for the process for the github "remote" merge process via the github_api.
   For the bitbucket standard or github manual process (used when the user applies -f force flag to the "remote" merge via the github_api), please go to section B.
 
 

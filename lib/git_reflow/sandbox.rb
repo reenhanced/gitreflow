@@ -4,6 +4,7 @@ module GitReflow
 
     COLOR_FOR_LABEL = {
       notice:         :yellow,
+      info:           :yellow,
       error:          :red,
       deliver_halted: :red,
       review_halted:  :red,

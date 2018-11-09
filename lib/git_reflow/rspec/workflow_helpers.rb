@@ -9,10 +9,9 @@ module GitReflow
       end
 
       def suppress_loading_of_external_workflows
-        allow(File).to receive(:exists?).and_call_original
-        allow(File).to receive(:exists?).with("#{GitReflow.git_root_dir}/Workflow").and_return(false)
+        allow(GitReflow::Workflows::Core).to receive(:load__workflow).with("#{GitReflow.git_root_dir}/Workflow").and_return(false)
         return if GitReflow::Config.get('reflow.workflow').to_s.empty?
-        allow(File).to receive(:exists?).with(GitReflow::Config.get('reflow.workflow')).and_return(false)
+        allow(GitReflow::Workflows::Core).to receive(:load_workflow).with(GitReflow::Config.get('reflow.workflow')).and_return(false)
       end
     end
   end

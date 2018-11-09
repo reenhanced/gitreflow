@@ -74,11 +74,11 @@ module GitReflow
       # @param [Hash] options the options to run start with
       # @option options [String] :base ("master") the name of the base branch you want to checkout your feature from
       # @option options [String] :feature_branch the name of the base branch you want to checkout your feature from
-      command(:start, arguments: { feature_branch: nil }, flags: { base: "master" }) do |**params|
-        base_branch    = params[:base]
+      command(:start, arguments: { feature_branch: nil }, flags: { base: nil }) do |**params|
+        base_branch    = params[:base] || default_base_branch
         feature_branch = params[:feature_branch]
 
-        if feature_branch.to_s.strip.empty?
+        if feature_branch.nil? or feature_branch.length <= 0
           say "usage: git-reflow start [new-branch-name]", :error
         else
           run_command_with_label "git checkout #{base_branch}"
@@ -104,11 +104,11 @@ LONGTIME
       # Submit a feature branch for review
       #
       # @param [Hash] options the options to run review with
-      # @option options [String] :base ("master") the name of the base branch you want to merge your feature into
+      # @option options [String] :base (GitReflow::Config.get('reflow.base-branch') or "master") the name of the base branch you want to merge your feature into
       # @option options [String] :title (<current-branch-name>) the title of your pull request
       # @option options [String] :message ("") the body of your pull request
-      command(:review, arguments: { base: "master" }, flags: { title: nil, message: nil }) do |**params|
-        base_branch         = params[:base]
+      command(:review, arguments: { base: nil }, flags: { title: nil, message: nil }) do |**params|
+        base_branch         = params[:base] || default_base_branch
         create_pull_request = true
 
         fetch_destination base_branch
@@ -163,7 +163,7 @@ LONGTIME
                   title: params[:title] || params[:message],
                   body:  params[:message],
                   head:  "#{remote_user}:#{current_branch}",
-                  base:  params[:base]
+                  base:  base_branch
                 )
               rescue Github::Error::UnprocessableEntity
                 retry if (retries += 1) < 3
@@ -197,12 +197,13 @@ LONGTIME
       #
       # @param [Hash] options the options to run review with
       # @option options [String] :destination_branch ("master") the branch you're merging your feature into
-      command(:status, arguments: { destination_branch: "master" }) do |**params|
-        pull_request = git_server.find_open_pull_request( :from => current_branch, :to => params[:destination_branch] )
+      command(:status, arguments: { destination_branch: nil }) do |**params|
+        base_branch = params[:destination_branch] || default_base_branch
+        pull_request = git_server.find_open_pull_request( :from => current_branch, :to => base_branch )
 
         if pull_request.nil?
-          say "No pull request exists for #{current_branch} -> #{params[:destination_branch]}", :notice
-          say "Run 'git reflow review #{params[:destination_branch]}' to start the review process", :notice
+          say "No pull request exists for #{current_branch} -> #{base_branch}", :notice
+          say "Run 'git reflow review #{base_branch}' to start the review process", :notice
         else
           say "Here's the status of your review:"
           pull_request.display_pull_request_summary
@@ -284,8 +285,10 @@ LONGTIME
       # @param [Hash] options the options to run review with
       # @option options [String] :base ("master") the base branch to merge your feature branch into
       # @option options [String] :force (false) whether to force-deliver the feature branch, ignoring any QA checks
-      command(:deliver, arguments: { base: "master" }, flags: { merge_method: "squash" }, switches: { force: false, skip_lgtm: false }) do |**params|
+      command(:deliver, arguments: { base: nil }, flags: { merge_method: "squash" }, switches: { force: false, skip_lgtm: false }) do |**params|
         params[:force] = params[:force] || params[:skip_lgtm]
+        params[:base] ||= default_base_branch
+
         begin
           existing_pull_request = git_server.find_open_pull_request( from: current_branch, to: params[:base] )
 
@@ -336,7 +339,8 @@ LONGTIME
       # @param [Hash] options the options to run review with
       # @option options [String] :remote ("origin") the name of the remote repository to fetch updates from
       # @option options [String] :base ("master") the branch that you want to fetch updates from
-      command(:refresh, flags: { remote: 'origin', base: 'master'}) do |**params|
+      command(:refresh, flags: { remote: 'origin', base: nil}) do |**params|
+        params[:base] ||= default_base_branch
         update_feature_branch(params)
       end
       command_help(

@@ -36,6 +36,12 @@ module GitReflow
       extract_remote_user_and_repo_from_remote_url(GitReflow::Config.get('remote.origin.url'))[:repo]
     end
 
+    def default_base_branch
+      base_branch_name = GitReflow::Config.get('reflow.base-branch')
+      return 'master' if base_branch_name.empty?
+      base_branch_name
+    end
+
     def current_branch
       run("git branch --no-color | grep '^\* ' | grep -v 'no branch' | sed 's/^* //g'", loud: false).strip
     end

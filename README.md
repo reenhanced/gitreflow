@@ -150,9 +150,11 @@ We assume you know what you're doing, so if you need something different, do it 
 
 After making commits to your branch, run `review`. Didn't push it up? No problem, we'll do it for you.
 ```
-git reflow review -t <title> -m <message>
+git reflow review -t <title> -m <message> <base-branch>
 ```
-> **Note:** `-t` and `-m` are optional.
+> **Note:** `-t` and `-m` are optional, as is the `base-branch` argument. If no
+> base-branch is provided, then we'll look for a `reflow.base-branch` git
+> configuration and fallback to `master` as the default.
 
 If you do not pass the title or message options to the review command, you will be given an editor to write your PR request commit message, similar to `git commit`. The first line is the title, the rest is the body.
 

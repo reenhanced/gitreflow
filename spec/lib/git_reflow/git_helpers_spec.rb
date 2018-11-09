@@ -82,6 +82,16 @@ describe GitReflow::GitHelpers do
     end
   end
 
+  describe '.default_base_branch' do
+    subject { Gitacular.default_base_branch }
+    it      { is_expected.to eq('master') }
+
+    context 'when configured' do
+      before { allow(GitReflow::Config).to receive(:get).with('reflow.base-branch').and_return('tuba') }
+      it { is_expected.to eq('tuba') }
+    end
+  end
+
   describe ".current_branch" do
     subject { Gitacular.current_branch }
     it      { expect{ subject }.to have_run_command_silently "git branch --no-color | grep '^\* ' | grep -v 'no branch' | sed 's/^* //g'" }

@@ -207,7 +207,7 @@ If not, create it and print "Pull request created at http://pull-url/". If so, p
 git reflow status <base-branch>
 ```
 
-> **Note:** If no > base-branch is provided, then we'll look for a `reflow.base-branch` git
+> **Note:** If no `base-branch` is provided, then we'll look for a `reflow.base-branch` git
 > configuration and fallback to `master` as the default.
 
 Sometimes you start working on a branch and can't get back to it for a while. It happens. Use +status+ to check on the status of your work.
@@ -231,10 +231,13 @@ to find out where your pull request is at. But in case you want to take a look, 
 ### Delivering approved code
 ![git-reflow deliver](http://reenhanced.com/reflow/git-reflow-deliver.gif)
 ```
-git reflow deliver
+git reflow deliver <base-branch>
 ```
 
-> **Note:** This documentation is for the process for the github "remote" merge process via the github_api.
+> **Note:** If no `base-branch` argument is provided, then we'll look for a `reflow.base-branch` git
+> configuration and fallback to `master` as the default.
+
+> **Also:** This documentation is for the process for the github "remote" merge process via the github_api.
   For the bitbucket standard or github manual process (used when the user applies -f force flag to the "remote" merge via the github_api), please go to section B.
 
 

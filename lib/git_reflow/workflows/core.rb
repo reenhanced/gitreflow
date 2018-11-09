@@ -284,8 +284,10 @@ LONGTIME
       # @param [Hash] options the options to run review with
       # @option options [String] :base ("master") the base branch to merge your feature branch into
       # @option options [String] :force (false) whether to force-deliver the feature branch, ignoring any QA checks
-      command(:deliver, arguments: { base: "master" }, flags: { merge_method: "squash" }, switches: { force: false, skip_lgtm: false }) do |**params|
+      command(:deliver, arguments: { base: nil }, flags: { merge_method: "squash" }, switches: { force: false, skip_lgtm: false }) do |**params|
         params[:force] = params[:force] || params[:skip_lgtm]
+        params[:base] ||= default_base_branch
+
         begin
           existing_pull_request = GitReflow.git_server.find_open_pull_request( from: GitReflow.current_branch, to: params[:base] )
 

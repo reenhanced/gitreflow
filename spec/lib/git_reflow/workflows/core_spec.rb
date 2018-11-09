@@ -740,6 +740,37 @@ describe GitReflow::Workflows::Core do
           subject
         end
       end
+
+      context "when a custom base-branch is configured" do
+        subject { workflow.deliver }
+        before do
+          expect(GitReflow.git_server).to receive(:find_open_pull_request).with( from: feature_branch, to: 'racecar').and_return(existing_gh_pull_request)
+          allow(existing_gh_pull_request).to receive(:good_to_merge?).and_return(true)
+          allow(GitReflow::Config).to receive(:get).with('reflow.base-branch').and_return('racecar')
+        end
+
+
+        it "displays the status of the PR" do
+          allow(existing_gh_pull_request).to receive(:merge!).with(
+            base: 'racecar',
+            merge_method: "squash",
+            force: false,
+            skip_lgtm: false
+          )
+          expect(GitReflow::Workflows::Core).to receive(:status).with(destination_branch: 'racecar')
+          subject
+        end
+
+        it "merges the feature branch" do
+          expect(existing_gh_pull_request).to receive(:merge!).with(
+            base: "racecar",
+            merge_method: "squash",
+            force: false,
+            skip_lgtm: false
+          )
+          subject
+        end
+      end
     end
   end
 

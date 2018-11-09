@@ -31,7 +31,6 @@ RSpec.configure do |config|
     stub_command_line
     suppress_loading_of_external_workflows
     GitReflow::Workflow.reset!
-    use_default_workflow
     allow_message_expectations_on_nil
   end
 

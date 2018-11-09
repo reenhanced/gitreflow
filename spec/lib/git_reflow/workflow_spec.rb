@@ -13,11 +13,7 @@ describe GitReflow::Workflow do
     subject { GitReflow::Workflow.current }
 
     before do
-      allow(GitReflow::Workflows::Core).to receive(:load_workflow).and_call_original
-    end
-
-    after do
-      GitReflow::Workflow.reset!
+      allow(GitReflow::Workflows::Core).to receive(:load_raw_workflow)
     end
 
     context "when no workflow is set" do
@@ -44,6 +40,7 @@ describe GitReflow::Workflow do
       before do
         allow(File).to receive(:exists?).with("#{GitReflow.git_root_dir}/Workflow").and_return(true)
         allow(File).to receive(:read).with("#{GitReflow.git_root_dir}/Workflow").and_return(workflow_content)
+        expect(GitReflow::Workflows::Core).to receive(:load_raw_workflow).with(workflow_content).and_call_original
       end
 
       specify { expect( subject ).to respond_to(:dummy) }
@@ -64,6 +61,7 @@ describe GitReflow::Workflow do
         allow(File).to receive(:exists?).with("#{GitReflow.git_root_dir}/Workflow").and_return(true)
         allow(File).to receive(:read).with("#{GitReflow.git_root_dir}/Workflow").and_return(workflow_content)
         allow(GitReflow::Config).to receive(:get).with("reflow.workflow").and_return(workflow_path)
+        allow(GitReflow::Workflows::Core).to receive(:load_raw_workflow).and_call_original
       end
 
       specify { expect(subject).to respond_to(:dummy) }

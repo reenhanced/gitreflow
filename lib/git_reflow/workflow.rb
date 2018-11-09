@@ -31,6 +31,9 @@ module GitReflow
       current.commands = {}
       current.callbacks = { before: {}, after: {}}
       @current = nil
+      # We'll need to reload the core class again in order to clear previously
+      # eval'd content in the context of the class
+      load File.expand_path('../workflows/core.rb', __FILE__)
     end
 
     module ClassMethods

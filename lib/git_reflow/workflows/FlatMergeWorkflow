@@ -1,10 +1,10 @@
 command(:deliver, arguments: { base: "master" }, flags: { merge_method: "merge" }, switches: { force: false, skip_lgtm: false }) do |**params|
   params[:force] = params[:force] || params[:skip_lgtm]
   begin
-    existing_pull_request = GitReflow.git_server.find_open_pull_request( from: GitReflow.current_branch, to: params[:base] )
+    existing_pull_request = git_server.find_open_pull_request( from: current_branch, to: params[:base] )
 
     if existing_pull_request.nil?
-      say "No pull request exists for #{GitReflow.remote_user}:#{GitReflow.current_branch}\nPlease submit your branch for review first with \`git reflow review\`", :deliver_halted
+      say "No pull request exists for #{remote_user}:#{current_branch}\nPlease submit your branch for review first with \`git reflow review\`", :deliver_halted
     else
 
       if existing_pull_request.good_to_merge?(force: params[:force])

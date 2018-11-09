@@ -115,7 +115,7 @@ LONGTIME
         begin
           push_current_branch
 
-          existing_pull_request = git_server.find_open_pull_request( from:current_branch, to: base_branch )
+          existing_pull_request = git_server.find_open_pull_request( from: current_branch, to: base_branch )
           if existing_pull_request
             say "A pull request already exists for these branches:", :notice
             existing_pull_request.display_pull_request_summary

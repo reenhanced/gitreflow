@@ -80,7 +80,10 @@ module GitReflow
           if self.class.minimum_approvals.to_i == 0
             super
           else
-            approvals.size >= self.class.minimum_approvals.to_i and !last_comment.match(self.class.approval_regex).nil?
+            approvals.size >= self.class.minimum_approvals.to_i and (
+              last_comment.empty? ||
+              !last_comment.match(self.class.approval_regex).nil?
+            )
           end
         end
 

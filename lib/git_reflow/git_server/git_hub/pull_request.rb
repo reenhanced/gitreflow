@@ -47,7 +47,7 @@ module GitReflow
         end
 
         def reviewers
-          (comment_authors + pull_request_reviews.map(&:user).map(&:login)).uniq
+          (comment_authors + pull_request_reviews.map(&:user).map(&:login)).uniq - [user.login]
         end
 
         def approvals
@@ -65,7 +65,7 @@ module GitReflow
           comments        = GitReflow.git_server.connection.issues.comments.all        GitReflow.remote_user, GitReflow.remote_repo_name, number: self.number
           review_comments = GitReflow.git_server.connection.pull_requests.comments.all GitReflow.remote_user, GitReflow.remote_repo_name, number: self.number
 
-          review_comments.to_a + comments.to_a
+          (review_comments.to_a + comments.to_a).select { |c| c.user.login != user.login }
         end
 
         def last_comment

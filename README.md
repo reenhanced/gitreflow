@@ -137,6 +137,9 @@ git reflow refresh -r <remote-location> -b <base-branch>
 
 You pass in the name of the remote to fetch from and the name of the **base-branch** that you would like to merge into your **feature-branch**. The **remote-location** defaults to `origin` and the base-branch defaults to `master`. This command also takes in remote and branch name as flag options.
 
+> **Note:** If no `base-branch` argument is provided, then we'll look for a `reflow.base-branch` git
+> configuration and fallback to `master` as the default.
+
 ### Reviewing your work
 ![git reflow review](http://reenhanced.com/reflow/git-reflow-review.gif)
 ```

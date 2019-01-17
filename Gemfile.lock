@@ -2,6 +2,7 @@ PATH
   remote: .
   specs:
     git_reflow (0.9.0)
+      bundler (>= 1.10.0)
       colorize (>= 0.7.0)
       github_api (= 0.18.2)
       highline
@@ -41,12 +42,12 @@ GEM
     httpclient (2.8.3)
     jwt (2.1.0)
     method_source (0.9.0)
-    mini_portile2 (2.3.0)
+    mini_portile2 (2.4.0)
     multi_json (1.13.1)
     multi_xml (0.6.0)
     multipart-post (2.0.0)
-    nokogiri (1.8.5)
-      mini_portile2 (~> 2.3.0)
+    nokogiri (1.10.1)
+      mini_portile2 (~> 2.4.0)
     oauth2 (1.4.1)
       faraday (>= 0.8, < 0.16.0)
       jwt (>= 1.0, < 3.0)
@@ -97,7 +98,6 @@ PLATFORMS
 
 DEPENDENCIES
   appraisal (= 2.2.0)
-  bundler (~> 1.16)
   chronic
   git_reflow!
   pry-byebug

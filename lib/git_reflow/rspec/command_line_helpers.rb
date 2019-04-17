@@ -7,6 +7,7 @@ module GitReflow
       def stub_command_line
         $commands_ran     = []
         $stubbed_commands = {}
+        $stubbed_runners  = Set.new
         $output           = []
         $says             = []
 
@@ -33,6 +34,7 @@ module GitReflow
       end
 
       def stub_run_for(module_to_stub)
+        $stubbed_runners << module_to_stub
         allow(module_to_stub).to receive(:run) do |command, options|
           options = { loud: true, blocking: true }.merge(options || {})
           $commands_ran << Hashie::Mash.new(command: command, options: options)
@@ -52,24 +54,31 @@ module GitReflow
         $says = []
       end
 
-      def stub_command(command, return_value)
+      def stub_command(command:, return_value: "", options: {})
         $stubbed_commands[command] = return_value
-        allow(GitReflow::Sandbox).to receive(:run).with(command).and_return(return_value)
+        $stubbed_runners.each do |runner|
+          allow(runner).to receive(:run).with(command, options) do |command, options|
+            options = { loud: true, blocking: true }.merge(options || {})
+            $commands_ran << Hashie::Mash.new(command: command, options: options)
+            $stubbed_commands[command] = return_value
+            raise GitReflow::Sandbox::CommandError.new(return_value, "\"#{command}\" failed to run.") if options[:raise]
+          end
+        end
       end
 
       def stub_command_line_inputs_for(module_to_stub, inputs)
         allow(module_to_stub).to receive(:ask) do |terminal, question|
-        return_value = inputs[question]
-        question = ""
-        return_value
+          return_value = inputs[question]
+          question = ""
+          return_value
         end
       end
 
       def stub_command_line_inputs(inputs)
         allow_any_instance_of(HighLine).to receive(:ask) do |terminal, question|
-        return_value = inputs[question]
-        question = ""
-        return_value
+          return_value = inputs[question]
+          question = ""
+          return_value
         end
       end
 

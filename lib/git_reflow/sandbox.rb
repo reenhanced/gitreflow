@@ -12,8 +12,16 @@ module GitReflow
       plain:          :white
     }
 
+    class CommandError < StandardError;
+      attr_reader :output
+      def initialize(output, *args)
+        @output = output
+        super(*args)
+      end
+    end
+
     def run(command, options = {})
-      options = { loud: true, blocking: true }.merge(options)
+      options = { loud: true, blocking: true, raise: false }.merge(options)
 
       GitReflow.logger.debug "Running... #{command}"
 
@@ -22,12 +30,13 @@ module GitReflow
       else
         output = %x{#{command}}
 
-        if options[:blocking] == true && !$?.success?
-          abort "\"#{command}\" failed to run."
-        else
-          puts output if options[:loud] == true
-          output
+        if !$?.success?
+          raise CommandError.new(output, "\"#{command}\" failed to run.") if options[:raise] == true
+          abort "\"#{command}\" failed to run." if options[:blocking] == true
         end
+
+        puts output if options[:loud] == true
+        output
       end
     end
 

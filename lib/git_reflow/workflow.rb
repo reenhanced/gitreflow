@@ -1,5 +1,6 @@
 require 'git_reflow/sandbox'
 require 'git_reflow/git_helpers'
+require 'bundler/inline'
 
 module GitReflow
   module Workflow
@@ -80,6 +81,32 @@ module GitReflow
         GitReflow.logger
       end
 
+      # Checks for an installed gem, and if none is installed use bundler's
+      # inline gemfile to install it.
+      #
+      # @param name [String] the name of the gem to require as a dependency
+      def use_gem(name, *args)
+        run("gem list -ie #{name}", loud: false, raise: true)
+        logger.info "Using installed gem '#{name}' with options: #{args.inspect}"
+      rescue ::GitReflow::Sandbox::CommandError => e
+        abort e.message unless e.output =~ /\Afalse/
+        logger.info "Installing gem '#{name}' with options: #{args.inspect}"
+        say "Installing gem '#{name}'...", :notice
+        gemfile do
+          source "https://rubygems.org"
+          gem name, *args
+        end
+      end
+
+      # Use bundler's inline gemfile to install dependencies.
+      # See: https://bundler.io/v1.16/guides/bundler_in_a_single_file_ruby_script.html
+      #
+      # @yield A block to be executed in the context of Bundler's `gemfile` DSL
+      def use_gemfile(&block)
+        logger.info "Using a custom gemfile"
+        gemfile(true, &block)
+      end
+
       # Loads a pre-defined workflow (FlatMergeWorkflow) from within another
       # Workflow file
       #
@@ -153,7 +180,7 @@ module GitReflow
             args_with_defaults.merge!(argument_overrides) if argument_overrides.is_a?(Hash)
           end
 
-          GitReflow.logger.debug "Running command `#{name}` with args: #{args_with_defaults.inspect}..."
+          GitReflow.logger.info "Running command `#{name}` with args: #{args_with_defaults.inspect}..."
           block.call(**args_with_defaults)
 
           Array(callbacks[:after][name]).each do |block|

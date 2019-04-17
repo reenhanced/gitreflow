@@ -6,6 +6,23 @@ describe GitReflow::Workflow do
     include GitReflow::Workflow
   end
 
+  class DummyBundler
+    def gemfile(&block)
+      instance_eval &block
+    end
+
+    def source(name); end
+    def gem(name, *args); end
+  end
+
+  class DummyGemifiedWorkflow
+    include GitReflow::Workflow
+
+    command :whirl do
+      puts "whirl"
+    end
+  end
+
   let(:workflow) { DummyWorkflow }
   let(:loader)   { double() }
 
@@ -164,9 +181,6 @@ describe GitReflow::Workflow do
 
   describe ".command" do
     it "creates a class method for a bogus command" do
-      class DummyWorkflow
-        include GitReflow::Workflow
-      end
       workflow.command :bogus do
         GitReflow.say "Woohoo"
       end
@@ -235,4 +249,56 @@ describe GitReflow::Workflow do
     end
   end
 
+  describe ".use_gem(name, *ags)" do
+    let(:mock_bundler) { DummyBundler.new }
+
+    before do
+      allow(DummyGemifiedWorkflow).to receive(:gemfile) do |&block|
+        mock_bundler.gemfile(&block)
+      end
+      stub_run_for(DummyGemifiedWorkflow)
+    end
+
+    it "Installs a gem using Bundler's inline gemfile" do
+      stub_command(command: "gem list -ie whirly", options: { loud: false, raise: true }, return_value: "false")
+      expect(mock_bundler).to receive(:source).with("https://rubygems.org")
+      expect(mock_bundler).to receive(:gem).with("whirly", "0.2.6")
+
+      DummyGemifiedWorkflow.class_eval do
+        use_gem "whirly", "0.2.6"
+      end
+    end
+
+    it "Uses an existing gem if it's already installed" do
+      stub_command(command: "gem list -ie whirly", options: { loud: false, raise: false }, return_value: "true")
+      expect(DummyGemifiedWorkflow).to_not receive(:gemfile)
+
+      DummyGemifiedWorkflow.class_eval do
+        use_gem "whirly", "0.2.6"
+      end
+    end
+  end
+
+  describe ".use_gemfile(&block)" do
+    let(:mock_bundler) { DummyBundler.new }
+
+    before do
+      allow(DummyGemifiedWorkflow).to receive(:gemfile) do |&block|
+        mock_bundler.gemfile(&block)
+      end
+      stub_run_for(DummyGemifiedWorkflow)
+    end
+
+    it "runs bundler's inline gemfile with the provided block" do
+      expect(mock_bundler).to receive(:source).with("https://rubygems.org")
+      expect(mock_bundler).to receive(:gem).with("standard")
+
+      DummyGemifiedWorkflow.class_eval do
+        use_gemfile do
+          source "https://rubygems.org"
+          gem "standard"
+        end
+      end
+    end
+  end
 end

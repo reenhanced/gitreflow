@@ -19,7 +19,6 @@ Gem::Specification.new do |s|
   s.rdoc_options     << '--title' << 'git_reflow' << '-ri'
 
   s.add_development_dependency('appraisal', '2.2.0')
-  s.add_development_dependency('bundler', "~> 1.16")
   s.add_development_dependency('chronic')
   s.add_development_dependency('pry-byebug')
   s.add_development_dependency('rake', "~> 12.3")
@@ -28,6 +27,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency('webmock')
   s.add_development_dependency('wwtd', '1.3.0')
 
+  s.add_dependency('bundler', '>= 1.10.0')
   s.add_dependency('colorize', '>= 0.7.0')
   s.add_dependency('highline')
   s.add_dependency('httpclient')

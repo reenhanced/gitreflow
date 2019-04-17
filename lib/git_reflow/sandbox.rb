@@ -30,14 +30,13 @@ module GitReflow
       else
         output = %x{#{command}}
 
-        if options[:blocking] == true && !$?.success?
+        if !$?.success?
           raise CommandError.new(output, "\"#{command}\" failed to run.") if options[:raise] == true
           abort "\"#{command}\" failed to run." if options[:blocking] == true
-        else
-          raise CommandError.new(output, "\"#{command}\" failed to run.") if options[:raise] == true && !$?.success?
-          puts output if options[:loud] == true
-          output
         end
+
+        puts output if options[:loud] == true
+        output
       end
     end
 

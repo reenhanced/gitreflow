@@ -1,7 +1,26 @@
 # Change Log
 
-## [v0.9.0](https://github.com/reenhanced/gitreflow/tree/v0.9.0) (2018-11-09)
+## [Unreleased](https://github.com/reenhanced/gitreflow/tree/HEAD)
 
+[Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.9.1...v0.9.2)
+
+**Closed issues:**
+
+- Rebase when refreshing? [\#234](https://github.com/reenhanced/gitreflow/issues/234)
+
+**Merged pull requests:**
+
+- Update dependencies and trap INT signal [\#235](https://github.com/reenhanced/gitreflow/pull/235) ([codenamev](https://github.com/codenamev))
+- Allow installing gems from within Workflow files with `use_gem` and `use_gemfile` [\#233](https://github.com/reenhanced/gitreflow/pull/233) ([codenamev](https://github.com/codenamev))
+
+## [v0.9.1](https://github.com/reenhanced/gitreflow/tree/v0.9.1) (2019-04-17)
+[Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.9.0...v0.9.1)
+
+**Closed issues:**
+
+- Purpose of core `stage` command? [\#232](https://github.com/reenhanced/gitreflow/issues/232)
+
+## [v0.9.0](https://github.com/reenhanced/gitreflow/tree/v0.9.0) (2018-11-09)
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.8.10...v0.9.0)
 
 **Implemented enhancements:**
@@ -15,6 +34,9 @@
 
 **Closed issues:**
 
+- ear [\#225](https://github.com/reenhanced/gitreflow/issues/225)
+- Nokogiri not getting installed:- [\#220](https://github.com/reenhanced/gitreflow/issues/220)
+- git reflow status returns with 401 - Bad credentials [\#219](https://github.com/reenhanced/gitreflow/issues/219)
 - No help from git reflow --help [\#118](https://github.com/reenhanced/gitreflow/issues/118)
 - f has already been specified as a switch in the command deliver \(ArgumentError\) [\#59](https://github.com/reenhanced/gitreflow/issues/59)
 - Command to edit default commit format [\#51](https://github.com/reenhanced/gitreflow/issues/51)

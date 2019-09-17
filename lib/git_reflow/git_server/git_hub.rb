@@ -84,56 +84,68 @@ module GitReflow
       end
 
       def authenticate(options = {silent: false})
+        self.class.user = options[:user]
+        if self.class.user.empty?
+          self.class.user = ask("Please enter your GitHub username: ")
+        end
+
         if connection and self.class.oauth_token.length > 0
-          unless options[:silent]
-            GitReflow.say "Your GitHub account was already setup with: "
-            GitReflow.say "\tUser Name: #{self.class.user}"
-            GitReflow.say "\tEndpoint: #{self.class.api_endpoint}"
-          end
-        else
           begin
-            gh_user     = options[:user] || ask("Please enter your GitHub username: ")
-            gh_password = options[:password] || ask("Please enter your GitHub password (we do NOT store this): ") { |q| q.echo = false }
-
-            @connection = ::Github.new do |config|
-              config.basic_auth = "#{gh_user}:#{gh_password}"
-              config.endpoint   = GitServer::GitHub.api_endpoint
-              config.site       = GitServer::GitHub.site_url
-              config.adapter    = :net_http
+            connection.users.get
+            unless options[:silent]
+              GitReflow.say "Your GitHub account was already setup with: "
+              GitReflow.say "\tUser Name: #{self.class.user}"
+              GitReflow.say "\tEndpoint: #{self.class.api_endpoint}"
             end
-
-            @connection.connection_options = {headers: {"X-GitHub-OTP" => options[:two_factor_auth_code]}} if options[:two_factor_auth_code]
-
-            previous_authorizations = @connection.oauth.all.select {|auth| auth.note == "git-reflow (#{run('hostname', loud: false).strip})" }
-            if previous_authorizations.any?
-              authorization = previous_authorizations.last
-              GitReflow.say "You have previously setup git-reflow on this machine, but we can no longer find the stored token.", :error
-              GitReflow.say "Please visit https://github.com/settings/tokens and delete the token for: git-reflow (#{run('hostname', loud: false).strip})", :notice
-              raise "Setup could not be completed."
-            else
-              authorization = @connection.oauth.create scopes: ['repo'], note: "git-reflow (#{run('hostname', loud: false).strip})"
-            end
-
-            self.class.oauth_token = authorization.token
-
+            return connection
           rescue ::Github::Error::Unauthorized => e
-            if e.inspect.to_s.include?('two-factor')
-              begin
-                # dummy request to trigger a 2FA SMS since a HTTP GET won't do it
-                @connection.oauth.create scopes: ['repo'], note: "thank Github for not making this straightforward"
-              rescue ::Github::Error::Unauthorized
-              ensure
-                two_factor_code = ask("Please enter your two-factor authentication code: ")
-                self.authenticate options.merge({user: gh_user, password: gh_password, two_factor_auth_code: two_factor_code})
-              end
-            else
-              GitReflow.say "Github Authentication Error: #{e.inspect}", :error
-            end
-          rescue StandardError => e
-            raise "We were unable to authenticate with Github."
-          else
-            GitReflow.say "Your GitHub account was successfully setup!", :success
+            GitReflow.logger.debug "[GitHub Error] Current oauth-token is invalid or expired..."
           end
+        end
+
+        begin
+          gh_password = options[:password] || ask("Please enter your GitHub password (we do NOT store this): ") { |q| q.echo = false }
+
+          @connection = ::Github.new do |config|
+            config.basic_auth = "#{self.class.user}:#{gh_password}"
+            config.endpoint   = GitServer::GitHub.api_endpoint
+            config.site       = GitServer::GitHub.site_url
+            config.adapter    = :net_http
+          end
+
+          @connection.connection_options = {headers: {"X-GitHub-OTP" => options[:two_factor_auth_code]}} if options[:two_factor_auth_code]
+
+          previous_authorizations = @connection.oauth.all.select {|auth| auth.note == "git-reflow (#{run('hostname', loud: false).strip})" }
+          if previous_authorizations.any?
+            authorization = previous_authorizations.last
+            GitReflow.say "You have previously setup git-reflow on this machine, but we can no longer find the stored token.", :error
+            GitReflow.say "Please visit https://github.com/settings/tokens and delete the token for: git-reflow (#{run('hostname', loud: false).strip})", :notice
+            raise "Setup could not be completed."
+          else
+            authorization = @connection.oauth.create scopes: ['repo'], note: "git-reflow (#{run('hostname', loud: false).strip})"
+          end
+
+          self.class.oauth_token = authorization.token
+
+        rescue ::Github::Error::Unauthorized => e
+          if e.inspect.to_s.include?('two-factor')
+            begin
+              # dummy request to trigger a 2FA SMS since a HTTP GET won't do it
+              @connection.oauth.create scopes: ['repo'], note: "thank Github for not making this straightforward"
+            rescue ::Github::Error::Unauthorized
+            ensure
+              two_factor_code = ask("Please enter your two-factor authentication code: ")
+              self.authenticate options.merge({user: self.class.user, password: gh_password, two_factor_auth_code: two_factor_code})
+            end
+          else
+            GitReflow.say "Github Authentication Error: #{e.inspect}", :error
+            raise "Setup could not be completed."
+          end
+        rescue StandardError => e
+          raise "We were unable to authenticate with Github."
+        else
+          GitReflow.say "Your GitHub account was successfully setup!", :success
+
         end
 
         @connection

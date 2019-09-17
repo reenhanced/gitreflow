@@ -78,7 +78,7 @@ describe GitReflow::GitServer::GitHub do
     subject                     { github.authenticate }
 
     before  do
-      allow(GitReflow::GitServer::GitHub).to receive(:user).and_return('reenhanced')
+      allow(GitReflow::GitServer::GitHub).to receive(:user).and_return(user)
       allow(github_api).to receive(:oauth).and_return(github_authorizations)
       allow(github_api).to receive_message_chain(:oauth, :all).and_return([])
       allow(github).to receive(:run).with('hostname', loud: false).and_return(hostname)
@@ -152,11 +152,85 @@ describe GitReflow::GitServer::GitHub do
         }}
 
         before do
+          allow(GitReflow::Config).to receive(:get).and_call_original
+          allow(GitReflow::Config).to receive(:get).with('github.oauth-token').and_return(oauth_token_hash[:token])
+          allow(Github::Client).to receive(:new).and_return(github_api)
+          allow(github_authorizations).to receive(:authenticated?).and_return(true)
+          allow(github_api.oauth).to receive(:create).with({ scopes: ['repo'], note: "git-reflow (#{hostname})" }).and_return(oauth_token_hash)
+
+          stub_request(:get, %r{/user}).
+            to_return(
+              body: Fixture.new('authentication_failure.json').to_s,
+              status: 401,
+              headers: {'content-type' => 'application/json; charset=utf-8', status: 'Unauthorized'},
+            )
+        end
+
+        it "notifies the user of successful setup" do
+          expect { subject }.to have_said "Your GitHub account was successfully setup!", :success
+        end
+
+        it "creates a new GitHub oauth token" do
+          expect(github_api.oauth).to receive(:create).and_return(oauth_token_hash)
+          subject
+        end
+
+        it "creates git config keys for github connections" do
+          expect{ subject }.to have_run_command_silently "git config -f #{GitReflow::Config::CONFIG_FILE_PATH} --replace-all github.site \"#{github_site}\"", blocking: false
+          expect{ subject }.to have_run_command_silently "git config -f #{GitReflow::Config::CONFIG_FILE_PATH} --replace-all github.endpoint \"#{github_api_endpoint}\"", blocking: false
+          expect{ subject }.to have_run_command_silently "git config -f #{GitReflow::Config::CONFIG_FILE_PATH} --replace-all github.oauth-token \"#{oauth_token_hash[:token]}\"", blocking: false
+          expect{ subject }.to have_run_command_silently "git config -f #{GitReflow::Config::CONFIG_FILE_PATH} --replace-all reflow.git-server \"GitHub\"", blocking: false
+        end
+
+      end
+    end
+
+    context 'already authenticated' do
+      let(:oauth_token) { "abc123" }
+
+      before do
+        allow(GitReflow::Config).to receive(:get).and_call_original
+        allow(GitReflow::Config).to receive(:get).with('github.oauth-token').and_return(oauth_token)
+      end
+
+      context "and authentication token is still valid" do
+        before do
+          stub_request(:get, %r{/user}).
+            to_return(
+              body: Fixture.new('users/user.json').to_s,
+              status: 200,
+              headers: { content_type: "application/json; charset=utf-8" }
+            )
+
+          allow(Github::Client).to receive(:new).and_return(github_api)
+          allow(github_api).to receive(:oauth).and_return(github_authorizations)
+          allow(github_authorizations).to receive(:authenticated?).and_return(true)
+          allow(github_api.oauth).to receive(:create).with({ scopes: ['repo'], note: "git-reflow (#{hostname})" }).and_return(oauth_token_hash)
+        end
+
+        it "resolves all missing git-reflow configurations" do
+          expect{ subject }.to have_run_command_silently "git config -f #{GitReflow::Config::CONFIG_FILE_PATH} --replace-all github.site \"#{github_site}\"", blocking: false
+          expect{ subject }.to have_run_command_silently "git config -f #{GitReflow::Config::CONFIG_FILE_PATH} --replace-all github.endpoint \"#{github_api_endpoint}\"", blocking: false
+          expect{ subject }.to have_run_command_silently "git config -f #{GitReflow::Config::CONFIG_FILE_PATH} --replace-all reflow.git-server \"GitHub\"", blocking: false
+          expect { subject }.to have_said "Your GitHub account was already setup with: "
+          expect { subject }.to have_said "\tUser Name: #{user}"
+          expect { subject }.to have_said "\tEndpoint: #{github_api_endpoint}"
+        end
+      end
+
+      context "and authentication token is expired" do
+        let(:unauthorized_error_response) {{
+          response_headers: {'content-type' => 'application/json; charset=utf-8', status: 'Unauthorized'},
+          method: 'GET',
+          status: '401',
+          body: { error: "GET https://api.github.com/authorizations: 401 Bad credentials" }
+        }}
+
+        before do
           allow(Github::Client).to receive(:new).and_raise Github::Error::Unauthorized.new(unauthorized_error_response)
         end
 
-        it "notifies user of invalid login details" do
-          expect { subject }.to have_said "Github Authentication Error: #{Github::Error::Unauthorized.new(unauthorized_error_response).inspect}", :error
+        it "requests a new oauth token" do
         end
       end
     end

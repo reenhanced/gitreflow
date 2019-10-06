@@ -7,6 +7,13 @@ module GitReflow
 
     module_function
 
+    # Gets the reqested git configuration variable.
+    #
+    # @param [String] key The key to get the value(s) for
+    # @option options [Boolean] :reload (false) whether to reload the value or use a cached value if available
+    # @option options [Boolean] :all (false) whether to return all keys for a multi-valued key
+    # @option options [Boolean] :local (false) whether to get the value specific to the current project
+    # @return the value of the git configuration
     def get(key, reload: false, all: false, local: false)
       return cached_git_config_value(key) unless reload || cached_git_config_value(key).empty?
 
@@ -19,6 +26,12 @@ module GitReflow
       cache_git_config_key(key, new_value)
     end
 
+    # Sets the reqested git configuration variable.
+    #
+    # @param [String] key The key to set the value for
+    # @param [String] value The value to set it to
+    # @option options [Boolean] :local (false) whether to set the value specific to the current project
+    # @return the value of the git configuration
     def set(key, value, local: false)
       value = value.to_s.strip
       if local
@@ -28,6 +41,12 @@ module GitReflow
       end
     end
 
+    # Remove values of the reqested git configuration variable.
+    #
+    # @param [String] key The key to remove
+    # @option options [Boolean] :value (nil) The value of the key to remove
+    # @option options [Boolean] :local (false) whether to remove the value specific to the current project
+    # @return the result of running the git command
     def unset(key, value: nil, local: false)
       value = value.nil? ? '' : "\"#{value}\""
       if local
@@ -37,6 +56,13 @@ module GitReflow
       end
     end
 
+    # Adds a new git configuration variable.
+    #
+    # @param [String] key The new key to set the value for
+    # @param [String] value The value to set it to
+    # @option options [Boolean] :local (false) whether to set the value specific to the current project
+    # @option options [Boolean] :global (false) whether to set the value globaly. if neither local or global is set gitreflow will default to using a configuration file
+    # @return the result of running the git command
     def add(key, value, local: false, global: false)
       if global
         GitReflow::Sandbox.run "git config --global --add #{key} \"#{value}\"", loud: false, blocking: false

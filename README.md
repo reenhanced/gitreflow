@@ -4,7 +4,9 @@
 </h1>
 
 <p>
-  [![Build Status](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Freenhanced%2Fgitreflow%2Fbadge%3Fref%3Dmaster&style=for-the-badge)](https://actions-badge.atrox.dev/reenhanced/gitreflow/goto?ref=master)
+  <a href="https://actions-badge.atrox.dev/reenhanced/gitreflow/goto?ref=master" title="git workflow">
+    <img alt="Git workflow powered by git-reflow"  src="https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2Freenhanced%2Fgitreflow%2Fbadge%3Fref%3Dmaster&style=flat">
+  </a>
   <a href="https://github.com/reenhanced/gitreflow" title="git workflow">
     <img alt="Git workflow powered by git-reflow"  src="https://img.shields.io/badge/git--reflow-v0.9.0-blue.svg?style=flat">
   </a>

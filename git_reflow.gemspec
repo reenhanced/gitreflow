@@ -15,7 +15,6 @@ Gem::Specification.new do |s|
   s.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
   s.executables   = s.files.grep(%r{^exe/}) { |f| File.basename(f) }
-  s.has_rdoc      = true
   s.bindir        = 'exe'
   s.require_paths = ['lib']
   s.rdoc_options << '--title' << 'git_reflow' << '-ri'

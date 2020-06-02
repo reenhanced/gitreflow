@@ -2,6 +2,24 @@
 
 ## [Unreleased](https://github.com/reenhanced/gitreflow/tree/HEAD)
 
+[Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.9.2...v0.9.3)
+
+**Implemented enhancements:**
+
+- Add documention for GitReflow::Config [\#237](https://github.com/reenhanced/gitreflow/issues/237)
+- Add documentation [\#157](https://github.com/reenhanced/gitreflow/issues/157)
+
+**Closed issues:**
+
+- GitHub authentication issues [\#193](https://github.com/reenhanced/gitreflow/issues/193)
+
+**Merged pull requests:**
+
+- Upgrade dependencies [\#242](https://github.com/reenhanced/gitreflow/pull/242) ([codenamev](https://github.com/codenamev))
+- Creates multi-ruby-tests.yml [\#241](https://github.com/reenhanced/gitreflow/pull/241) ([codenamev](https://github.com/codenamev))
+- Documention for GitReflow::Config [\#238](https://github.com/reenhanced/gitreflow/pull/238) ([PuZZleDucK](https://github.com/PuZZleDucK))
+- Fixes several issues related to git-reflow setup [\#236](https://github.com/reenhanced/gitreflow/pull/236) ([codenamev](https://github.com/codenamev))
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.9.1...v0.9.2)
 
 **Closed issues:**

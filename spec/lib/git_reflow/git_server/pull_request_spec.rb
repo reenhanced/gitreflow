@@ -491,14 +491,42 @@ describe GitReflow::GitServer::PullRequest do
         allow(GitReflow::Config).to receive(:get).with('reflow.always-cleanup').and_return('false')
       end
 
-      context "and user chooses to cleanup" do
-        before { expect(pr).to receive(:ask).with('Would you like to push this branch to your remote repo and cleanup your feature branch? ').and_return('yes') }
+      context "and always cleanup local config is set" do
+      end
+
+      context "and always cleanup remote config is set" do
+      end
+
+      context "and user chooses to cleanup local only" do
+        before do
+          expect(pr).to receive(:ask).with('Would you like to cleanup your local feature branch? ').and_return('yes')
+          allow(pr).to receive(:ask).with('Would you like to cleanup your remote feature branch? ').and_return('no')
+        end
+        it { should be_truthy }
+      end
+
+      context "and user chooses to cleanup remote only" do
+        before do
+          expect(pr).to receive(:ask).with('Would you like to cleanup your local feature branch? ').and_return('no')
+          expect(pr).to receive(:ask).with('Would you like to cleanup your remote feature branch? ').and_return('yes')
+        end
         it     { should be_truthy }
       end
 
-      context "and user chooses not to cleanup" do
-        before { expect(pr).to receive(:ask).with('Would you like to push this branch to your remote repo and cleanup your feature branch? ').and_return('no') }
-        it     { should be_falsy }
+      context "and user chooses to cleanup local and remote" do
+        before do
+          allow(pr).to receive(:ask).with('Would you like to cleanup your local feature branch? ').and_return('yes')
+          allow(pr).to receive(:ask).with('Would you like to cleanup your remote feature branch? ').and_return('yes')
+        end
+        it { should be_truthy }
+      end
+
+      context "and user chooses to cleanup neither local nor remote" do
+        before do
+          expect(pr).to receive(:ask).with('Would you like to cleanup your local feature branch? ').and_return('no')
+          allow(pr).to receive(:ask).with('Would you like to cleanup your remote feature branch? ').and_return('no')
+        end
+        it     { should be_falsey }
       end
     end
   end

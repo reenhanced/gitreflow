@@ -32,7 +32,7 @@ Gem::Specification.new do |s|
   s.add_dependency('bundler', '>= 1.10.0')
   s.add_dependency('codenamev_bitbucket_api', '0.4.1')
   s.add_dependency('colorize', '>= 0.7.0')
-  s.add_dependency('github_api', '0.18.2')
+  s.add_dependency('github_api', '0.19')
   s.add_dependency('highline')
   s.add_dependency('httpclient')
 

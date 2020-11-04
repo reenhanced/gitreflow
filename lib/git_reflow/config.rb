@@ -14,7 +14,7 @@ module GitReflow
     # @option options [Boolean] :all (false) whether to return all keys for a multi-valued key
     # @option options [Boolean] :local (false) whether to get the value specific to the current project
     # @return the value of the git configuration
-    def get(key, reload: false, all: false, local: false)
+    def get(key, reload: false, all: false, local: false, **_other_options)
       return cached_git_config_value(key) unless reload || cached_git_config_value(key).empty?
 
       local = local ? '--local ' : ''
@@ -32,7 +32,7 @@ module GitReflow
     # @param [String] value The value to set it to
     # @option options [Boolean] :local (false) whether to set the value specific to the current project
     # @return the value of the git configuration
-    def set(key, value, local: false)
+    def set(key, value, local: false, **_other_options)
       value = value.to_s.strip
       if local
         GitReflow::Sandbox.run "git config --replace-all #{key} \"#{value}\"", loud: false, blocking: false
@@ -47,7 +47,7 @@ module GitReflow
     # @option options [Boolean] :value (nil) The value of the key to remove
     # @option options [Boolean] :local (false) whether to remove the value specific to the current project
     # @return the result of running the git command
-    def unset(key, value: nil, local: false)
+    def unset(key, value: nil, local: false, **_other_options)
       value = value.nil? ? '' : "\"#{value}\""
       if local
         GitReflow::Sandbox.run "git config --unset-all #{key} #{value}", loud: false, blocking: false
@@ -63,7 +63,7 @@ module GitReflow
     # @option options [Boolean] :local (false) whether to set the value specific to the current project
     # @option options [Boolean] :global (false) whether to set the value globaly. if neither local or global is set gitreflow will default to using a configuration file
     # @return the result of running the git command
-    def add(key, value, local: false, global: false)
+    def add(key, value, local: false, global: false, **_other_options)
       if global
         GitReflow::Sandbox.run "git config --global --add #{key} \"#{value}\"", loud: false, blocking: false
       elsif local

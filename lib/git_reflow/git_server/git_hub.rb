@@ -84,8 +84,9 @@ module GitReflow
       end
 
       def authenticate(options = {silent: false})
-        self.class.user = options[:user]
-        if self.class.user.empty?
+        if !options[:user].to_s.empty?
+          self.class.user = options[:user]
+        elsif self.class.user.empty?
           self.class.user = ask("Please enter your GitHub username: ")
         end
 

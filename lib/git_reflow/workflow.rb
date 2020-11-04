@@ -132,7 +132,7 @@ module GitReflow
         @workflows
       end
 
-      # Creates a singleton method on the inlcuded class
+      # Creates a singleton method on the included class
       #
       # This method will take any number of keyword parameters. If @defaults keyword is provided, and the given
       # key(s) in the defaults are not provided as keyword parameters, then it will use the value given in the
@@ -230,7 +230,7 @@ module GitReflow
         end
       end
 
-      # Creates a singleton method on the inlcuded class
+      # Creates a singleton method on the included class
       #
       # This method updates the help text associated with the provided command.
       #

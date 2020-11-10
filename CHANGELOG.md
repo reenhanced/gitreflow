@@ -1,6 +1,14 @@
-# Change Log
+# Changelog
 
-## [Unreleased](https://github.com/reenhanced/gitreflow/tree/HEAD)
+## [v0.9.4](https://github.com/reenhanced/gitreflow/tree/v0.9.4) (2020-11-10)
+
+[Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.9.3...v0.9.4)
+
+**Merged pull requests:**
+
+- Fixed typo [\#244](https://github.com/reenhanced/gitreflow/pull/244) ([hsbt](https://github.com/hsbt))
+
+## [v0.9.3](https://github.com/reenhanced/gitreflow/tree/v0.9.3) (2020-06-02)
 
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.9.2...v0.9.3)
 
@@ -20,6 +28,8 @@
 - Documention for GitReflow::Config [\#238](https://github.com/reenhanced/gitreflow/pull/238) ([PuZZleDucK](https://github.com/PuZZleDucK))
 - Fixes several issues related to git-reflow setup [\#236](https://github.com/reenhanced/gitreflow/pull/236) ([codenamev](https://github.com/codenamev))
 
+## [v0.9.2](https://github.com/reenhanced/gitreflow/tree/v0.9.2) (2019-09-10)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.9.1...v0.9.2)
 
 **Closed issues:**
@@ -29,9 +39,9 @@
 **Merged pull requests:**
 
 - Update dependencies and trap INT signal [\#235](https://github.com/reenhanced/gitreflow/pull/235) ([codenamev](https://github.com/codenamev))
-- Allow installing gems from within Workflow files with `use_gem` and `use_gemfile` [\#233](https://github.com/reenhanced/gitreflow/pull/233) ([codenamev](https://github.com/codenamev))
 
 ## [v0.9.1](https://github.com/reenhanced/gitreflow/tree/v0.9.1) (2019-04-17)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.9.0...v0.9.1)
 
 **Closed issues:**
@@ -39,6 +49,7 @@
 - Purpose of core `stage` command? [\#232](https://github.com/reenhanced/gitreflow/issues/232)
 
 ## [v0.9.0](https://github.com/reenhanced/gitreflow/tree/v0.9.0) (2018-11-09)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.8.10...v0.9.0)
 
 **Implemented enhancements:**
@@ -61,6 +72,7 @@
 
 **Merged pull requests:**
 
+- Fix critical issue, and update deps [\#245](https://github.com/reenhanced/gitreflow/pull/245) ([codenamev](https://github.com/codenamev))
 - Allows for configuring a custom base-branch [\#231](https://github.com/reenhanced/gitreflow/pull/231) ([codenamev](https://github.com/codenamev))
 - Fixes many scoping issues with new Workflow [\#229](https://github.com/reenhanced/gitreflow/pull/229) ([codenamev](https://github.com/codenamev))
 - Retry pull-request creation if there are errors [\#226](https://github.com/reenhanced/gitreflow/pull/226) ([codenamev](https://github.com/codenamev))
@@ -68,6 +80,7 @@
 - Allow for custom commit/merge message templates [\#223](https://github.com/reenhanced/gitreflow/pull/223) ([codenamev](https://github.com/codenamev))
 
 ## [v0.8.10](https://github.com/reenhanced/gitreflow/tree/v0.8.10) (2018-04-19)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.8.9...v0.8.10)
 
 **Merged pull requests:**
@@ -79,6 +92,7 @@
 - Updates readme with details on customization [\#214](https://github.com/reenhanced/gitreflow/pull/214) ([codenamev](https://github.com/codenamev))
 
 ## [v0.8.9](https://github.com/reenhanced/gitreflow/tree/v0.8.9) (2017-04-26)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.8.8...v0.8.9)
 
 **Fixed bugs:**
@@ -91,9 +105,11 @@
 - Adds checks for new GH reviews when delivering [\#215](https://github.com/reenhanced/gitreflow/pull/215) ([codenamev](https://github.com/codenamev))
 
 ## [v0.8.8](https://github.com/reenhanced/gitreflow/tree/v0.8.8) (2017-04-24)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.8.7...v0.8.8)
 
 ## [v0.8.7](https://github.com/reenhanced/gitreflow/tree/v0.8.7) (2017-04-21)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.8.4...v0.8.7)
 
 **Implemented enhancements:**
@@ -120,6 +136,7 @@
 - \[53\] Allow workflows to be loaded from git config [\#199](https://github.com/reenhanced/gitreflow/pull/199) ([codenamev](https://github.com/codenamev))
 
 ## [v0.8.4](https://github.com/reenhanced/gitreflow/tree/v0.8.4) (2016-08-22)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.8.3...v0.8.4)
 
 **Closed issues:**
@@ -132,9 +149,11 @@
 - \[53\] Create core workflow module to consolidate commands [\#198](https://github.com/reenhanced/gitreflow/pull/198) ([codenamev](https://github.com/codenamev))
 
 ## [v0.8.3](https://github.com/reenhanced/gitreflow/tree/v0.8.3) (2016-08-04)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.8.2...v0.8.3)
 
 ## [v0.8.2](https://github.com/reenhanced/gitreflow/tree/v0.8.2) (2016-08-01)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.8.1...v0.8.2)
 
 **Fixed bugs:**
@@ -143,7 +162,6 @@
 
 **Closed issues:**
 
-- GitHub authentication issues [\#193](https://github.com/reenhanced/gitreflow/issues/193)
 - non-master base branch does not work for the deliver command [\#192](https://github.com/reenhanced/gitreflow/issues/192)
 - git-reflow fork command [\#188](https://github.com/reenhanced/gitreflow/issues/188)
 - Bitbucket setup not working [\#186](https://github.com/reenhanced/gitreflow/issues/186)
@@ -163,6 +181,7 @@
 - Respect GitHub pull request template [\#179](https://github.com/reenhanced/gitreflow/pull/179) ([timraasveld](https://github.com/timraasveld))
 
 ## [v0.8.1](https://github.com/reenhanced/gitreflow/tree/v0.8.1) (2016-05-26)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.8.0...v0.8.1)
 
 **Closed issues:**
@@ -175,6 +194,7 @@
 - Support for non-master branch [\#73](https://github.com/reenhanced/gitreflow/issues/73)
 
 ## [v0.8.0](https://github.com/reenhanced/gitreflow/tree/v0.8.0) (2016-05-26)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.7.5...v0.8.0)
 
 **Implemented enhancements:**
@@ -201,6 +221,7 @@
 - \[issue: 162\] Updating Rspecs: Use "Allow" instead of "Stub" [\#163](https://github.com/reenhanced/gitreflow/pull/163) ([simonzhu24](https://github.com/simonzhu24))
 
 ## [v0.7.5](https://github.com/reenhanced/gitreflow/tree/v0.7.5) (2016-04-14)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.7.4...v0.7.5)
 
 **Implemented enhancements:**
@@ -219,6 +240,7 @@
 - Remove unused gitreflow-common [\#155](https://github.com/reenhanced/gitreflow/pull/155) ([pboling](https://github.com/pboling))
 
 ## [v0.7.4](https://github.com/reenhanced/gitreflow/tree/v0.7.4) (2016-04-08)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.7.3...v0.7.4)
 
 **Fixed bugs:**
@@ -227,6 +249,7 @@
 - SSL Verification is turned off [\#151](https://github.com/reenhanced/gitreflow/issues/151)
 
 ## [v0.7.3](https://github.com/reenhanced/gitreflow/tree/v0.7.3) (2016-03-24)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.7.2...v0.7.3)
 
 **Fixed bugs:**
@@ -240,6 +263,7 @@
 - Store OAuth token somewhere else? [\#54](https://github.com/reenhanced/gitreflow/issues/54)
 
 ## [v0.7.2](https://github.com/reenhanced/gitreflow/tree/v0.7.2) (2016-02-22)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.7.1...v0.7.2)
 
 **Closed issues:**
@@ -249,6 +273,7 @@
 - Deliver to custom branch? [\#144](https://github.com/reenhanced/gitreflow/issues/144)
 
 ## [v0.7.1](https://github.com/reenhanced/gitreflow/tree/v0.7.1) (2015-10-27)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.7.0...v0.7.1)
 
 **Merged pull requests:**
@@ -256,6 +281,7 @@
 - Fix the ask to open in browser dialog on Mac. [\#143](https://github.com/reenhanced/gitreflow/pull/143) ([squaresurf](https://github.com/squaresurf))
 
 ## [v0.7.0](https://github.com/reenhanced/gitreflow/tree/v0.7.0) (2015-10-14)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.6.7...v0.7.0)
 
 **Fixed bugs:**
@@ -267,9 +293,11 @@
 - Command Injection in append\_to\_squashed\_commit\_message. [\#134](https://github.com/reenhanced/gitreflow/issues/134)
 
 ## [v0.6.7](https://github.com/reenhanced/gitreflow/tree/v0.6.7) (2015-09-29)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.6.6...v0.6.7)
 
 ## [v0.6.6](https://github.com/reenhanced/gitreflow/tree/v0.6.6) (2015-09-28)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.6.5...v0.6.6)
 
 **Merged pull requests:**
@@ -277,6 +305,7 @@
 - Fix review message parsing from editor failed [\#133](https://github.com/reenhanced/gitreflow/pull/133) ([francois](https://github.com/francois))
 
 ## [v0.6.5](https://github.com/reenhanced/gitreflow/tree/v0.6.5) (2015-08-31)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.6.4...v0.6.5)
 
 **Closed issues:**
@@ -285,6 +314,7 @@
 - Feature Request: command to cleanly land a contributor's PR [\#128](https://github.com/reenhanced/gitreflow/issues/128)
 
 ## [v0.6.4](https://github.com/reenhanced/gitreflow/tree/v0.6.4) (2015-08-04)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.6.3...v0.6.4)
 
 **Fixed bugs:**
@@ -292,6 +322,7 @@
 - reflow needs an lgtm from myself [\#116](https://github.com/reenhanced/gitreflow/issues/116)
 
 ## [v0.6.3](https://github.com/reenhanced/gitreflow/tree/v0.6.3) (2015-08-03)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.6.2...v0.6.3)
 
 **Closed issues:**
@@ -300,6 +331,7 @@
 - Error: \#\<NameError: wrong constant name \> [\#120](https://github.com/reenhanced/gitreflow/issues/120)
 
 ## [v0.6.2](https://github.com/reenhanced/gitreflow/tree/v0.6.2) (2015-08-03)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.6.1...v0.6.2)
 
 **Fixed bugs:**
@@ -321,6 +353,7 @@
 - Add number attribute to Base:PullRequest [\#110](https://github.com/reenhanced/gitreflow/pull/110) ([tanin47](https://github.com/tanin47))
 
 ## [v0.6.1](https://github.com/reenhanced/gitreflow/tree/v0.6.1) (2015-06-02)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.6.0...v0.6.1)
 
 **Closed issues:**
@@ -328,13 +361,11 @@
 - git reflow setup not working [\#106](https://github.com/reenhanced/gitreflow/issues/106)
 
 ## [v0.6.0](https://github.com/reenhanced/gitreflow/tree/v0.6.0) (2015-05-15)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.5.3...v0.6.0)
 
-**Merged pull requests:**
-
-- new functionality for review [\#99](https://github.com/reenhanced/gitreflow/pull/99) ([meesterdude](https://github.com/meesterdude))
-
 ## [v0.5.3](https://github.com/reenhanced/gitreflow/tree/v0.5.3) (2015-05-15)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.5.2...v0.5.3)
 
 **Closed issues:**
@@ -348,12 +379,15 @@
 - tmp\_squash\_msh is not removed if we use git reflow in other directories than root. [\#98](https://github.com/reenhanced/gitreflow/pull/98) ([tanin47](https://github.com/tanin47))
 
 ## [v0.5.2](https://github.com/reenhanced/gitreflow/tree/v0.5.2) (2015-04-03)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.5.1...v0.5.2)
 
 ## [v0.5.1](https://github.com/reenhanced/gitreflow/tree/v0.5.1) (2015-03-26)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.5.0...v0.5.1)
 
 ## [v0.5.0](https://github.com/reenhanced/gitreflow/tree/v0.5.0) (2015-03-26)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.4.2...v0.5.0)
 
 **Fixed bugs:**
@@ -365,6 +399,7 @@
 - Changing remote url in \reponame\.git\config to make reflow deliver work [\#75](https://github.com/reenhanced/gitreflow/issues/75)
 
 ## [v0.4.2](https://github.com/reenhanced/gitreflow/tree/v0.4.2) (2015-02-10)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.4.1...v0.4.2)
 
 **Fixed bugs:**
@@ -379,6 +414,7 @@
 - Github Enterprise Compatibility [\#42](https://github.com/reenhanced/gitreflow/issues/42)
 
 ## [v0.4.1](https://github.com/reenhanced/gitreflow/tree/v0.4.1) (2014-10-28)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.4.0...v0.4.1)
 
 **Closed issues:**
@@ -386,6 +422,7 @@
 - License does not have year and name filled in [\#69](https://github.com/reenhanced/gitreflow/issues/69)
 
 ## [v0.4.0](https://github.com/reenhanced/gitreflow/tree/v0.4.0) (2014-10-16)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.3.5...v0.4.0)
 
 **Merged pull requests:**
@@ -394,6 +431,7 @@
 - \[fix\] Show delivery halted message properly [\#63](https://github.com/reenhanced/gitreflow/pull/63) ([shirshendu](https://github.com/shirshendu))
 
 ## [v0.3.5](https://github.com/reenhanced/gitreflow/tree/v0.3.5) (2014-03-05)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.3.4...v0.3.5)
 
 **Closed issues:**
@@ -410,6 +448,7 @@
 - Add note to created oauth token so users can find them on their tokens page [\#55](https://github.com/reenhanced/gitreflow/pull/55) ([marten](https://github.com/marten))
 
 ## [v0.3.4](https://github.com/reenhanced/gitreflow/tree/v0.3.4) (2013-11-01)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.3.3...v0.3.4)
 
 **Fixed bugs:**
@@ -422,6 +461,7 @@
 - Print all git commands [\#43](https://github.com/reenhanced/gitreflow/issues/43)
 
 ## [v0.3.3](https://github.com/reenhanced/gitreflow/tree/v0.3.3) (2013-10-16)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.3.2...v0.3.3)
 
 **Closed issues:**
@@ -433,34 +473,45 @@
 - Fix --skip-lgtm option was never passed to the `\#deliver` method [\#45](https://github.com/reenhanced/gitreflow/pull/45) ([francois](https://github.com/francois))
 
 ## [v0.3.2](https://github.com/reenhanced/gitreflow/tree/v0.3.2) (2013-07-25)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.3.1...v0.3.2)
 
 ## [v0.3.1](https://github.com/reenhanced/gitreflow/tree/v0.3.1) (2013-07-12)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.3...v0.3.1)
 
 ## [v0.3](https://github.com/reenhanced/gitreflow/tree/v0.3) (2013-07-12)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.2.5...v0.3)
 
 ## [v0.2.5](https://github.com/reenhanced/gitreflow/tree/v0.2.5) (2013-03-04)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.2.5-with-tests...v0.2.5)
 
 ## [v0.2.5-with-tests](https://github.com/reenhanced/gitreflow/tree/v0.2.5-with-tests) (2013-03-04)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.2.4...v0.2.5-with-tests)
 
 ## [v0.2.4](https://github.com/reenhanced/gitreflow/tree/v0.2.4) (2012-09-21)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.2.2...v0.2.4)
 
 ## [v0.2.2](https://github.com/reenhanced/gitreflow/tree/v0.2.2) (2012-09-17)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.2.1...v0.2.2)
 
 ## [v0.2.1](https://github.com/reenhanced/gitreflow/tree/v0.2.1) (2012-08-30)
+
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.2...v0.2.1)
 
 ## [v0.2](https://github.com/reenhanced/gitreflow/tree/v0.2) (2012-08-28)
+
+[Full Changelog](https://github.com/reenhanced/gitreflow/compare/e84b48641d5ec6f5d87674c9152830e08ffe1b76...v0.2)
+
 **Merged pull requests:**
 
 - Adds documentation to reflow [\#13](https://github.com/reenhanced/gitreflow/pull/13) ([nhance](https://github.com/nhance))
 
 
 
-\* *This Change Log was automatically generated by [github_changelog_generator](https://github.com/skywinder/Github-Changelog-Generator)*
+\* *This Changelog was automatically generated by [github_changelog_generator](https://github.com/github-changelog-generator/github-changelog-generator)*

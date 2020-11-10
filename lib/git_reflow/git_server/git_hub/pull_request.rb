@@ -147,13 +147,19 @@ module GitReflow
                 GitReflow.run_command_with_label "git pull origin #{self.base_branch_name}"
                 GitReflow.say "Pull request ##{self.number} successfully merged.", :success
 
-                if cleanup_feature_branch?
-                  GitReflow.run_command_with_label "git push origin :#{self.feature_branch_name}"
-                  GitReflow.run_command_with_label "git branch -D #{self.feature_branch_name}"
-                  GitReflow.say "Nice job buddy."
+                if cleanup_remote_feature_branch?
+                  GitReflow.run_command_with_label "git push origin :#{self.feature_branch_name}", blocking: false
                 else
-                  cleanup_failure_message
+                  GitReflow.say "Skipped. Remote feature branch #{self.feature_branch_name} left in tact."
                 end
+
+                if cleanup_local_feature_branch?
+                  GitReflow.run_command_with_label "git branch -D #{self.feature_branch_name}"
+                else
+                  GitReflow.say "Skipped. Local feature branch #{self.feature_branch_name} left in tact."
+                end
+
+                GitReflow.say "Nice job buddy."
               else
                 GitReflow.say merge_response.to_s, :deliver_halted
                 GitReflow.say "There were problems commiting your feature... please check the errors above and try again.", :error

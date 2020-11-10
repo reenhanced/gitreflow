@@ -443,11 +443,15 @@ If the review is done, it's time to merge. Here's what happens:
 
   In order to streamline delivery you can set the following git config to:
 
-  1. always clean up the feature branch after the PR is merged
+  1. always clean up the remote feature branch after the PR is merged
     ```
-    git config --global --add "reflow.always-cleanup" "true"
+    git config --global --add "reflow.always-cleanup-remote" "true"
     ```
-  2. always deliver without further prompt
+  2. always clean up the local feature branch after the PR is merged
+    ```
+    git config --global --add "reflow.always-cleanup-local" "true"
+    ```
+  3. always deliver without further prompt
     ```
     git config --global --add "reflow.always-deliver" "true"
     ```

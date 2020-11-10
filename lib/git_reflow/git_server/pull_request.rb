@@ -178,7 +178,21 @@ module GitReflow
       end
 
       def cleanup_feature_branch?
-        GitReflow::Config.get('reflow.always-cleanup') == "true" || (ask "Would you like to push this branch to your remote repo and cleanup your feature branch? ") =~ /^y/i
+        cleanup_local_feature_branch? || cleanup_remote_feature_branch?
+      end
+
+      def cleanup_local_feature_branch?
+        # backwards compat
+        always_cleanup_local = GitReflow::Config.get('reflow.always-cleanup').to_s
+        always_cleanup_local = GitReflow::Config.get('reflow.always-cleanup-local') if always_cleanup_local.empty?
+        always_cleanup_local == "true" || (ask "Would you like to cleanup your local feature branch? ") =~ /^y/i
+      end
+
+      def cleanup_remote_feature_branch?
+        # backwards compat
+        always_cleanup_remote = GitReflow::Config.get('reflow.always-cleanup').to_s
+        always_cleanup_remote = GitReflow::Config.get('reflow.always-cleanup-remote') if always_cleanup_remote.empty?
+        always_cleanup_remote == "true" || (ask "Would you like to cleanup your remote feature branch? ") =~ /^y/i
       end
 
       def deliver?

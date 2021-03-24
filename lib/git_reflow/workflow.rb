@@ -157,7 +157,7 @@ module GitReflow
         self.commands[name] = params
         self.command_docs[name] = params
 
-        self.define_singleton_method(name) do |**args|
+        self.define_singleton_method(name) do |args = {}|
           args_with_defaults = {}
           args.each do |name, value|
             if "#{value}".length <= 0 && !defaults[name].nil?

@@ -1,8 +1,8 @@
 require 'rubygems'
 require 'rspec'
+require 'ruby_jard'
 require 'multi_json'
 require 'webmock/rspec'
-require 'pry'
 
 $LOAD_PATH << 'lib'
 require 'git_reflow'

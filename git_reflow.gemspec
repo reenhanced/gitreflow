@@ -22,7 +22,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency('appraisal', '2.2.0')
   s.add_development_dependency('chronic')
   s.add_development_dependency('github_changelog_generator')
-  s.add_development_dependency('pry-byebug')
+  s.add_development_dependency('ruby_jard')
   s.add_development_dependency('rake', '~> 13.0.1')
   s.add_development_dependency('rdoc')
   s.add_development_dependency('rspec', '~> 3.9')

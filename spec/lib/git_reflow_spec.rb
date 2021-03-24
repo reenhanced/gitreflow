@@ -1,7 +1,6 @@
 require 'spec_helper'
 
 describe GitReflow do
-
   describe ".logger" do
     # Ignore memoization for tests
     before { GitReflow.instance_variable_set("@logger", nil) }

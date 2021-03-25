@@ -19,19 +19,19 @@ Gem::Specification.new do |s|
   s.require_paths = ['lib']
   s.rdoc_options << '--title' << 'git_reflow' << '-ri'
 
-  s.add_development_dependency('appraisal', '2.2.0')
+  s.add_development_dependency('appraisal', '2.4.0')
   s.add_development_dependency('chronic')
   s.add_development_dependency('github_changelog_generator')
-  s.add_development_dependency('pry-byebug')
-  s.add_development_dependency('rake', '~> 13.0.1')
+  s.add_development_dependency('ruby_jard')
+  s.add_development_dependency('rake', '~> 13.0.3')
   s.add_development_dependency('rdoc')
-  s.add_development_dependency('rspec', '~> 3.9')
+  s.add_development_dependency('rspec', '~> 3.10')
   s.add_development_dependency('webmock')
   s.add_development_dependency('wwtd', '1.4')
 
   s.add_dependency('bundler', '>= 1.10.0')
   s.add_dependency('codenamev_bitbucket_api', '0.4.1')
-  s.add_dependency('colorize', '>= 0.7.0')
+  s.add_dependency('colorize', '>= 0.8.1')
   s.add_dependency('github_api', '0.19')
   s.add_dependency('highline')
   s.add_dependency('httpclient')

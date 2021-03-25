@@ -1,11 +1,20 @@
 # Changelog
 
+## [Unreleased](https://github.com/reenhanced/gitreflow/tree/HEAD)
+
+[Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.9.4...HEAD)
+
+**Fixed bugs:**
+
+- Deprecation warnings with Ruby 2.7.0 [\#239](https://github.com/reenhanced/gitreflow/issues/239)
+
 ## [v0.9.4](https://github.com/reenhanced/gitreflow/tree/v0.9.4) (2020-11-10)
 
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.9.3...v0.9.4)
 
 **Merged pull requests:**
 
+- Fix critical issue, and update deps [\#245](https://github.com/reenhanced/gitreflow/pull/245) ([codenamev](https://github.com/codenamev))
 - Fixed typo [\#244](https://github.com/reenhanced/gitreflow/pull/244) ([hsbt](https://github.com/hsbt))
 
 ## [v0.9.3](https://github.com/reenhanced/gitreflow/tree/v0.9.3) (2020-06-02)
@@ -72,7 +81,6 @@
 
 **Merged pull requests:**
 
-- Fix critical issue, and update deps [\#245](https://github.com/reenhanced/gitreflow/pull/245) ([codenamev](https://github.com/codenamev))
 - Allows for configuring a custom base-branch [\#231](https://github.com/reenhanced/gitreflow/pull/231) ([codenamev](https://github.com/codenamev))
 - Fixes many scoping issues with new Workflow [\#229](https://github.com/reenhanced/gitreflow/pull/229) ([codenamev](https://github.com/codenamev))
 - Retry pull-request creation if there are errors [\#226](https://github.com/reenhanced/gitreflow/pull/226) ([codenamev](https://github.com/codenamev))
@@ -86,7 +94,7 @@
 **Merged pull requests:**
 
 - Updates rubies and gems [\#221](https://github.com/reenhanced/gitreflow/pull/221) ([codenamev](https://github.com/codenamev))
-- Remove lingering `skip\_lgtm` options in favor of `force` option [\#218](https://github.com/reenhanced/gitreflow/pull/218) ([codenamev](https://github.com/codenamev))
+- Remove lingering `skip_lgtm` options in favor of `force` option [\#218](https://github.com/reenhanced/gitreflow/pull/218) ([codenamev](https://github.com/codenamev))
 - Remove dead code [\#217](https://github.com/reenhanced/gitreflow/pull/217) ([codenamev](https://github.com/codenamev))
 - Updates REAME to Markdown [\#216](https://github.com/reenhanced/gitreflow/pull/216) ([codenamev](https://github.com/codenamev))
 - Updates readme with details on customization [\#214](https://github.com/reenhanced/gitreflow/pull/214) ([codenamev](https://github.com/codenamev))
@@ -127,7 +135,7 @@
 **Merged pull requests:**
 
 - 0.8.7 [\#213](https://github.com/reenhanced/gitreflow/pull/213) ([nhance](https://github.com/nhance))
-- Updates Github merge request to use new `merge\_method` param [\#211](https://github.com/reenhanced/gitreflow/pull/211) ([codenamev](https://github.com/codenamev))
+- Updates Github merge request to use new `merge_method` param [\#211](https://github.com/reenhanced/gitreflow/pull/211) ([codenamev](https://github.com/codenamev))
 - Adds a logger to log command runs [\#210](https://github.com/reenhanced/gitreflow/pull/210) ([codenamev](https://github.com/codenamev))
 - All commands that are run through reflow \(except git-config\) are now blocking [\#209](https://github.com/reenhanced/gitreflow/pull/209) ([codenamev](https://github.com/codenamev))
 - Fix loading of PR template from '.github' directory [\#208](https://github.com/reenhanced/gitreflow/pull/208) ([codenamev](https://github.com/codenamev))
@@ -470,7 +478,7 @@
 
 **Merged pull requests:**
 
-- Fix --skip-lgtm option was never passed to the `\#deliver` method [\#45](https://github.com/reenhanced/gitreflow/pull/45) ([francois](https://github.com/francois))
+- Fix --skip-lgtm option was never passed to the `#deliver` method [\#45](https://github.com/reenhanced/gitreflow/pull/45) ([francois](https://github.com/francois))
 
 ## [v0.3.2](https://github.com/reenhanced/gitreflow/tree/v0.3.2) (2013-07-25)
 

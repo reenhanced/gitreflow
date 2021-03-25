@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    git_reflow (0.9.4)
+    git_reflow (0.9.5)
       bundler (>= 1.10.0)
       codenamev_bitbucket_api (= 0.4.1)
       colorize (>= 0.8.1)
@@ -182,4 +182,4 @@ DEPENDENCIES
   wwtd (= 1.4)
 
 BUNDLED WITH
-   2.1.4
+   2.2.4

@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 require "spec_helper"
 
 module Gitacular
@@ -98,7 +96,7 @@ describe GitReflow::GitHelpers do
     subject { Gitacular.current_branch }
     it {
       expect { subject }
-        .to have_run_command_silently 'git branch --no-color | grep "^\* " | grep -v "no branch" | sed "s/^* //g"'
+        .to have_run_command_silently "git branch --no-color | grep '^\* ' | grep -v 'no branch' | sed 's/^* //g'"
     }
   end
 
@@ -123,6 +121,30 @@ describe GitReflow::GitHelpers do
       end
 
       it { is_expected.to be_nil }
+    end
+
+    context "custom template file configured" do
+      before do
+        allow(GitReflow::Config).to receive(:get).with("templates.pull-request").and_return "pr_template_file.md"
+      end
+
+      context "template file exists" do
+        let(:template_content) { "Template content" }
+
+        before do
+          allow(File).to receive(:exist?).with("pr_template_file.md").and_return(true)
+          allow(File).to receive(:read).with("pr_template_file.md").and_return(template_content)
+        end
+        it { is_expected.to eq template_content }
+      end
+
+      context "template file does not exist" do
+        before do
+          allow(File).to receive(:exist?).and_return(false)
+        end
+
+        it { is_expected.to be_nil }
+      end
     end
   end
 

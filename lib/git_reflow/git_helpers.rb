@@ -62,12 +62,14 @@ module GitReflow
     end
 
     def merge_commit_template
+      custom_template = GitReflow::Config.get('templates.merge-commit')
       filenames_to_try = %w[.github/MERGE_COMMIT_TEMPLATE.md
                             .github/MERGE_COMMIT_TEMPLATE
                             MERGE_COMMIT_TEMPLATE.md
                             MERGE_COMMIT_TEMPLATE].map do |file|
         "#{git_root_dir}/#{file}"
       end
+      filenames_to_try.unshift(custom_template) unless custom_template.empty?
 
       parse_first_matching_template_file(filenames_to_try)
     end

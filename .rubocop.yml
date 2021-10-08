@@ -1,2 +1,9 @@
+Metrics/BlockLength:
+  Exclude:
+    - "spec/**/*_spec.rb"
 Metrics/LineLength:
   Max: 120
+Style/ModuleFuction:
+  EnforcedStyle: extend_self
+Style/StringLiterals:
+  EnforcedStyle: double_quotes

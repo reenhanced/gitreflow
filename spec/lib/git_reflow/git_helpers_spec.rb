@@ -1,15 +1,15 @@
-require 'spec_helper'
+require "spec_helper"
+
+module Gitacular
+  include GitReflow::GitHelpers
+  extend self
+end
 
 describe GitReflow::GitHelpers do
-  let(:origin_url) { 'git@github.com:reenhanced.spectacular/this-is-the.shit.git' }
+  let(:origin_url) { "git@github.com:reenhanced.spectacular/this-is-the.shit.git" }
 
   before do
-    stub_with_fallback(GitReflow::Config, :get).with('remote.origin.url').and_return(origin_url)
-
-    module Gitacular
-      include GitReflow::GitHelpers
-      extend self
-    end
+    stub_with_fallback(GitReflow::Config, :get).with("remote.origin.url").and_return(origin_url)
 
     stub_run_for Gitacular
   end
@@ -18,83 +18,86 @@ describe GitReflow::GitHelpers do
     subject { Gitacular.default_editor }
 
     context "when the environment has EDITOR set" do
-      before  { allow(ENV).to receive(:[]).with('EDITOR').and_return('emacs') }
-      specify { expect( subject ).to eql('emacs') }
+      before  { allow(ENV).to receive(:[]).with("EDITOR").and_return("emacs") }
+      specify { expect(subject).to eql("emacs") }
     end
 
     context "when the environment has no EDITOR set" do
-      before  { allow(ENV).to receive(:[]).with('EDITOR').and_return(nil) }
-      specify { expect( subject ).to eql('vi') }
+      before  { allow(ENV).to receive(:[]).with("EDITOR").and_return(nil) }
+      specify { expect(subject).to eql("vi") }
     end
   end
 
   describe ".git_root_dir" do
     subject { Gitacular.git_root_dir }
-    it      { expect{ subject }.to have_run_command_silently "git rev-parse --show-toplevel" }
+    it      { expect { subject }.to have_run_command_silently "git rev-parse --show-toplevel" }
   end
 
-  describe '.git_editor_command' do
+  describe ".git_editor_command" do
     subject { Gitacular.git_editor_command }
-    before { ENV['EDITOR'] = 'vim' }
+    before { ENV["EDITOR"] = "vim" }
 
-    it 'defaults to GitReflow config' do
-      allow(GitReflow::Config).to receive(:get).with('core.editor').and_return 'nano'
+    it "defaults to GitReflow config" do
+      allow(GitReflow::Config).to receive(:get).with("core.editor").and_return "nano"
 
-      expect(subject).to eq 'nano'
+      expect(subject).to eq "nano"
     end
 
-    it 'falls back to the environment variable $EDITOR' do
-      allow(GitReflow::Config).to receive(:get).with('core.editor').and_return ''
+    it "falls back to the environment variable $EDITOR" do
+      allow(GitReflow::Config).to receive(:get).with("core.editor").and_return ""
 
-      expect(subject).to eq 'vim'
+      expect(subject).to eq "vim"
     end
   end
 
   describe ".remote_user" do
     subject { Gitacular.remote_user }
 
-    it { is_expected.to eq('reenhanced.spectacular') }
+    it { is_expected.to eq("reenhanced.spectacular") }
 
     context "remote origin url isn't set" do
-      let(:origin_url) { '' }
-      it { is_expected.to eq('') }
+      let(:origin_url) { "" }
+      it { is_expected.to eq("") }
     end
 
     context "remote origin uses HTTP" do
-      let(:origin_url) { 'https://github.com/reenhanced.spectacular/this-is-the.shit.git' }
-      it               { is_expected.to eq('reenhanced.spectacular') }
+      let(:origin_url) { "https://github.com/reenhanced.spectacular/this-is-the.shit.git" }
+      it               { is_expected.to eq("reenhanced.spectacular") }
     end
   end
 
   describe ".remote_repo_name" do
     subject { Gitacular.remote_repo_name }
 
-    it { is_expected.to eq('this-is-the.shit') }
+    it { is_expected.to eq("this-is-the.shit") }
 
     context "remote origin url isn't set" do
-      let(:origin_url) { '' }
-      it { is_expected.to eq('') }
+      let(:origin_url) { "" }
+      it { is_expected.to eq("") }
     end
 
     context "remote origin uses HTTP" do
-      let(:origin_url) { 'https://github.com/reenhanced.spectacular/this-is-the.shit.git' }
-      it               { is_expected.to eq('this-is-the.shit') }
+      let(:origin_url) { "https://github.com/reenhanced.spectacular/this-is-the.shit.git" }
+      it               { is_expected.to eq("this-is-the.shit") }
     end
   end
 
-  describe '.default_base_branch' do
+  describe ".default_base_branch" do
     subject { Gitacular.default_base_branch }
-    it      { is_expected.to eq('master') }
+    it      { is_expected.to eq("master") }
 
-    context 'when configured' do
-      before { allow(GitReflow::Config).to receive(:get).with('reflow.base-branch').and_return('tuba') }
-      it { is_expected.to eq('tuba') }
+    context "when configured" do
+      before { allow(GitReflow::Config).to receive(:get).with("reflow.base-branch").and_return("tuba") }
+      it { is_expected.to eq("tuba") }
     end
   end
 
   describe ".current_branch" do
     subject { Gitacular.current_branch }
-    it      { expect{ subject }.to have_run_command_silently "git branch --no-color | grep '^\* ' | grep -v 'no branch' | sed 's/^* //g'" }
+    it {
+      expect { subject }
+        .to have_run_command_silently "git branch --no-color | grep '^\* ' | grep -v 'no branch' | sed 's/^* //g'"
+    }
   end
 
   describe ".pull_request_template" do
@@ -119,36 +122,29 @@ describe GitReflow::GitHelpers do
 
       it { is_expected.to be_nil }
     end
-  end
 
-  describe ".pull_request_template" do
-    subject { Gitacular.pull_request_template }
-
-    context "template file exists" do
-      let(:root_dir) { "/some_repo" }
-      let(:template_content) { "Template content" }
-
+    context "custom template file configured" do
       before do
-        allow(Gitacular).to receive(:git_root_dir).and_return(root_dir)
-        allow(File).to receive(:exist?).with("#{root_dir}/.github/PULL_REQUEST_TEMPLATE.md").and_return(true)
-        allow(File).to receive(:read).with("#{root_dir}/.github/PULL_REQUEST_TEMPLATE.md").and_return(template_content)
+        allow(GitReflow::Config).to receive(:get).with("templates.pull-request").and_return "pr_template_file.md"
       end
 
-      it { is_expected.to eq template_content }
+      context "template file exists" do
+        let(:template_content) { "Template content" }
 
-      context "when template has mustache tags" do
-        let(:template_content) { "This is the coolest {{current_branch}}" }
-        before { allow(GitReflow).to receive(:current_branch).and_return("tomato") }
-        it { is_expected.to eq "This is the coolest tomato" }
-      end
-    end
-
-    context "template file does not exist" do
-      before do
-        allow(File).to receive(:exist?).and_return(false)
+        before do
+          allow(File).to receive(:exist?).with("pr_template_file.md").and_return(true)
+          allow(File).to receive(:read).with("pr_template_file.md").and_return(template_content)
+        end
+        it { is_expected.to eq template_content }
       end
 
-      it { is_expected.to be_nil }
+      context "template file does not exist" do
+        before do
+          allow(File).to receive(:exist?).and_return(false)
+        end
+
+        it { is_expected.to be_nil }
+      end
     end
   end
 
@@ -181,27 +177,51 @@ describe GitReflow::GitHelpers do
 
       it { is_expected.to be_nil }
     end
+
+    context "custom template file configured" do
+      before do
+        allow(GitReflow::Config).to receive(:get).with("templates.merge-commit").and_return "merge_template_file.md"
+      end
+
+      context "template file exists" do
+        let(:template_content) { "Template content" }
+
+        before do
+          allow(File).to receive(:exist?).with("merge_template_file.md").and_return(true)
+          allow(File).to receive(:read).with("merge_template_file.md").and_return(template_content)
+        end
+        it { is_expected.to eq template_content }
+      end
+
+      context "template file does not exist" do
+        before do
+          allow(File).to receive(:exist?).and_return(false)
+        end
+
+        it { is_expected.to be_nil }
+      end
+    end
   end
 
   describe ".get_first_commit_message" do
     subject { Gitacular.get_first_commit_message }
-    it      { expect{ subject }.to have_run_command_silently 'git log --pretty=format:"%s" --no-merges -n 1' }
+    it      { expect { subject }.to have_run_command_silently 'git log --pretty=format:"%s" --no-merges -n 1' }
   end
 
   describe ".push_current_branch" do
     subject { Gitacular.push_current_branch }
-    before  { allow(Gitacular).to receive(:current_branch).and_return('bingo') }
-    it      { expect{ subject }.to have_run_command "git push origin bingo" }
+    before  { allow(Gitacular).to receive(:current_branch).and_return("bingo") }
+    it      { expect { subject }.to have_run_command "git push origin bingo" }
   end
 
   describe ".fetch_destination(destination_branch)" do
-    subject { Gitacular.fetch_destination('new-feature') }
-    it      { expect{ subject }.to have_run_command "git fetch origin new-feature" }
+    subject { Gitacular.fetch_destination("new-feature") }
+    it      { expect { subject }.to have_run_command "git fetch origin new-feature" }
   end
 
   describe ".update_destination(destination_branch)" do
-    let(:current_branch)     { 'bananas' }
-    let(:destination_branch) { 'monkey-business' }
+    let(:current_branch)     { "bananas" }
+    let(:destination_branch) { "monkey-business" }
 
     before  { allow(Gitacular).to receive(:current_branch).and_return(current_branch) }
     subject { Gitacular.update_destination(destination_branch) }
@@ -217,7 +237,7 @@ describe GitReflow::GitHelpers do
 
   describe ".update_current_branch" do
     subject { Gitacular.update_current_branch }
-    before  { allow(Gitacular).to receive(:current_branch).and_return('new-feature') }
+    before  { allow(Gitacular).to receive(:current_branch).and_return("new-feature") }
 
     it "updates the remote changes and pushes any local changes" do
       expect { subject }.to have_run_commands_in_order [
@@ -228,9 +248,9 @@ describe GitReflow::GitHelpers do
   end
 
   describe ".update_feature_branch" do
-    options = {base: "base", remote: "remote"}
+    options = { base: "base", remote: "remote" }
     subject { Gitacular.update_feature_branch(options) }
-    before  { allow(Gitacular).to receive(:current_branch).and_return('feature') }
+    before  { allow(Gitacular).to receive(:current_branch).and_return("feature") }
 
     it "calls the correct methods" do
       expect { subject }.to have_run_commands_in_order [
@@ -246,14 +266,14 @@ describe GitReflow::GitHelpers do
   describe ".append_to_merge_commit_message(message)" do
     let(:original_commit_message) { "Oooooo, SQUASH IT" }
     let(:message)                 { "do do the voodoo that you do" }
-    let(:root_dir)                { '/home/gitreflow' }
+    let(:root_dir)                { "/home/gitreflow" }
     let(:merge_message_path)      { "#{root_dir}/.git/SQUASH_MSG" }
     let(:tmp_merge_message_path)  { "#{root_dir}/.git/tmp_merge_msg" }
     before                        { allow(Gitacular).to receive(:git_root_dir).and_return(root_dir) }
     subject                       { Gitacular.append_to_merge_commit_message(message) }
 
     it "appends the message to git's SQUASH_MSG temp file" do
-      tmp_file = double('file')
+      tmp_file = double("file")
       allow(File).to receive(:open).with(tmp_merge_message_path, "w").and_yield(tmp_file)
       allow(File).to receive(:exists?).with(merge_message_path).and_return(true)
       allow(File).to receive(:foreach).with(merge_message_path).and_yield(original_commit_message)
@@ -269,7 +289,7 @@ describe GitReflow::GitHelpers do
       let(:merge_message_path) { "#{root_dir}/.git/MERGE_MSG" }
       subject { Gitacular.append_to_merge_commit_message(message, merge_method: "merge") }
       it "appends the message to git's MERGE_MSG temp file if using a direct merge" do
-        tmp_file = double('file')
+        tmp_file = double("file")
         allow(File).to receive(:open).with(tmp_merge_message_path, "w").and_yield(tmp_file)
         allow(File).to receive(:exists?).with(merge_message_path).and_return(true)
         allow(File).to receive(:foreach).with(merge_message_path).and_yield(original_commit_message)

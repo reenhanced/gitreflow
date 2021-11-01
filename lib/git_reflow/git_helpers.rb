@@ -47,23 +47,29 @@ module GitReflow
     end
 
     def pull_request_template
-      filenames_to_try = %w[.github/PULL_REQUEST_TEMPLATE.md
-                            .github/PULL_REQUEST_TEMPLATE
-                            PULL_REQUEST_TEMPLATE.md
-                            PULL_REQUEST_TEMPLATE].map do |file|
+      custom_template = GitReflow::Config.get('templates.pull-request')
+      filenames_to_try = %w[
+        .github/PULL_REQUEST_TEMPLATE.md
+        .github/PULL_REQUEST_TEMPLATE
+        PULL_REQUEST_TEMPLATE.md
+        PULL_REQUEST_TEMPLATE
+      ].map do |file|
         "#{git_root_dir}/#{file}"
       end
+      filenames_to_try.unshift(custom_template) unless custom_template.empty?
 
       parse_first_matching_template_file(filenames_to_try)
     end
 
     def merge_commit_template
+      custom_template = GitReflow::Config.get('templates.merge-commit')
       filenames_to_try = %w[.github/MERGE_COMMIT_TEMPLATE.md
                             .github/MERGE_COMMIT_TEMPLATE
                             MERGE_COMMIT_TEMPLATE.md
                             MERGE_COMMIT_TEMPLATE].map do |file|
         "#{git_root_dir}/#{file}"
       end
+      filenames_to_try.unshift(custom_template) unless custom_template.empty?
 
       parse_first_matching_template_file(filenames_to_try)
     end

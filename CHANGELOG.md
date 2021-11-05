@@ -1,12 +1,28 @@
 # Changelog
 
-## [Unreleased](https://github.com/reenhanced/gitreflow/tree/HEAD)
+## [v0.9.6](https://github.com/reenhanced/gitreflow/tree/v0.9.6) (2021-11-05)
 
-[Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.9.4...HEAD)
+[Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.9.5...HEAD)
+
+**Implemented enhancements:**
+
+- Use GitHub PR Templates? [\#251](https://github.com/reenhanced/gitreflow/issues/251)
+
+**Merged pull requests:**
+
+- Introduce configurable PR and merge commit templates [\#252](https://github.com/reenhanced/gitreflow/pull/252) ([codenamev](https://github.com/codenamev))
+
+## [v0.9.5](https://github.com/reenhanced/gitreflow/tree/v0.9.5) (2021-03-25)
+
+[Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.9.4...v0.9.5)
 
 **Fixed bugs:**
 
 - Deprecation warnings with Ruby 2.7.0 [\#239](https://github.com/reenhanced/gitreflow/issues/239)
+
+**Merged pull requests:**
+
+- Support for Ruby 3.0 [\#249](https://github.com/reenhanced/gitreflow/pull/249) ([codenamev](https://github.com/codenamev))
 
 ## [v0.9.4](https://github.com/reenhanced/gitreflow/tree/v0.9.4) (2020-11-10)
 

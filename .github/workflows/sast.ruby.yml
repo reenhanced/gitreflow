@@ -1,0 +1,15 @@
+name: SAST Ruby
+on:
+  pull_request:
+    paths:
+      - "**.rb"
+jobs:
+  semgrep:
+    name: Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: returntocorp/semgrep-action@v1
+        with:
+          config: >-
+            p/ruby

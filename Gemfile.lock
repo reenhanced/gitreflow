@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    git_reflow (0.9.7)
+    git_reflow (0.9.8)
       bundler (>= 1.10.0)
       codenamev_bitbucket_api (= 0.4.1)
       colorize (>= 0.8.1)

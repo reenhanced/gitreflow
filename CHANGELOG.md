@@ -1,5 +1,15 @@
 # Changelog
 
+## [v0.9.8](https://github.com/reenhanced/gitreflow/tree/v0.9.8) (2022-02-20)
+
+[Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.9.7...HEAD)
+
+**Bug fixes:**
+
+- Fixes a bug accidentally introduced when attempting to debug OptionParser issue.
+
+# Changelog
+
 ## [v0.9.7](https://github.com/reenhanced/gitreflow/tree/v0.9.7) (2022-02-20)
 
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.9.6...HEAD)

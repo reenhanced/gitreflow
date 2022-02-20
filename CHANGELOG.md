@@ -1,5 +1,13 @@
 # Changelog
 
+## [v0.9.7](https://github.com/reenhanced/gitreflow/tree/v0.9.7) (2022-02-20)
+
+[Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.9.6...HEAD)
+
+**Bug fixes:**
+
+- Correctly parse command line flag and switch values when no help docs are provided
+
 ## [v0.9.6](https://github.com/reenhanced/gitreflow/tree/v0.9.6) (2021-11-05)
 
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.9.5...HEAD)

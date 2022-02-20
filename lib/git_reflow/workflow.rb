@@ -157,7 +157,7 @@ module GitReflow
         self.commands[name] = params
         self.command_docs[name] = params
 
-        logger.debug "adding new command '#{name}' with #{defaults.inspect}"
+        GitReflow.logger.debug "adding new command '#{name}' with #{defaults.inspect}"
         self.define_singleton_method(name) do |args = {}|
           args_with_defaults = {}
           args.each do |name, value|

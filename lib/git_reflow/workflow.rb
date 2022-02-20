@@ -157,6 +157,7 @@ module GitReflow
         self.commands[name] = params
         self.command_docs[name] = params
 
+        logger.debug "adding new command '#{name}' with #{defaults.inspect}"
         self.define_singleton_method(name) do |args = {}|
           args_with_defaults = {}
           args.each do |name, value|
@@ -310,13 +311,19 @@ module GitReflow
           opts.separator  "COMMAND OPTIONS:" if docs[:flags].any? || docs[:switches].any?
 
           self.commands[name][:flags].each do |flag_name, flag_default|
-            opts.on("-#{flag_name[0]}", "--#{flag_name} #{flag_name.upcase}", command_docs[name][:flags][flag_name]) do |f|
+            # There is a bug in Ruby that will not parse the flag value if no
+            # help text is provided.  Fallback to the flag name.
+            flag_help = command_docs[name][:flags][flag_name] || flag_name
+            opts.on("-#{flag_name[0]}", "--#{flag_name} #{flag_name.upcase}", flag_help) do |f|
               options[kebab_to_underscore(flag_name)] = f || flag_default
             end
           end
 
           self.commands[name][:switches].each do |switch_name, switch_default|
-            opts.on("-#{switch_name[0]}", "--[no-]#{switch_name}", command_docs[name][:switches][switch_name]) do |s|
+            # There is a bug in Ruby that will not parse the switch value if no
+            # help text is provided.  Fallback to the switch name.
+            switch_help = command_docs[name][:switches][switch_name] || switch_name
+            opts.on("-#{switch_name[0]}", "--[no-]#{switch_name}", switch_help) do |s|
               options[kebab_to_underscore(switch_name)] = s || switch_default
             end
           end

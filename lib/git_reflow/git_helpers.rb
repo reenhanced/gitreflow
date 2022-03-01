@@ -14,6 +14,8 @@ module GitReflow
 
     def git_root_dir
       return @git_root_dir unless @git_root_dir.to_s.empty?
+      return @git_root_dir = Dir.pwd if Dir.exists?("#{Dir.pwd}/.git")
+
       @git_root_dir = run('git rev-parse --show-toplevel', loud: false).strip
     end
 

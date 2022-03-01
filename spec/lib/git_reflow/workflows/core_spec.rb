@@ -34,7 +34,6 @@ describe GitReflow::Workflows::Core do
   end
 
   describe ".load_raw_workflow(workflow_string)" do
-    before { allow(GitReflow::Workflows::Core).to receive(:load_workflow).and_call_original }
     it "evaluates the raw string in the context of the Core workflow" do
       workflow_content = <<~WORKFLOW_CONTENT
         command :dummy do
@@ -44,7 +43,7 @@ describe GitReflow::Workflows::Core do
       fake_binding = instance_double(Binding)
       expect(fake_binding).to receive(:eval).with(workflow_content)
       expect(described_class).to receive(:binding).and_return(fake_binding)
-      GitReflow::Workflows::Core.load_raw_workflow(workflow_content)
+      described_class.load_raw_workflow(workflow_content)
     end
   end
 

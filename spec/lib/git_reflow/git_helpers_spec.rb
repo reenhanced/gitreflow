@@ -30,7 +30,15 @@ describe GitReflow::GitHelpers do
 
   describe ".git_root_dir" do
     subject { Gitacular.git_root_dir }
-    it      { expect { subject }.to have_run_command_silently "git rev-parse --show-toplevel" }
+
+    before { Gitacular.instance_variable_set(:@git_root_dir, nil) }
+
+    it { expect(subject).to eq(Dir.pwd) }
+
+    context "when not in the root directory" do
+      before { allow(Dir).to receive(:pwd).and_return("/tmp/nope") }
+      it { expect { subject }.to have_run_command_silently "git rev-parse --show-toplevel" }
+    end
   end
 
   describe ".git_editor_command" do

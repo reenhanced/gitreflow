@@ -13,7 +13,7 @@ module GitReflow
       # @param workflow_path [String] the path of the Workflow file to eval
       def self.load_workflow(workflow_path)
         return unless workflow_path.length > 0 and File.exists?(workflow_path)
-        ::GitReflow.logger.debug "Using workflow: #{workflow_path}"
+        logger.debug "Using workflow: #{workflow_path}"
         self.load_raw_workflow(File.read(workflow_path))
       end
 
@@ -22,7 +22,7 @@ module GitReflow
       # @param workflow_string [String] the contents of a Workflow file to eval
       def self.load_raw_workflow(workflow_string)
         return if workflow_string.strip.empty?
-        ::GitReflow.logger.debug "Evaluating workflow..."
+        logger.debug "Evaluating workflow..."
         binding.eval(workflow_string)
       end
 

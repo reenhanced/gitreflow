@@ -1,3 +1,4 @@
+require 'git_reflow/logger'
 require 'git_reflow/sandbox'
 require 'git_reflow/git_helpers'
 require 'bundler/inline'
@@ -77,8 +78,12 @@ module GitReflow
         GitReflow.git_server
       end
 
-      def logger
-        GitReflow.logger
+      def logger(*args)
+        return @logger if defined?(@logger)
+
+        @logger = GitReflow.try(:logger, *args) || GitReflow::Logger.new(*args)
+      rescue NoMethodError
+        @logger = GitReflow::Logger.new(*args)
       end
 
       # Checks for an installed gem, and if none is installed use bundler's
@@ -113,10 +118,10 @@ module GitReflow
       # @param name [String] the name of the Workflow file to use as a basis
       def use(workflow_name)
         if workflows.key?(workflow_name)
-          GitReflow.logger.debug "Using Workflow: #{workflow_name}"
+          logger.debug "Using Workflow: #{workflow_name}"
           GitReflow::Workflows::Core.load_workflow(workflows[workflow_name])
         else
-          GitReflow.logger.error "Tried to use non-existent Workflow: #{workflow_name}"
+          logger.error "Tried to use non-existent Workflow: #{workflow_name}"
         end
       end
 
@@ -157,7 +162,7 @@ module GitReflow
         self.commands[name] = params
         self.command_docs[name] = params
 
-        GitReflow.logger.debug "adding new command '#{name}' with #{defaults.inspect}"
+        logger.debug "adding new command '#{name}' with #{defaults.inspect}"
         self.define_singleton_method(name) do |args = {}|
           args_with_defaults = {}
           args.each do |name, value|
@@ -174,18 +179,18 @@ module GitReflow
             end
           end
 
-          GitReflow.logger.debug "callbacks: #{callbacks.inspect}"
+          logger.debug "callbacks: #{callbacks.inspect}"
           Array(callbacks[:before][name]).each do |block|
-            GitReflow.logger.debug "(before) callback running for `#{name}` command..."
+            logger.debug "(before) callback running for `#{name}` command..."
             argument_overrides = block.call(**args_with_defaults) || {}
             args_with_defaults.merge!(argument_overrides) if argument_overrides.is_a?(Hash)
           end
 
-          GitReflow.logger.info "Running command `#{name}` with args: #{args_with_defaults.inspect}..."
+          logger.info "Running command `#{name}` with args: #{args_with_defaults.inspect}..."
           block.call(**args_with_defaults)
 
           Array(callbacks[:after][name]).each do |block|
-            GitReflow.logger.debug "(after) callback running for `#{name}` command..."
+            logger.debug "(after) callback running for `#{name}` command..."
             block.call(**args_with_defaults)
           end
         end
@@ -203,9 +208,9 @@ module GitReflow
       def before(name, &block)
         name = name.to_sym
         if commands[name].nil?
-          GitReflow.logger.error "Attempted to register (before) callback for non-existing command: #{name}"
+          logger.error "Attempted to register (before) callback for non-existing command: #{name}"
         else
-          GitReflow.logger.debug "(before) callback registered for: #{name}"
+          logger.debug "(before) callback registered for: #{name}"
           callbacks[:before][name] ||= []
           callbacks[:before][name] << block
         end
@@ -223,9 +228,9 @@ module GitReflow
       def after(name, &block)
         name = name.to_sym
         if commands[name].nil?
-          GitReflow.logger.error "Attempted to register (after) callback for non-existing command: #{name}"
+          logger.error "Attempted to register (after) callback for non-existing command: #{name}"
         else
-          GitReflow.logger.debug "(after) callback registered for: #{name}"
+          logger.debug "(after) callback registered for: #{name}"
           callbacks[:after][name] ||= []
           callbacks[:after][name] << block
         end

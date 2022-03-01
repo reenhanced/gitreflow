@@ -41,6 +41,7 @@ describe GitReflow do
       it "calls the defined workflow methods instead of the default core" do
         workflow_path = File.join(File.expand_path("../../fixtures", __FILE__), "/awesome_workflow.rb")
         allow(GitReflow::Config).to receive(:get).with("reflow.workflow").and_return(workflow_path)
+        allow(GitReflow::Workflows::Core).to receive(:load_raw_workflow)
         expect(GitReflow::Workflows::Core).to receive(:load_raw_workflow).with(File.read(workflow_path)).and_call_original
 
         expect{ subject.start }.to have_said "Awesome."

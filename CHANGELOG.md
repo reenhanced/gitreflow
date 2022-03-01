@@ -1,5 +1,16 @@
 # Changelog
 
+## [v0.9.9](https://github.com/reenhanced/gitreflow/tree/v0.9.9) (2022-03-01)
+
+[Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.9.7...HEAD)
+
+**Bug fixes:**
+
+- Fixes issue with custom workflows failing to load due to a race condition
+  preventing GitReflow.logger from loading before the rest of the library in
+  Ruby 3.0+
+- Cleans up tests and bump Ruby versions in GH workflows
+
 ## [v0.9.8](https://github.com/reenhanced/gitreflow/tree/v0.9.8) (2022-02-20)
 
 [Full Changelog](https://github.com/reenhanced/gitreflow/compare/v0.9.7...HEAD)

@@ -78,13 +78,10 @@ module GitReflow
         GitReflow.git_server
       end
 
-      def logger
-        GitReflow.logger
-      end
       def logger(*args)
         return @logger if defined?(@logger)
 
-        @logger = GitReflow.logger(*args) || GitReflow::Logger.new(*args)
+        @logger = GitReflow.try(:logger, *args) || GitReflow::Logger.new(*args)
       rescue NoMethodError
         @logger = GitReflow::Logger.new(*args)
       end
@@ -121,10 +118,10 @@ module GitReflow
       # @param name [String] the name of the Workflow file to use as a basis
       def use(workflow_name)
         if workflows.key?(workflow_name)
-          GitReflow.logger.debug "Using Workflow: #{workflow_name}"
+          logger.debug "Using Workflow: #{workflow_name}"
           GitReflow::Workflows::Core.load_workflow(workflows[workflow_name])
         else
-          GitReflow.logger.error "Tried to use non-existent Workflow: #{workflow_name}"
+          logger.error "Tried to use non-existent Workflow: #{workflow_name}"
         end
       end
 
